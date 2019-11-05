@@ -24,9 +24,9 @@ import subprocess
 import urllib.parse
 from typing import Dict, Any
 
+# DEFAULT_SERVER_NAME = 'xcube-dcfs Server'
+# DEFAULT_SERVER_URL = 'http://ec2-3-123-65-163.eu-central-1.compute.amazonaws.com:8080'
 DEFAULT_VIEWER_URL = 'http://xcube-viewer.s3-website.eu-central-1.amazonaws.com'
-DEFAULT_SERVER_URL = 'http://ec2-3-123-65-163.eu-central-1.compute.amazonaws.com:8080'
-DEFAULT_SERVER_NAME = 'xcube-dcfs Server'
 
 
 class ViewerServer:
@@ -35,9 +35,9 @@ class ViewerServer:
     def __init__(self,
                  *cube_paths,
                  styles: Dict[str, Dict[str, Any]] = None,
-                 viewer_url: str = DEFAULT_VIEWER_URL,
-                 server_url: str = DEFAULT_SERVER_URL,
-                 server_name: str = DEFAULT_SERVER_NAME):
+                 # server_url: str = DEFAULT_SERVER_URL,
+                 # server_name: str = DEFAULT_SERVER_NAME,
+                 viewer_url: str = DEFAULT_VIEWER_URL):
         for cube_path in cube_paths:
             if not os.path.exists(cube_path):
                 raise ValueError(f'cube does not exist: {cube_path}')
@@ -54,7 +54,10 @@ class ViewerServer:
                     raise ValueError(f'unrecognized style properties: {remaining}')
                 style_args = f'{var_name}=({vmin},{vmax},{cmap!r})'
 
-        args = ['xcube', 'serve', '--address', '0.0.0.0']
+        port = 8080
+        server_name = 'xcube-dcfs Server'
+        server_url = f'http://localhost:{port}'
+        args = ['xcube', 'serve', '--address', '0.0.0.0', '--port', f'{port}']
         if style_args:
             args.append('--styles')
             args.append(','.join(style_args))
@@ -64,8 +67,8 @@ class ViewerServer:
 
         print(f'running: {" ".join(args)}')
 
-        self.viewer_url = viewer_url
         self.server_url = server_url
+        self.viewer_url = viewer_url
         self.server_name = server_name
         self.process = subprocess.Popen(args,
                                         stdin=subprocess.PIPE,
@@ -84,10 +87,12 @@ class ViewerServer:
                                   f'?serverUrl={urllib.parse.quote(server_url)}'
                                   f'&serverName={urllib.parse.quote(server_name)}')
         viewer = f'<a href="{viewer_url_with_server}">Click to open</a>' if return_code is None else 'Not available.'
+        server = f'<a href="{server_url}">Click to open</a>' if return_code is None else 'Not available.'
         return (
             f'<html>'
             f'<table>'
             f'<tr><td>Viewer:</td><td>{viewer}</td></tr>'
+            f'<tr><td>Server:</td><td>{server}</td></tr>'
             f'<tr><td>Server status:</td><td>{status}</td></tr>'
             f'<tr><td>Server PID:</td><td>{self.process.pid}</td></tr>'
             f'</table>'
@@ -105,8 +110,3 @@ class ViewerServer:
     @classmethod
     def prune(cls):
         cls.servers = [server for server in cls.servers if server.process.returncode is not None]
-
-    @classmethod
-    def set_default_server_url(cls, server_url: str):
-        global DEFAULT_SERVER_URL
-        DEFAULT_SERVER_URL = server_url
