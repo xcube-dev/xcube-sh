@@ -1,0 +1,62 @@
+{
+  "input": {
+    "bounds": {
+      "bbox": [
+        13.822,
+        45.85,
+        14.559,
+        46.291
+      ],
+      "properties": {
+        "crs": "http://www.opengis.net/def/crs/EPSG/0/4326"
+      }
+    },
+    "data": [
+      {
+        "type": "S2L1C",
+        "processing": {
+          "upsampling": "BILINEAR",
+          "downsampling": "BILINEAR"
+        },
+        "dataFilter": {
+          "timeRange": {
+            "from": "2018-10-01T00:00:00.000Z",
+            "to": "2018-10-10T00:00:00.000Z"
+          },
+          "mosaickingOrder": "mostRecent"
+        }
+      }
+    ]
+  },
+  "output": {
+    "width": 512,
+    "height": 512,
+    "responses": [
+      {
+        "identifier": "B02",
+        "format": {
+          "type": "image/tiff"
+        }
+      },
+      {
+        "identifier": "B03",
+        "format": {
+          "type": "image/tiff"
+        }
+      },
+      {
+        "identifier": "B04",
+        "format": {
+          "type": "image/tiff"
+        }
+      },
+      {
+        "identifier": "B08",
+        "format": {
+          "type": "image/tiff"
+        }
+      }
+    ]
+  },
+  "evalscript": "//VERSION=3\nfunction setup() {\n    return {\n        input: [{\n            bands: ['B02', 'B03', 'B04', 'B08'],\n            units: ['reflectance', 'reflectance', 'reflectance', 'reflectance'],\n        }],\n        output: [\n            {id: 'B02', bands: 1, sampleType: 'FLOAT32'},\n            {id: 'B03', bands: 1, sampleType: 'FLOAT32'},\n            {id: 'B04', bands: 1, sampleType: 'FLOAT32'},\n            {id: 'B08', bands: 1, sampleType: 'FLOAT32'},\n        ]\n    };\n}\nfunction evaluatePixel(sample) {\n    return {\n        B02: [sample.B02],\n        B03: [sample.B03],\n        B04: [sample.B04],\n        B08: [sample.B08],\n    };\n}"
+}

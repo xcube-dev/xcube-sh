@@ -1,0 +1,40 @@
+{
+  "input": {
+    "bounds": {
+      "bbox": [
+        1545577,
+        5761986,
+        1705367,
+        5857046
+      ],
+      "properties": {
+        "crs": "http://www.opengis.net/def/crs/EPSG/0/3857"
+      }
+    },
+    "data": [
+      {
+        "type": "CUSTOM",
+        "processing": {
+          "upsampling": "BILINEAR",
+          "downsampling": "BILINEAR"
+        },
+        "dataFilter": {
+          "collectionId": "1a3ab057-3c51-447c-9f85-27d4b633b3f5"
+        }
+      }
+    ]
+  },
+  "output": {
+    "width": 512,
+    "height": 305,
+    "responses": [
+      {
+        "identifier": "default",
+        "format": {
+          "type": "image/tiff"
+        }
+      }
+    ]
+  },
+  "evalscript": "//VERSION=3\nfunction setup() {\n    return {\n        input: ['RED'],\n        output: [\n            {bands: 1, sampleType: 'UINT8'}\n        ]\n    };\n}\nfunction evaluatePixel(sample) {\n    return [sample.RED];\n}"
+}
