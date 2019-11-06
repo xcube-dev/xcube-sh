@@ -25,7 +25,6 @@ import platform
 import random
 import time
 import warnings
-import xml.etree.ElementTree as ET
 from typing import List, Any, Dict, Tuple, Union, Sequence
 
 import oauthlib.oauth2
@@ -71,6 +70,7 @@ class SentinelHub:
             self.token = self.session.fetch_token(token_url=self.oauth2_url + '/token',
                                                   client_id=client_id,
                                                   client_secret=client_secret)
+            self.client_id = client_id
         else:
             self.session = session
             self.token = None
@@ -89,6 +89,10 @@ class SentinelHub:
         resp = self.session.get(self.api_url + '/process/dataset')
         obj = json.loads(resp.content)
         return obj.get('data')
+
+    def refresh_session(self):
+        client = oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)
+        self.session = requests_oauthlib.OAuth2Session(client=client, token=self.token)
 
     def band_names(self, dataset_name) -> Dict[str, Any]:
         resp = self.session.get(self.api_url + f'/process/dataset/{dataset_name}/bands')

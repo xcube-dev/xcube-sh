@@ -509,6 +509,8 @@ class SentinelHubStore(RemoteStore):
                     bbox: Tuple[float, float, float, float],
                     time_range: Tuple[pd.Timestamp, pd.Timestamp]) -> bytes:
 
+        self._sentinel_hub.refresh_session()
+
         start_time, end_time = time_range
         time_range = start_time.isoformat(), end_time.isoformat()
 
