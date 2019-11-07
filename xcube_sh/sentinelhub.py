@@ -25,7 +25,6 @@ import platform
 import random
 import time
 import warnings
-import xml.etree.ElementTree as ET
 from typing import List, Any, Dict, Tuple, Union, Sequence
 
 import oauthlib.oauth2
@@ -48,7 +47,8 @@ class SentinelHub:
                  client_secret=None,
                  session=None,
                  api_url=None,
-                 oauth2_url=None):
+                 oauth2_url=None,
+                 request_warnings=False):
         self.instance_id = instance_id or DEFAULT_INSTANCE_ID
         self.api_url = api_url or os.environ.get('SH_API_URL', DEFAULT_SH_API_URL)
         self.oauth2_url = oauth2_url or os.environ.get('SH_OAUTH2_URL', DEFAULT_SH_OAUTH2_URL)
@@ -74,6 +74,7 @@ class SentinelHub:
         else:
             self.session = session
             self.token = None
+        self.request_warnings = request_warnings
 
     def close(self):
         self.session.close()
@@ -197,10 +198,11 @@ class SentinelHub:
                 retry_min = int(response.headers.get('Retry-After', '100'))
                 retry_backoff = random.random() * retry_backoff_max
                 retry_total = retry_min + retry_backoff
-                retry_message = f'Error 429: Too Many Requests. ' \
-                                f'Attempt {i + 1} of {num_retries} to retry after ' \
-                                f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff} = {"%.2f" % retry_total} ms...'
-                warnings.warn(retry_message)
+                if self.request_warnings:
+                    retry_message = f'Error 429: Too Many Requests. ' \
+                                    f'Attempt {i + 1} of {num_retries} to retry after ' \
+                                    f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff} = {"%.2f" % retry_total} ms...'
+                    warnings.warn(retry_message)
                 time.sleep(retry_total / 1000.0)
                 retry_backoff_max *= retry_backoff_base
             else:
