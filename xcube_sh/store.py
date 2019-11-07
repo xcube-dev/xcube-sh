@@ -67,7 +67,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         x_array = np.linspace(x1 + spatial_res / 2, x2 - spatial_res / 2, width, dtype=np.float64)
         y_array = np.linspace(y2 - spatial_res / 2, y1 + spatial_res / 2, height, dtype=np.float64)
 
-        time_period = self._cube_config.time_period
+        # time_period = self._cube_config.time_period
 
         t_array = np.array([s + 0.5 * (e - s) for s, e in self._time_ranges]).astype('datetime64[s]').astype(np.int64)
         t_bnds_array = np.array(self._time_ranges).astype('datetime64[s]').astype(np.int64)
@@ -508,8 +508,6 @@ class SentinelHubStore(RemoteStore):
                     chunk_index: Tuple[int, ...],
                     bbox: Tuple[float, float, float, float],
                     time_range: Tuple[pd.Timestamp, pd.Timestamp]) -> bytes:
-
-        self._sentinel_hub.refresh_session()
 
         start_time, end_time = time_range
         time_range = start_time.isoformat(), end_time.isoformat()

@@ -38,6 +38,55 @@ from .metadata import SentinelHubMetadata
 from .version import version
 
 
+class SentinelOAuth2Session(requests_oauthlib.OAuth2Session):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def __getstate__(self):
+        return {
+            'client_id': self.client_id,
+            'compliance_hook': self.compliance_hook,
+            '_client': self._client,
+            'auto_refresh_url': self.auto_refresh_url,
+            'auto_refresh_kwargs': self.auto_refresh_kwargs,
+            'scope': self.scope,
+            'redirect_uri': self.redirect_uri,
+            'cookies': self.cookies,
+            'trust_env': self.trust_env,
+            'auth': self.auth,
+            'headers': self.headers,
+            'params': self.params,
+            'hooks': self.hooks,
+            'proxies': self.proxies,
+            'stream': self.stream,
+            'cert': self.cert,
+            'verify': self.verify,
+            'max_redirects': self.max_redirects,
+            'adapters': self.adapters
+        }
+
+    def __setstate__(self, state):
+        self._client = state['_client']
+        self.compliance_hook = state['compliance_hook']
+        self.client_id = state['client_id']
+        self.auto_refresh_url = state['auto_refresh_url']
+        self.auto_refresh_kwargs = state['auto_refresh_kwargs']
+        self.scope = state['scope']
+        self.trust_env = state['trust_env']
+        self.cookies = state['cookies']
+        self.redirect_uri = state['redirect_uri']
+        self.auth = state['auth']
+        self.headers = state['headers']
+        self.params = state['params']
+        self.hooks = state['hooks']
+        self.proxies = state['proxies']
+        self.stream = state['stream']
+        self.verify = state['verify']
+        self.cert = state['cert']
+        self.max_redirects = state['max_redirects']
+        self.adapters = state['adapters']
+
+
 class SentinelHub:
     METADATA = SentinelHubMetadata()
 
@@ -64,7 +113,7 @@ class SentinelHub:
 
             # Create a OAuth2 session
             client = oauthlib.oauth2.BackendApplicationClient(client_id=client_id)
-            self.session = requests_oauthlib.OAuth2Session(client=client)
+            self.session = SentinelOAuth2Session(client=client)
 
             # Get OAuth2 token for the session
             self.token = self.session.fetch_token(token_url=self.oauth2_url + '/token',
@@ -90,9 +139,10 @@ class SentinelHub:
         obj = json.loads(resp.content)
         return obj.get('data')
 
-    def refresh_session(self):
-        client = oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)
-        self.session = requests_oauthlib.OAuth2Session(client=client, token=self.token)
+    # def refresh_session(self):
+    #     client = oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)
+    #     # self.session = requests_oauthlib.OAuth2Session(client=client, token=self.token)
+    #     self.session = SentinelOAuth2Session(client=client, token=self.token)
 
     def band_names(self, dataset_name) -> Dict[str, Any]:
         resp = self.session.get(self.api_url + f'/process/dataset/{dataset_name}/bands')
