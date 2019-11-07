@@ -10,6 +10,7 @@
   `CubeConfig.bbox`. (#3)  
 * Renamed `xcube-dcfs` to `xcube-sh`. Made the `xcube-sh` environment dependent 
   on `xcube`. `SentinelhubStore` now inherits from `xcube.api.CubeStore`. (#4)  
+* Added class SentinelOAuth2Session to allow proper pickling of the oauth session 
 
 ## Changes in 0.1
  
