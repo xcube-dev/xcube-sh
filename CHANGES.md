@@ -11,6 +11,10 @@
 * Renamed `xcube-dcfs` to `xcube-sh`. Made the `xcube-sh` environment dependent 
   on `xcube`. `SentinelhubStore` now inherits from `xcube.api.CubeStore`. (#4)  
 * Added class SentinelOAuth2Session to allow proper pickling of the oauth session 
+* The `ViewerServer` constructor will now try killing any running server on same port number, 
+  before a new server instance is started. Style parsing has been fixed.
+  Setting `server_url=None` will make it default to `http://localhost:8080`. 
+
 
 ## Changes in 0.1
  
