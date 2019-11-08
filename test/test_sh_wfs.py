@@ -22,7 +22,7 @@
 import os
 import unittest
 
-from xcube_sh import SentinelHub
+from xcube_sh.sentinelhub import SentinelHub
 
 HAS_SH_INSTANCE_ID = 'SH_INSTANCE_ID' in os.environ
 REQUIRE_SH_INSTANCE_ID = 'requires SH instance ID'
