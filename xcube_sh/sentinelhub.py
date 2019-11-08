@@ -44,8 +44,8 @@ class SentinelOAuth2Session(requests_oauthlib.OAuth2Session):
     The class requests_oauthlib.OAuth2Session does not implement the magic methods __getstate__ and __setstate__
     which are used during pickling.
     """
-    _SERIALIZED_ATTRS = ['_client', '_state', 'compliance_hook', 'client_id', 'auto_refresh_url',
-                         'auto_refresh_kwargs', 'scope', 'state', 'token_updater', 'redirect_uri', 'cookies',
+    _SERIALIZED_ATTRS = ['_client', 'compliance_hook', 'client_id', 'auto_refresh_url',
+                         'auto_refresh_kwargs', 'scope', 'redirect_uri', 'cookies',
                          'trust_env', 'auth', 'headers', 'params', 'hooks', 'proxies',
                          'stream', 'cert', 'verify', 'max_redirects', 'adapters']
 
