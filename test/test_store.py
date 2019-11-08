@@ -30,7 +30,7 @@ import zarr
 
 from xcube_sh.config import CubeConfig
 from xcube_sh.metadata import SentinelHubMetadata
-from xcube_sh.sentinelhub import SentinelOAuth2Session
+from xcube_sh.sentinelhub import SerializableOAuth2Session
 from xcube_sh.store import SentinelHubStore
 
 
@@ -95,23 +95,6 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
         store_cache = zarr.LRUStoreCache(self.store, max_size=2 * 24)
         cube = xr.open_zarr(store_cache)
         self.assert_3d_cube_is_valid(cube)
-
-    def test_pickle(self):
-        from oauthlib.oauth2 import BackendApplicationClient
-        client = BackendApplicationClient(client_id='sdfvdsv')
-        session = SentinelOAuth2Session(client=client)
-
-        self.assertIsNotNone(session._client)
-
-        actual = pickle.loads(pickle.dumps(session)).__dict__
-        del actual['_client']
-        del actual['adapters']
-
-        expected = session.__dict__
-        del expected['_client']
-        del expected['adapters']
-
-        self.assertEqual(expected, actual)
 
     def assert_3d_cube_is_valid(self, cube):
         cube_config = self.cube_config

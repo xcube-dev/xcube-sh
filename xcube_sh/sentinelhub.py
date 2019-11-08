@@ -32,33 +32,10 @@ import pandas as pd
 import requests
 import requests_oauthlib
 
-from .constants import DEFAULT_INSTANCE_ID, DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
-from .constants import DEFAULT_SH_API_URL, DEFAULT_SH_OAUTH2_URL, DEFAULT_CRS
-from .metadata import SentinelHubMetadata
-from .version import version
-
-
-class SentinelOAuth2Session(requests_oauthlib.OAuth2Session):
-    """
-    This class aids fixing an issue with using the SentinelHubStore when distributing across a dask cluster.
-    The class requests_oauthlib.OAuth2Session does not implement the magic methods __getstate__ and __setstate__
-    which are used during pickling.
-    """
-    _SERIALIZED_ATTRS = ['_client', 'compliance_hook', 'client_id', 'auto_refresh_url',
-                         'auto_refresh_kwargs', 'scope', 'redirect_uri', 'cookies',
-                         'trust_env', 'auth', 'headers', 'params', 'hooks', 'proxies',
-                         'stream', 'cert', 'verify', 'max_redirects', 'adapters']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.auth = None
-
-    def __getstate__(self):
-        return {a: getattr(self, a) for a in self._SERIALIZED_ATTRS}
-
-    def __setstate__(self, state):
-        for a in self._SERIALIZED_ATTRS:
-            setattr(self, a, state[a])
+from xcube_sh.constants import DEFAULT_INSTANCE_ID, DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
+from xcube_sh.constants import DEFAULT_SH_API_URL, DEFAULT_SH_OAUTH2_URL, DEFAULT_CRS
+from xcube_sh.metadata import SentinelHubMetadata
+from xcube_sh.version import version
 
 
 class SentinelHub:
@@ -88,7 +65,7 @@ class SentinelHub:
 
             # Create a OAuth2 session
             client = oauthlib.oauth2.BackendApplicationClient(client_id=client_id)
-            self.session = SentinelOAuth2Session(client=client)
+            self.session = SerializableOAuth2Session(client=client)
 
             # Get OAuth2 token for the session
             self.token = self.session.fetch_token(token_url=self.oauth2_url + '/token',
@@ -402,3 +379,26 @@ class SentinelHubError(Exception):
         if self.content:
             text += f':\n{self.content}\n'
         return text
+
+
+class SerializableOAuth2Session(requests_oauthlib.OAuth2Session):
+    """
+    Aids fixing an issue with using the SentinelHubStore when distributing across a dask cluster.
+    The class requests_oauthlib.OAuth2Session does not implement the magic methods __getstate__ and __setstate__
+    which are used during pickling.
+    """
+    _SERIALIZED_ATTRS = ['_client', 'compliance_hook', 'client_id', 'auto_refresh_url',
+                         'auto_refresh_kwargs', 'scope', 'redirect_uri', 'cookies',
+                         'trust_env', 'auth', 'headers', 'params', 'hooks', 'proxies',
+                         'stream', 'cert', 'verify', 'max_redirects', 'adapters']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.auth = None
+
+    def __getstate__(self):
+        return {a: getattr(self, a) for a in self._SERIALIZED_ATTRS}
+
+    def __setstate__(self, state):
+        for a in self._SERIALIZED_ATTRS:
+            setattr(self, a, state[a])

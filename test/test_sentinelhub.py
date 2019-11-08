@@ -22,6 +22,7 @@
 import json
 import os
 import os.path
+import pickle
 import shutil
 import time
 import unittest
@@ -30,7 +31,7 @@ from typing import Any, Sequence, Dict
 import numpy as np
 import zarr
 
-from xcube_sh.sentinelhub import SentinelHub
+from xcube_sh.sentinelhub import SentinelHub, SerializableOAuth2Session
 
 HAS_SH_CREDENTIALS = 'SH_CLIENT_ID' in os.environ and 'SH_CLIENT_SECRET' in os.environ
 REQUIRE_SH_CREDENTIALS = 'requires SH credentials'
@@ -322,6 +323,27 @@ class SentinelHubNewRequestTest(unittest.TestCase):
             expected_request = json.load(fp)
 
         self.assertEqual(expected_request, request)
+
+
+class SerializableOAuth2SessionTest(unittest.TestCase):
+
+    def test_pickle(self):
+        from oauthlib.oauth2 import BackendApplicationClient
+        client = BackendApplicationClient(client_id='sdfvdsv')
+        session = SerializableOAuth2Session(client=client)
+
+        self.assertIsNotNone(session._client)
+
+        actual = pickle.loads(pickle.dumps(session)).__dict__
+        del actual['_client']
+        del actual['adapters']
+
+        expected = session.__dict__
+        del expected['_client']
+        del expected['adapters']
+
+        self.assertEqual(expected, actual)
+
 
 def _write_zarr_array(dir_path: str,
                       data: Any,
