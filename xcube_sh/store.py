@@ -109,18 +109,24 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             x_attrs, y_attrs = ({
                                     "_ARRAY_DIMENSIONS": ['lon'],
                                     "units": "decimal_degrees",
+                                    "long_name": "longitude",
                                     "standard_name": "longitude",
                                 }, {
                                     "_ARRAY_DIMENSIONS": ['lat'],
                                     "units": "decimal_degrees",
+                                    "long_name": "longitude",
                                     "standard_name": "latitude",
                                 })
         else:
             x_name, y_name = 'x', 'y'
             x_attrs, y_attrs = ({
                                     "_ARRAY_DIMENSIONS": ['x'],
+                                    "long_name": "x coordinate of projection",
+                                    "standard_name": "projection_x_coordinate",
                                 }, {
                                     "_ARRAY_DIMENSIONS": ['y'],
+                                    "long_name": "y coordinate of projection",
+                                    "standard_name": "projection_y_coordinate",
                                 })
 
         time_attrs = {
