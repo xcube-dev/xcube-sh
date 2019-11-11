@@ -109,18 +109,24 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             x_attrs, y_attrs = ({
                                     "_ARRAY_DIMENSIONS": ['lon'],
                                     "units": "decimal_degrees",
+                                    "long_name": "longitude",
                                     "standard_name": "longitude",
                                 }, {
                                     "_ARRAY_DIMENSIONS": ['lat'],
                                     "units": "decimal_degrees",
+                                    "long_name": "longitude",
                                     "standard_name": "latitude",
                                 })
         else:
             x_name, y_name = 'x', 'y'
             x_attrs, y_attrs = ({
                                     "_ARRAY_DIMENSIONS": ['x'],
+                                    "long_name": "x coordinate of projection",
+                                    "standard_name": "projection_x_coordinate",
                                 }, {
                                     "_ARRAY_DIMENSIONS": ['y'],
+                                    "long_name": "y coordinate of projection",
+                                    "standard_name": "projection_y_coordinate",
                                 })
 
         time_attrs = {
@@ -147,7 +153,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                 band_array_dimensions = ['time', 'lat', 'lon', 'band']
             else:
                 band_array_dimensions = ['time', 'y', 'x', 'band']
-            chunk_width, chunk_height = self._cube_config.chunk_size
+            tile_width, tile_height = self._cube_config.tile_size
             num_bands = len(self._cube_config.band_names)
             self._add_static_array('band',
                                    np.array(self._cube_config.band_names),
@@ -158,7 +164,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                               band_names=self._cube_config.band_names)
             self._add_remote_array(BAND_DATA_ARRAY_NAME,
                                    [t_array.size, height, width, num_bands],
-                                   [1, chunk_height, chunk_width, num_bands],
+                                   [1, tile_height, tile_width, num_bands],
                                    band_encoding,
                                    band_attrs)
         else:
@@ -166,14 +172,14 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                 band_array_dimensions = ['time', 'lat', 'lon']
             else:
                 band_array_dimensions = ['time', 'y', 'x']
-            chunk_width, chunk_height = self._cube_config.chunk_size
+            tile_width, tile_height = self._cube_config.tile_size
             for band_name in self._cube_config.band_names:
                 band_encoding = self.get_band_encoding(band_name)
                 band_attrs = self.get_band_attrs(band_name)
                 band_attrs.update(_ARRAY_DIMENSIONS=band_array_dimensions)
                 self._add_remote_array(band_name,
                                        [t_array.size, height, width],
-                                       [1, chunk_height, chunk_width],
+                                       [1, tile_height, tile_width],
                                        band_encoding,
                                        band_attrs)
 
@@ -211,18 +217,18 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         Get any metadata attributes for band (variable) *band_name*.
         """
 
-    def request_bbox(self, x_chunk_index: int, y_chunk_index: int) -> Tuple[float, float, float, float]:
-        x_chunk_size, y_chunk_size = self.cube_config.chunk_size
+    def request_bbox(self, x_tile_index: int, y_tile_index: int) -> Tuple[float, float, float, float]:
+        x_tile_size, y_tile_size = self.cube_config.tile_size
 
-        x_index = x_chunk_index * x_chunk_size
-        y_index = y_chunk_index * y_chunk_size
+        x_index = x_tile_index * x_tile_size
+        y_index = y_tile_index * y_tile_size
 
         x01, _, _, y02 = self.cube_config.geometry
         spatial_res = self.cube_config.spatial_res
 
         x1 = x01 + spatial_res * x_index
-        x2 = x01 + spatial_res * (x_index + x_chunk_size)
-        y1 = y02 - spatial_res * (y_index + y_chunk_size)
+        x2 = x01 + spatial_res * (x_index + x_tile_size)
+        y1 = y02 - spatial_res * (y_index + y_tile_size)
         y2 = y02 - spatial_res * y_index
 
         return x1, y1, x2, y2
@@ -531,7 +537,7 @@ class SentinelHubStore(RemoteStore):
         request = SentinelHub.new_data_request(
             self.cube_config.dataset_name,
             band_names,
-            self.cube_config.chunk_size,
+            self.cube_config.tile_size,
             time_range=time_range,
             bbox=bbox,
             band_sample_types=band_sample_types,

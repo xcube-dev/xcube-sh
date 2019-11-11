@@ -333,14 +333,19 @@ class SerializableOAuth2SessionTest(unittest.TestCase):
         session = SerializableOAuth2Session(client=client)
 
         self.assertIsNotNone(session._client)
+        self.assertIsNotNone(session.adapters)
 
-        actual = pickle.loads(pickle.dumps(session)).__dict__
-        del actual['_client']
-        del actual['adapters']
+        actual = pickle.loads(pickle.dumps(session))
+
+        valid_test_attrs = SerializableOAuth2Session._SERIALIZED_ATTRS
+        valid_test_attrs.remove('_client')
+        valid_test_attrs.remove('adapters')
+
+        actual = actual.__dict__
+        actual = dict((k, actual[k]) for k in valid_test_attrs if k in actual)
 
         expected = session.__dict__
-        del expected['_client']
-        del expected['adapters']
+        expected = dict((k, expected[k]) for k in valid_test_attrs if k in expected)
 
         self.assertEqual(expected, actual)
 
