@@ -31,7 +31,7 @@ class CubeConfigTest(unittest.TestCase):
         common_kwargs = dict(dataset_name='S2L2A',
                              band_names=('B01', 'B02', 'B03'),
                              spatial_res=spatial_res,
-                             chunk_size=(512, 512),
+                             tile_size=(512, 512),
                              time_range=('2019-01-01', '2019-01-02'))
 
         # size will be smaller than chunk sizes
@@ -39,8 +39,8 @@ class CubeConfigTest(unittest.TestCase):
         w, h = config.size
         x1, y1, x2, y2 = config.geometry
         self.assertEqual((167, 111), (w, h))
-        self.assertEqual((167, 111), config.chunk_size)
-        self.assertEqual((1, 1), config.num_chunks)
+        self.assertEqual((167, 111), config.tile_size)
+        self.assertEqual((1, 1), config.num_tiles)
         self.assertAlmostEqual(10.11, x1)
         self.assertAlmostEqual(10.14006, x2, places=4)
         self.assertAlmostEqual(54.17, y1)
@@ -53,8 +53,8 @@ class CubeConfigTest(unittest.TestCase):
         w, h = config.size
         x1, y1, x2, y2 = config.geometry
         self.assertEqual((514, 722), (w, h))
-        self.assertEqual((514, 722), config.chunk_size)
-        self.assertEqual((1, 1), config.num_chunks)
+        self.assertEqual((514, 722), config.tile_size)
+        self.assertEqual((1, 1), config.num_tiles)
         self.assertAlmostEqual(10.11, x1)
         self.assertAlmostEqual(10.20252, x2, places=4)
         self.assertAlmostEqual(54.17, y1)
@@ -67,8 +67,8 @@ class CubeConfigTest(unittest.TestCase):
         w, h = config.size
         x1, y1, x2, y2 = config.geometry
         self.assertEqual((2560, 2048), (w, h))
-        self.assertEqual((512, 512), config.chunk_size)
-        self.assertEqual((5, 4), config.num_chunks)
+        self.assertEqual((512, 512), config.tile_size)
+        self.assertEqual((5, 4), config.num_tiles)
         self.assertAlmostEqual(10.11, x1)
         self.assertAlmostEqual(10.57080, x2, places=4)
         self.assertAlmostEqual(54.17, y1)

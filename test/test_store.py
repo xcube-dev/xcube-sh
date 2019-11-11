@@ -42,7 +42,7 @@ class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
         cube_config = self.get_cube_config()
 
         self.assertEqual((4000, 4000), cube_config.size)
-        self.assertEqual((1000, 1000), cube_config.chunk_size)
+        self.assertEqual((1000, 1000), cube_config.tile_size)
         np.testing.assert_almost_equal(cube_config.geometry, (10.2, 53.5, 10.3, 53.6))
 
         self.cube_config = cube_config
@@ -127,8 +127,8 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
              'B01-(2, 3, 0)', 'B01-(2, 3, 1)', 'B01-(2, 3, 2)', 'B01-(2, 3, 3)'],
             sorted(list(self.observed_kwargs.keys())))
 
-        x_delta = cube_config.chunk_size[0] * cube_config.spatial_res
-        y_delta = cube_config.chunk_size[1] * cube_config.spatial_res
+        x_delta = cube_config.tile_size[0] * cube_config.spatial_res
+        y_delta = cube_config.tile_size[1] * cube_config.spatial_res
         bbox_200 = self.observed_kwargs['B01-(2, 0, 0)']['bbox']
         np.testing.assert_almost_equal(bbox_200, (10.2, 53.6 - y_delta, 10.2 + x_delta, 53.6))
         bbox_233 = self.observed_kwargs['B01-(2, 3, 3)']['bbox']
@@ -241,8 +241,8 @@ class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):
              'B01-(2, 3, 0)', 'B01-(2, 3, 1)', 'B01-(2, 3, 2)', 'B01-(2, 3, 3)'],
             sorted(list(self.observed_kwargs.keys())))
 
-        x_delta = cube_config.chunk_size[0] * cube_config.spatial_res
-        y_delta = cube_config.chunk_size[1] * cube_config.spatial_res
+        x_delta = cube_config.tile_size[0] * cube_config.spatial_res
+        y_delta = cube_config.tile_size[1] * cube_config.spatial_res
         bbox_200 = self.observed_kwargs['B01-(2, 0, 0)']['bbox']
         np.testing.assert_almost_equal(bbox_200, (10.2, 53.6 - y_delta, 10.2 + x_delta, 53.6))
         bbox_233 = self.observed_kwargs['B01-(2, 3, 3)']['bbox']
@@ -336,8 +336,8 @@ class SentinelHubStore4DTest(SentinelHubStoreTest):
              'band_data-(2, 3, 3, 0)'],
             sorted(list(self.observed_kwargs.keys())))
 
-        x_delta = cube_config.chunk_size[0] * cube_config.spatial_res
-        y_delta = cube_config.chunk_size[1] * cube_config.spatial_res
+        x_delta = cube_config.tile_size[0] * cube_config.spatial_res
+        y_delta = cube_config.tile_size[1] * cube_config.spatial_res
         bbox_2000 = self.observed_kwargs['band_data-(2, 0, 0, 0)']['bbox']
         np.testing.assert_almost_equal(bbox_2000, (10.2, 53.6 - y_delta, 10.2 + x_delta, 53.6))
         bbox_2330 = self.observed_kwargs['band_data-(2, 3, 3, 0)']['bbox']
@@ -429,7 +429,7 @@ class SentinelHubMock:
         """
         self._requests.append(request)
 
-        chunk_width, chunk_height = self._config.chunk_size
+        chunk_width, chunk_height = self._config.tile_size
         num_bands = len(self._config.band_names)
 
         if self._config.four_d:

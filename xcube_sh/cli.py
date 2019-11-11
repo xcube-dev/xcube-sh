@@ -105,7 +105,7 @@ def gen(dataset,
 
     cube_config = CubeConfig(dataset_name=dataset,
                              band_names=band_names,
-                             chunk_size=tile_size,
+                             tile_size=tile_size,
                              geometry=geometry,
                              spatial_res=spatial_res,
                              crs=crs,

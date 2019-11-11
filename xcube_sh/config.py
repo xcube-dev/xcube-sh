@@ -20,11 +20,12 @@
 # SOFTWARE.
 
 import math
+import warnings
 from typing import Tuple, Union, Optional, Sequence, Dict, Any
 
 import pandas as pd
 
-from .constants import DEFAULT_CRS, DEFAULT_TIME_TOLERANCE, DEFAULT_NUM_CHUNK_ELEMENTS, SH_MAX_IMAGE_SIZE
+from .constants import DEFAULT_CRS, DEFAULT_TIME_TOLERANCE, DEFAULT_NUM_TILE_PIXELS, SH_MAX_IMAGE_SIZE
 
 
 def _safe_int_div(x: int, y: int) -> int:
@@ -32,11 +33,32 @@ def _safe_int_div(x: int, y: int) -> int:
 
 
 class CubeConfig:
+    """
+    Sentinel Hub cube configuration.
+
+    :param dataset_name: Dataset name. Mandatory.
+    :param band_names: Band names. Mandatory.
+    :param band_units: Band units. Optional.
+    :param band_sample_types: Band sample types. Optional.
+    :param tile_size: Tile size as tuple (width, height). Optional.
+    :param chunk_size: Deprecated. Use *tile_size*.
+    :param geometry:
+    :param spatial_res:
+    :param crs:
+    :param time_range:
+    :param time_period:
+    :param time_tolerance:
+    :param collection_id:
+    :param four_d:
+    :param exception_type:
+    """
+
     def __init__(self,
                  dataset_name: str = None,
                  band_names: Sequence[str] = None,
                  band_units: Union[str, Sequence[str]] = None,
                  band_sample_types: Union[str, Sequence[str]] = None,
+                 tile_size: Union[str, Tuple[int, int]] = None,
                  chunk_size: Union[str, Tuple[int, int]] = None,
                  geometry: Union[str, Tuple[float, float, float, float]] = None,
                  spatial_res: float = None,
@@ -57,6 +79,11 @@ class CubeConfig:
         else:
             x1, y1, x2, y2 = geometry
 
+        if chunk_size is not None:
+            warnings.warn('the chunk_size parameter is no longer supported, use tile_size instead')
+            if tile_size is None:
+                tile_size = chunk_size
+
         if spatial_res is None:
             raise exception_type('spatial resolution must be given')
         if spatial_res <= 0.0:
@@ -65,35 +92,35 @@ class CubeConfig:
         width, height = (max(1, round((x2 - x1) / spatial_res)),
                          max(1, round((y2 - y1) / spatial_res)))
 
-        if chunk_size is None:
-            chunk_width, chunk_height = None, None
-        elif isinstance(chunk_size, str):
+        if tile_size is None:
+            tile_width, tile_height = None, None
+        elif isinstance(tile_size, str):
             parsed = tuple(map(int, geometry.split(',', maxsplit=1)))
             if len(parsed) == 1:
-                chunk_width, chunk_height = parsed[0], parsed[0]
+                tile_width, tile_height = parsed[0], parsed[0]
             elif len(parsed) == 2:
-                chunk_width, chunk_height = parsed
+                tile_width, tile_height = parsed
             else:
-                raise exception_type(f'invalid chunk size: {chunk_size}')
+                raise exception_type(f'invalid tile size: {tile_size}')
         else:
-            chunk_width, chunk_height = chunk_size
-        if chunk_width is None:
-            chunk_width = int(math.sqrt(_safe_int_div(DEFAULT_NUM_CHUNK_ELEMENTS * width, height)) + 0.5)
-        if chunk_height is None:
-            chunk_height = _safe_int_div(DEFAULT_NUM_CHUNK_ELEMENTS, chunk_width)
-        if chunk_width > SH_MAX_IMAGE_SIZE:
-            chunk_width = SH_MAX_IMAGE_SIZE
-        if chunk_height > SH_MAX_IMAGE_SIZE:
-            chunk_height = SH_MAX_IMAGE_SIZE
+            tile_width, tile_height = tile_size
+        if tile_width is None:
+            tile_width = int(math.sqrt(_safe_int_div(DEFAULT_NUM_TILE_PIXELS * width, height)) + 0.5)
+        if tile_height is None:
+            tile_height = _safe_int_div(DEFAULT_NUM_TILE_PIXELS, tile_width)
+        if tile_width > SH_MAX_IMAGE_SIZE:
+            tile_width = SH_MAX_IMAGE_SIZE
+        if tile_height > SH_MAX_IMAGE_SIZE:
+            tile_height = SH_MAX_IMAGE_SIZE
 
-        if width < 2 * chunk_width:
-            chunk_width = width
+        if width < 2 * tile_width:
+            tile_width = width
         else:
-            width = self._adjust_size(width, chunk_width)
-        if height < 2 * chunk_height:
-            chunk_height = height
+            width = self._adjust_size(width, tile_width)
+        if height < 2 * tile_height:
+            tile_height = height
         else:
-            height = self._adjust_size(height, chunk_height)
+            height = self._adjust_size(height, tile_height)
 
         x2, y2 = x1 + width * spatial_res, y1 + height * spatial_res
 
@@ -147,8 +174,8 @@ class CubeConfig:
         self._collection_id = collection_id
         self._four_d = four_d
         self._size = width, height
-        self._chunk_size = chunk_width, chunk_height
-        self._num_chunks = width // chunk_width, height // chunk_height
+        self._tile_size = tile_width, tile_height
+        self._num_tiles = width // tile_width, height // tile_height
 
     def as_dict(self) -> Dict[str, Any]:
         """Convert to JSON-serializable dictionary that can be passed to ctor as kwargs"""
@@ -162,7 +189,7 @@ class CubeConfig:
                     band_names=self.band_names,
                     band_units=self.band_units,
                     band_sample_types=self.band_sample_types,
-                    chunk_size=self.chunk_size,
+                    tile_size=self.tile_size,
                     geometry=self.geometry,
                     spatial_res=self.spatial_res,
                     crs=self.crs,
@@ -225,20 +252,20 @@ class CubeConfig:
         return self._size
 
     @property
-    def chunk_size(self) -> Tuple[int, int]:
-        return self._chunk_size
+    def tile_size(self) -> Tuple[int, int]:
+        return self._tile_size
 
     @property
-    def num_chunks(self) -> Tuple[int, int]:
-        return self._num_chunks
+    def num_tiles(self) -> Tuple[int, int]:
+        return self._num_tiles
 
     @property
     def is_wgs84_crs(self) -> bool:
         return self._crs.endswith('/4326') or self._crs.endswith('/WGS84')
 
     @classmethod
-    def _adjust_size(cls, size: int, chunk_size: int) -> int:
-        if size > chunk_size:
-            num_chunks = _safe_int_div(size, chunk_size)
-            size = num_chunks * chunk_size
+    def _adjust_size(cls, size: int, tile_size: int) -> int:
+        if size > tile_size:
+            num_tiles = _safe_int_div(size, tile_size)
+            size = num_tiles * tile_size
         return size
