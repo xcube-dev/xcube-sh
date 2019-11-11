@@ -48,6 +48,8 @@ class CubeConfig:
                  four_d: bool = False,
                  exception_type=ValueError):
 
+        if not dataset_name:
+            raise exception_type('dataset name must be given')
         if not geometry:
             raise exception_type('geometry must be given')
         if isinstance(geometry, str):
@@ -84,12 +86,21 @@ class CubeConfig:
         if chunk_height > SH_MAX_IMAGE_SIZE:
             chunk_height = SH_MAX_IMAGE_SIZE
 
-        width = self._adjust_size(width, chunk_width)
-        height = self._adjust_size(height, chunk_height)
+        if width < 2 * chunk_width:
+            chunk_width = width
+        else:
+            width = self._adjust_size(width, chunk_width)
+        if height < 2 * chunk_height:
+            chunk_height = height
+        else:
+            height = self._adjust_size(height, chunk_height)
 
         x2, y2 = x1 + width * spatial_res, y1 + height * spatial_res
 
         geometry = x1, y1, x2, y2
+
+        if not band_names:
+            raise exception_type('band names must be a given')
 
         if not crs:
             raise exception_type('CRS must be a given')
@@ -141,6 +152,12 @@ class CubeConfig:
 
     def as_dict(self) -> Dict[str, Any]:
         """Convert to JSON-serializable dictionary that can be passed to ctor as kwargs"""
+        time_range = (self.time_range[0].isoformat(), self.time_range[1].isoformat()) \
+            if self.time_range else None
+        time_period = str(self.time_period) \
+            if self.time_period else None
+        time_tolerance = str(self.time_tolerance) \
+            if self.time_tolerance else None
         return dict(dataset_name=self.dataset_name,
                     band_names=self.band_names,
                     band_units=self.band_units,
@@ -149,9 +166,9 @@ class CubeConfig:
                     geometry=self.geometry,
                     spatial_res=self.spatial_res,
                     crs=self.crs,
-                    time_range=(self.time_range[0].isoformat(), self.time_range[1].isoformat()) if self.time_range else None,
-                    time_period=str(self.time_period) if self.time_period else None,
-                    time_tolerance=str(self.time_tolerance) if self.time_tolerance else None,
+                    time_range=time_range,
+                    time_period=time_period,
+                    time_tolerance=time_tolerance,
                     collection_id=self.collection_id,
                     four_d=self.four_d)
 
@@ -213,7 +230,7 @@ class CubeConfig:
 
     @property
     def num_chunks(self) -> Tuple[int, int]:
-        return self._chunk_size
+        return self._num_chunks
 
     @property
     def is_wgs84_crs(self) -> bool:
