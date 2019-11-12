@@ -336,10 +336,12 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         return result
 
     def _get_collections(self):
-        return self.query(self._GET_TABLES_SQL)
+        result = self.query(self._GET_TABLES_SQL)
+        return [r[0] for r in result]
 
     def _collection_exists(self, collection_name: str):
-        return collection_name in self._collections
+        print(self._collections)
+        return self._TABLE_PREFIX + collection_name in self._collections
 
     def _make_column(self, name: str, typ: str):
         if typ == 'str':
