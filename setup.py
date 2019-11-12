@@ -28,9 +28,9 @@ requirements = [
     #
     # Sync with ./environment.yml.
     #
-    'oauthlib',
-    'requests_oauthlib',
-    'xcube',
+    #'oauthlib',
+    #'requests_oauthlib',
+    #'xcube',
 ]
 
 packages = find_packages(exclude=["test", "test.*"])

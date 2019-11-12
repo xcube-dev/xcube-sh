@@ -145,12 +145,12 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         'geometry', ST_AsGeoJSON(geometry)::json
         )
         FROM "{table_prefix}{collection}" 
-        WHERE properties->>{query} LIMIT {max}
+        WHERE properties->>{query} {max}
     """
 
-    _FILTER2_SQL = """SELECT  *
+    _FILTER_LONG_SQL = """SELECT  *
         FROM "{table_prefix}{collection}" 
-        WHERE properties->>{query} LIMIT {max}
+        WHERE {query} {max}
     """
 
     _GET_TABLES_SQL = """SELECT t.table_name
@@ -234,8 +234,13 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         if not self._collection_exists(collection_name=collection_name):
             raise ValueError(f"Collection {collection_name} not found")
 
+        limit = ''
+        if max_records > -1:
+            limit = 'LIMIT ' + str(max_records)
+
         if fmt == 'geojson':
-            sql = self._FILTER_SQL.format(collection=collection_name, max=max_records, query=query,
+
+            sql = self._FILTER_SQL.format(collection=collection_name, max=limit, query=query,
                                           table_prefix=self._TABLE_PREFIX)
             cursor = self._conn.cursor()
             if isinstance(cursor, CursorMock):
@@ -247,8 +252,8 @@ class RemoteGeoPostgreSQLService(GeoDBService):
                 result_set.append(f[0])
             return result_set
         elif fmt == 'gdf':
-            sql2 = self._FILTER2_SQL.format(collection=collection_name, max=max_records, query=query,
-                                            table_prefix=self._TABLE_PREFIX)
+            sql2 = self._FILTER_LONG_SQL.format(collection=collection_name, max=limit, query=query,
+                                                table_prefix=self._TABLE_PREFIX)
             return gpd.GeoDataFrame.from_postgis(sql2, self._conn, geom_col='geometry')
         else:
             raise ValueError(f"format {fmt} unknown")
@@ -287,7 +292,12 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             _local = f['properties'].values()
             values = []
             for v in _local:
-                values.append(f"'{str(v)}'")
+                if isinstance(v, float) or isinstance(v, int) or isinstance(v, bool):
+                    values.append(f"{v}")
+                elif v is None:
+                    values.append(f"null")
+                else:
+                    values.append(f"'{str(v)}'")
 
             columns = ','.join(columns)
             values = ','.join(values)
