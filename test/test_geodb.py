@@ -20,20 +20,19 @@
 # SOFTWARE.
 import unittest
 from typing import Any
-
-from test.psycopg2_mock import connect
+from unittest import mock
 from xcube_sh.geodb import get_geo_db_service, LocalGeoDBService, RemoteGeoPostgreSQLService
 
 
 class GeoDBServiceTest(unittest.TestCase):
-    def test_get_geo_db_service(self):
+    @mock.patch('psycopg2.connect')
+    def test_get_geo_db_service(self, mock_connect):
         s = get_geo_db_service(driver='local')
         self.assertIsInstance(s, LocalGeoDBService)
 
-
-def get_geodb_service_mock(tgt: Any) -> Any:
-    conn = connect(tgt=tgt)
-    return RemoteGeoPostgreSQLService(conn=conn, host='test')
+        mock_con = mock_connect.return_value
+        s = get_geo_db_service(driver='psql', host='test', conn=mock_con)
+        self.assertIsInstance(s, RemoteGeoPostgreSQLService)
 
 
 class GeoDBLocalServiceTest(unittest.TestCase):
@@ -64,28 +63,22 @@ class GeoDBLocalServiceTest(unittest.TestCase):
 
 class GeoDBremotePsqlServiceTest(unittest.TestCase):
 
-    def test_find_feature_none(self):
-        tgt = {
-            '_collection_exists': {
-                'fetchall': [1],
-                'rowcount': 1,
-            },
-            '_get_collections': {
-                'fetchall': ['test'],
-                'rowcount': 1,
-            },
-            'find_features': {
-                'fetchall': [],
-                'rowcount': 0,
-            }
-        }
+    @mock.patch('psycopg2.connect')
+    def test_find_feature_none(self, mock_connect):
+        expected = []
+        mock_con = mock_connect.return_value
+        mock_cur = mock_con.cursor.return_value
+        mock_cur.fetchall.return_value = expected
 
-        geo_db = get_geodb_service_mock(tgt=tgt)
+        geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
+        geo_db._collections = ["test"]
+
         x = geo_db.find_feature(collection_name='test', query="'S_NAME'='Lago di Garda'")
         self.assertIsNone(x)
 
-    def test_find_feature_one(self):
-        record = {'type': 'Feature',
+    @mock.patch('psycopg2.connect')
+    def test_find_feature_one(self, mock_connect):
+        expected = {'type': 'Feature',
                   'properties':
                       {'id': '74',
                        'METADATA_U': 'http://www.wasserblick.net',
@@ -97,28 +90,20 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
                                'coordinates': [[[9.993225, 54.1375089999961, 0],
                                                 [9.993311, 54.1376349999961, 0],
                                                 [9.993225, 54.1375089999961, 0]]]}}
-        tgt = {
-            '_collection_exists': {
-                'fetchall': [1],
-                'rowcount': 1,
-            },
-            '_get_collections': {
-                'fetchall': ['test'],
-                'rowcount': 1,
-            },
-            'find_features': {
-                'fetchall': [[record]],
-                'rowcount': 1,
-            }
-        }
 
-        geo_db = get_geodb_service_mock(tgt=tgt)
+        mock_con = mock_connect.return_value
+        mock_cur = mock_con.cursor.return_value
+        mock_cur.fetchall.return_value = [[expected]]
 
-        x = geo_db.find_feature(collection_name='germany-sh-lakes', query="'S_NAME'='Einfelder_See'")
+        geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
+        geo_db._collections = ["test"]
+
+        x = geo_db.find_feature(collection_name='test', query="'S_NAME'='Einfelder_See'")
         self.assertIsNotNone(x)
-        self.assertDictEqual(record, x)
+        self.assertDictEqual(expected, x)
 
-    def test_new_collection(self):
+    @mock.patch('psycopg2.connect')
+    def test_new_collection(self, mock_connect):
         schema = {'geometry': 'Polygon',
                   'properties': {'CAT': 'float:16',
                                  'FIPS_CNTRY': 'str',
@@ -126,40 +111,29 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
                                  'AREA': 'float:15.2',
                                  'POP_CNTRY': 'float:15.2'}}
 
-        tgt = {
-            '_collection_exists': {
-                'fetchall': [False],
-                'rowcount': 1,
-            },
-            '_get_collections': {
-                'fetchall': [],
-                'rowcount': 0,
-            },
-        }
+        mock_con = mock_connect.return_value
 
-        geo_db = get_geodb_service_mock(tgt=tgt)
-        geo_db.new_collection('test3', schema=schema)
+        geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
+        geo_db._collections = ["test"]
 
-    def test_drop_collection(self):
-        tgt = {
-            '_collection_exists': {
-                'fetchall': [False],
-                'rowcount': 1,
-            },
-            '_get_collections': {
-                'fetchall': [],
-                'rowcount': 0,
-            },
-        }
+        result = geo_db.new_collection('test3', schema=schema)
+        self.assertEqual("Collection created", result)
 
-        geo_db = get_geodb_service_mock(tgt=tgt)
+    @mock.patch('psycopg2.connect')
+    def test_drop_collection(self, mock_connect):
+
+        mock_con = mock_connect.return_value
+
+        geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
+        geo_db._collections = ["test"]
 
         with self.assertRaises(ValueError) as cm:
             geo_db.drop_collection('test2')
 
         self.assertEqual("Collection test2 does not exist", str(cm.exception))
 
-    def test_add_features(self):
+    @mock.patch('psycopg2.connect')
+    def test_add_features(self, mock_connect):
         record = {'type': 'Feature',
                   'properties':
                       {'id': '74',
@@ -172,29 +146,21 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
                                'coordinates': [[[9.993225, 54.1375089999961, 0],
                                                 [9.993311, 54.1376349999961, 0],
                                                 [9.993225, 54.1375089999961, 0]]]}}
-        tgt = {
-            '_get_collections': {
-                'fetchall': [],
-                'rowcount': 0,
-            },
-        }
 
-        geo_db = get_geodb_service_mock(tgt=tgt)
-        geo_db.add_features(collection_name='test', features=[record])
+        mock_con = mock_connect.return_value
 
-    def test_find_feature_collection_not_exists(self):
-        tgt = {
-            '_collection_exists': {
-                'fetchall': [False],
-                'rowcount': 1,
-            },
-            '_get_collections': {
-                'fetchall': [],
-                'rowcount': 0,
-            },
-        }
+        geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
+        geo_db._collections = ["test"]
 
-        geo_db = get_geodb_service_mock(tgt=tgt)
+        result = geo_db.add_features(collection_name='test', features=[record])
+        self.assertEqual("Features Added", result)
+
+    @mock.patch('psycopg2.connect')
+    def test_find_feature_collection_not_exists(self, mock_connect):
+        mock_con = mock_connect.return_value
+
+        geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
+        geo_db._collections = ["test"]
 
         with self.assertRaises(ValueError) as cm:
             geo_db.find_features(collection_name='germany-sh', query='S_NAME == "Lago di Garda"')

@@ -218,11 +218,12 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             self._conn = conn
         else:
             self._conn = psycopg2.connect(f"host={host} port={port} user={user} password={password}")
-        self._get_collections()
+
+        self._collections = self._get_collections()
 
     @property
     def collections(self) -> Optional[Sequence[str]]:
-        return self._get_collections()
+        return self._collections
 
     def find_feature(self, collection_name: str, query: str) -> Optional[Feature]:
         features = self.find_features(collection_name, query, max_records=1)
@@ -238,7 +239,6 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             limit = 'LIMIT ' + str(max_records)
 
         if fmt == 'geojson':
-
             sql = self._FILTER_SQL.format(collection=collection_name, max=limit, query=query,
                                           table_prefix=self._TABLE_PREFIX)
             cursor = self._conn.cursor()
@@ -255,7 +255,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         else:
             raise ValueError(f"format {fmt} unknown")
 
-    def new_collection(self, collection_name: str, schema: Schema):
+    def new_collection(self, collection_name: str, schema: Schema) -> str:
         if self._collection_exists(collection_name):
             raise ValueError(f"Collection {collection_name} exists")
 
@@ -265,14 +265,16 @@ class RemoteGeoPostgreSQLService(GeoDBService):
 
         sql = self._CREATE_COLLECTION_SQL.format(collection=collection_name, columns=',\n'.join(columns),
                                                  table_prefix=self._TABLE_PREFIX)
-        self.query(sql, referer='new_collection')
+        self.query(sql)
+
+        return "Collection created"
 
     def drop_collection(self, collection_name: str):
         if not self._collection_exists(collection_name=collection_name):
             raise ValueError(f"Collection {collection_name} does not exist")
 
         sql = self._DROP_COLLECTION_SQL.format(collection=collection_name, table_prefix=self._TABLE_PREFIX)
-        self.query(sql=sql, referer='drop_collection')
+        self.query(sql=sql)
 
     def add_feature(self, collection_name: str, feature: Feature) -> str:
         self.add_features(collection_name, [feature])
@@ -303,15 +305,14 @@ class RemoteGeoPostgreSQLService(GeoDBService):
 
             sql = f"INSERT INTO {self._TABLE_PREFIX}{collection_name}(properties, name, {columns}, geometry) " \
                 f"VALUES('{json.dumps(properties)}', '{properties['S_NAME']}', {values}, ST_GeomFromGeoJSON('{json.dumps(geometry)}')) "
-            self.query(sql=sql, referer='add_features')
+            self.query(sql=sql)
         return "Features Added"
 
-    def query(self, sql: str, referer: str) -> Optional[Any]:
+    def query(self, sql: str) -> Optional[Any]:
         """
 
         Args:
             sql: The raw SQL statement in PostgreSQL dialect
-            referer: An ID that can be used for easier mocking the connection during unit testing
 
         Returns:
             A list of tuples if the number of returned rows is larger than one or a single tuple otherwise, or
@@ -335,12 +336,10 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         return result
 
     def _get_collections(self):
-        return self.query(self._GET_TABLES_SQL, referer='_get_collections')
+        return self.query(self._GET_TABLES_SQL)
 
     def _collection_exists(self, collection_name: str):
-        sql = self._TABLE_EXISTS_SQL.format(collection=collection_name, table_prefix=self._TABLE_PREFIX)
-        result = self.query(sql, referer='_collection_exists')
-        return result[0]
+        return collection_name in self._collections
 
     def _make_column(self, name: str, typ: str):
         if typ == 'str':
