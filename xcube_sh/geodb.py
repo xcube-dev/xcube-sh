@@ -27,7 +27,7 @@ import fiona as fio
 import psycopg2
 import geopandas as gpd
 import json
-from test.psycopg2_mock import CursorMock
+
 
 Feature = Dict[str, Any]
 Schema = Dict[str, Any]
@@ -242,8 +242,6 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             sql = self._FILTER_SQL.format(collection=collection_name, max=limit, query=query,
                                           table_prefix=self._TABLE_PREFIX)
             cursor = self._conn.cursor()
-            if isinstance(cursor, CursorMock):
-                cursor.referer = 'find_features'
             cursor.execute(sql)
 
             result_set = []
@@ -322,8 +320,6 @@ class RemoteGeoPostgreSQLService(GeoDBService):
 
         """
         cur = self._conn.cursor()
-        if isinstance(cur, CursorMock):
-            cur.referer = referer
         cur.execute(sql)
 
         if "SELECT" in sql:
