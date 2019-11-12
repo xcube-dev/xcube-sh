@@ -1,10 +1,19 @@
-from typing import Dict
+from typing import Dict, Optional
 
 
 class CursorMock(object):
     def __init__(self, tgt: Dict):
         self._tgt = tgt
         self._sql = None
+        self._referer = None
+
+    @property
+    def referer(self) -> Optional[str]:
+        return self._referer
+
+    @referer.setter
+    def referer(self, value: Optional[str]):
+        self._referer = value
 
     def execute(self, sql: str):
         self._sql = sql
@@ -16,30 +25,17 @@ class CursorMock(object):
         pass
 
     def fetchall(self):
-        for k, v in self._tgt.items():
-            if k in self._sql:
-                return v['fetchall']
-        return None
+        return self._tgt[self._referer]['fetchall']
 
     def fetchone(self):
-        for k, v in self._tgt.items():
-            if k in self._sql:
-                return v['fetchone']
-        return None
+        return self._tgt[self._referer]['fetchone']
 
     def rowcount(self):
-        for k, v in self._tgt.items():
-            if k in self._sql:
-                return v['rowcount']
-        return None
+        return self._tgt[self._referer]['rowcount']
 
     @property
     def description(self):
-        for k, v in self._tgt.items():
-            if k in self._sql:
-                return v['description']
-        return None
-
+        return self._tgt[self._referer]['description']
 
 
 class ConnectionMock(object):

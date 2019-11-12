@@ -27,11 +27,8 @@ from xcube_sh.geodb import get_geo_db_service, LocalGeoDBService, RemoteGeoPostg
 
 class GeoDBServiceTest(unittest.TestCase):
     def test_get_geo_db_service(self):
-        s = get_geo_db_service(local=True)
+        s = get_geo_db_service(driver='local')
         self.assertIsInstance(s, LocalGeoDBService)
-
-        s = get_geo_db_service(local=False)
-        self.assertIsInstance(s, RemoteGeoPostgreSQLService)
 
 
 def get_geodb_service_mock(tgt: Any) -> Any:
@@ -67,29 +64,24 @@ class GeoDBLocalServiceTest(unittest.TestCase):
 
 class GeoDBremotePsqlServiceTest(unittest.TestCase):
 
-    def setUp(self) -> None:
-        # self.geo_db = RemoteGeoPostgreSQLService(conn=conn, host='test')
-        self.geo_db = get_geo_db_service(
-            driver='pgsql',
-            host="db-dcfs-geodb.cbfjgqxk302m.eu-central-1.rds.amazonaws.com",
-            user="postgres",
-            password="Oeckel6b&z"
-        )
-
     def test_find_feature_none(self):
         tgt = {
-            'information_schema': {
+            '_collection_exists': {
                 'fetchall': [1],
                 'rowcount': 1,
             },
-            'json_build_object': {
+            '_get_collections': {
+                'fetchall': ['test'],
+                'rowcount': 1,
+            },
+            'find_features': {
                 'fetchall': [],
                 'rowcount': 0,
             }
         }
 
         geo_db = get_geodb_service_mock(tgt=tgt)
-        x = geo_db.find_feature(collection_name='germany-sh-lakes', query="'S_NAME'='Lago di Garda'")
+        x = geo_db.find_feature(collection_name='test', query="'S_NAME'='Lago di Garda'")
         self.assertIsNone(x)
 
     def test_find_feature_one(self):
@@ -106,11 +98,15 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
                                                 [9.993311, 54.1376349999961, 0],
                                                 [9.993225, 54.1375089999961, 0]]]}}
         tgt = {
-            'information_schema': {
+            '_collection_exists': {
                 'fetchall': [1],
                 'rowcount': 1,
             },
-            'json_build_object': {
+            '_get_collections': {
+                'fetchall': ['test'],
+                'rowcount': 1,
+            },
+            'find_features': {
                 'fetchall': [[record]],
                 'rowcount': 1,
             }
@@ -130,13 +126,29 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
                                  'AREA': 'float:15.2',
                                  'POP_CNTRY': 'float:15.2'}}
 
-        self.geo_db.new_collection('test3', schema=schema)
+        tgt = {
+            '_collection_exists': {
+                'fetchall': [False],
+                'rowcount': 1,
+            },
+            '_get_collections': {
+                'fetchall': [],
+                'rowcount': 0,
+            },
+        }
+
+        geo_db = get_geodb_service_mock(tgt=tgt)
+        geo_db.new_collection('test3', schema=schema)
 
     def test_drop_collection(self):
         tgt = {
-            'information_schema': {
+            '_collection_exists': {
                 'fetchall': [False],
                 'rowcount': 1,
+            },
+            '_get_collections': {
+                'fetchall': [],
+                'rowcount': 0,
             },
         }
 
@@ -161,8 +173,9 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
                                                 [9.993311, 54.1376349999961, 0],
                                                 [9.993225, 54.1375089999961, 0]]]}}
         tgt = {
-            'INSERT': {
-
+            '_get_collections': {
+                'fetchall': [],
+                'rowcount': 0,
             },
         }
 
@@ -171,9 +184,13 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
 
     def test_find_feature_collection_not_exists(self):
         tgt = {
-            'information_schema': {
+            '_collection_exists': {
                 'fetchall': [False],
                 'rowcount': 1,
+            },
+            '_get_collections': {
+                'fetchall': [],
+                'rowcount': 0,
             },
         }
 

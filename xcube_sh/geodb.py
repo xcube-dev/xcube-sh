@@ -28,7 +28,7 @@ import psycopg2
 import geopandas as gpd
 import json
 # import sqlalchemy
-
+from test.psycopg2_mock import CursorMock
 
 Feature = Dict[str, Any]
 Schema = Dict[str, Any]
@@ -238,6 +238,8 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             sql = self._FILTER_SQL.format(collection=collection_name, max=max_records, query=query,
                                           table_prefix=self._TABLE_PREFIX)
             cursor = self._conn.cursor()
+            if isinstance(cursor, CursorMock):
+                cursor.referer = 'find_features'
             cursor.execute(sql)
 
             result_set = []
@@ -261,17 +263,18 @@ class RemoteGeoPostgreSQLService(GeoDBService):
 
         sql = self._CREATE_COLLECTION_SQL.format(collection=collection_name, columns=',\n'.join(columns),
                                                  table_prefix=self._TABLE_PREFIX)
-        self.query(sql)
+        self.query(sql, referer='new_collection')
 
     def drop_collection(self, collection_name: str):
         if not self._collection_exists(collection_name=collection_name):
             raise ValueError(f"Collection {collection_name} does not exist")
 
         sql = self._DROP_COLLECTION_SQL.format(collection=collection_name, table_prefix=self._TABLE_PREFIX)
-        self.query(sql=sql)
+        self.query(sql=sql, referer='drop_collection')
 
     def add_feature(self, collection_name: str, feature: Feature) -> str:
         self.add_features(collection_name, [feature])
+        return "Feature Added"
 
     def add_features(self, collection_name: str, features: Sequence[Feature]) -> str:
         for f in features:
@@ -293,20 +296,25 @@ class RemoteGeoPostgreSQLService(GeoDBService):
 
             sql = f"INSERT INTO {self._TABLE_PREFIX}{collection_name}(properties, name, {columns}, geometry) " \
                 f"VALUES('{json.dumps(properties)}', '{properties['S_NAME']}', {values}, ST_GeomFromGeoJSON('{json.dumps(geometry)}')) "
-            self.query(sql=sql)
+            self.query(sql=sql, referer='add_features')
+        return "Features Added"
 
-    def query(self, sql: str) -> Optional[Any]:
+    def query(self, sql: str, referer: str) -> Optional[Any]:
         """
 
         Args:
             sql: The raw SQL statement in PostgreSQL dialect
+            referer: An ID that can be used for easier mocking the connection during unit testing
 
         Returns:
             A list of tuples if the number of returned rows is larger than one or a single tuple otherwise, or
             nothing if the query is not a SELECT statement
 
+
         """
         cur = self._conn.cursor()
+        if isinstance(cur, CursorMock):
+            cur.referer = referer
         cur.execute(sql)
 
         if "SELECT" in sql:
@@ -322,11 +330,11 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         return result
 
     def _get_collections(self):
-        return self.query(self._GET_TABLES_SQL)
+        return self.query(self._GET_TABLES_SQL, referer='_get_collections')
 
     def _collection_exists(self, collection_name: str):
         sql = self._TABLE_EXISTS_SQL.format(collection=collection_name, table_prefix=self._TABLE_PREFIX)
-        result = self.query(sql)
+        result = self.query(sql, referer='_collection_exists')
         return result[0]
 
     def _make_column(self, name: str, typ: str):
