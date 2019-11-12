@@ -27,7 +27,6 @@ import fiona as fio
 import psycopg2
 import geopandas as gpd
 import json
-# import sqlalchemy
 from test.psycopg2_mock import CursorMock
 
 Feature = Dict[str, Any]
