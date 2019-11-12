@@ -340,7 +340,6 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         return [r[0] for r in result]
 
     def _collection_exists(self, collection_name: str):
-        print(self._collections)
         return self._TABLE_PREFIX + collection_name in self._collections
 
     def _make_column(self, name: str, typ: str):

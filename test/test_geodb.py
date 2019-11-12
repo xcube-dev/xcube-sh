@@ -61,6 +61,13 @@ class GeoDBLocalServiceTest(unittest.TestCase):
         self.assertEqual("Could not find file germany-sh.geojson", str(cm.exception))
 
 
+def _get_collections(self):
+    return ["geodb_test"]
+
+
+RemoteGeoPostgreSQLService._get_collections = _get_collections
+
+
 class GeoDBremotePsqlServiceTest(unittest.TestCase):
 
     @mock.patch('psycopg2.connect')
@@ -71,7 +78,6 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
         mock_cur.fetchall.return_value = expected
 
         geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
-        geo_db._collections = ["test"]
 
         x = geo_db.find_feature(collection_name='test', query="'S_NAME'='Lago di Garda'")
         self.assertIsNone(x)
@@ -96,7 +102,6 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
         mock_cur.fetchall.return_value = [[expected]]
 
         geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
-        geo_db._collections = ["test"]
 
         x = geo_db.find_feature(collection_name='test', query="'S_NAME'='Einfelder_See'")
         self.assertIsNotNone(x)
