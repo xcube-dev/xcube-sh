@@ -18,27 +18,185 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 import unittest
+from typing import Any
 
-from xcube_sh.geodb import GeoDB
+from test.psycopg2_mock import connect
+from xcube_sh.geodb import get_geo_db_service, LocalGeoDBService, RemoteGeoPostgreSQLService
 
 
-class GeoDBTest(unittest.TestCase):
+class GeoDBServiceTest(unittest.TestCase):
+    def test_get_geo_db_service(self):
+        s = get_geo_db_service(driver='local')
+        self.assertIsInstance(s, LocalGeoDBService)
+
+
+def get_geodb_service_mock(tgt: Any) -> Any:
+    conn = connect(tgt=tgt)
+    return RemoteGeoPostgreSQLService(conn=conn, host='test')
+
+
+class GeoDBLocalServiceTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.geo_db = GeoDB()
+        self.geo_db = get_geo_db_service(driver='local')
 
     def test_find_feature(self):
-        x = self.geo_db.find_feature('S_NAME == "Lago di Garda"')
+        x = self.geo_db.find_feature(collection_name='germany-sh-lakes', query='S_NAME == "Lago di Garda"')
         self.assertIsNone(x)
 
-        x = self.geo_db.find_feature('S_NAME == "Selenter_See"')
+        x = self.geo_db.find_feature(collection_name='germany-sh-lakes', query='S_NAME == "Selenter_See"')
         self.assertIsNotNone(x)
 
     def test_find_features(self):
-        x = self.geo_db.find_features('S_NAME == "Lago di Garda"')
+        x = self.geo_db.find_features(collection_name='germany-sh-lakes', query='S_NAME == "Lago di Garda"')
         self.assertEqual(0, len(x))
 
-        x = self.geo_db.find_features('S_NAME == "Selenter_See"')
+        x = self.geo_db.find_features(collection_name='germany-sh-lakes', query='S_NAME == "Selenter_See"')
         self.assertEqual(1, len(x))
+
+    def test_find_feature_collection_not_exists(self):
+        with self.assertRaises(FileNotFoundError) as cm:
+            self.geo_db.find_features(collection_name='germany-sh', query='S_NAME == "Lago di Garda"')
+
+        self.assertEqual("Could not find file germany-sh.geojson", str(cm.exception))
+
+
+class GeoDBremotePsqlServiceTest(unittest.TestCase):
+
+    def test_find_feature_none(self):
+        tgt = {
+            '_collection_exists': {
+                'fetchall': [1],
+                'rowcount': 1,
+            },
+            '_get_collections': {
+                'fetchall': ['test'],
+                'rowcount': 1,
+            },
+            'find_features': {
+                'fetchall': [],
+                'rowcount': 0,
+            }
+        }
+
+        geo_db = get_geodb_service_mock(tgt=tgt)
+        x = geo_db.find_feature(collection_name='test', query="'S_NAME'='Lago di Garda'")
+        self.assertIsNone(x)
+
+    def test_find_feature_one(self):
+        record = {'type': 'Feature',
+                  'properties':
+                      {'id': '74',
+                       'METADATA_U': 'http://www.wasserblick.net',
+                       'RESTRICTED': '1',
+                       'TEMPLATE': 'Lwseggeom',
+                       'S_NAME': 'Einfelder_See',
+                       'EU_CD_LS': 'DE_LS_DESH_0072', },
+                  'geometry': {'type': 'Polygon',
+                               'coordinates': [[[9.993225, 54.1375089999961, 0],
+                                                [9.993311, 54.1376349999961, 0],
+                                                [9.993225, 54.1375089999961, 0]]]}}
+        tgt = {
+            '_collection_exists': {
+                'fetchall': [1],
+                'rowcount': 1,
+            },
+            '_get_collections': {
+                'fetchall': ['test'],
+                'rowcount': 1,
+            },
+            'find_features': {
+                'fetchall': [[record]],
+                'rowcount': 1,
+            }
+        }
+
+        geo_db = get_geodb_service_mock(tgt=tgt)
+
+        x = geo_db.find_feature(collection_name='germany-sh-lakes', query="'S_NAME'='Einfelder_See'")
+        self.assertIsNotNone(x)
+        self.assertDictEqual(record, x)
+
+    def test_new_collection(self):
+        schema = {'geometry': 'Polygon',
+                  'properties': {'CAT': 'float:16',
+                                 'FIPS_CNTRY': 'str',
+                                 'CNTRY_NAME': 'str',
+                                 'AREA': 'float:15.2',
+                                 'POP_CNTRY': 'float:15.2'}}
+
+        tgt = {
+            '_collection_exists': {
+                'fetchall': [False],
+                'rowcount': 1,
+            },
+            '_get_collections': {
+                'fetchall': [],
+                'rowcount': 0,
+            },
+        }
+
+        geo_db = get_geodb_service_mock(tgt=tgt)
+        geo_db.new_collection('test3', schema=schema)
+
+    def test_drop_collection(self):
+        tgt = {
+            '_collection_exists': {
+                'fetchall': [False],
+                'rowcount': 1,
+            },
+            '_get_collections': {
+                'fetchall': [],
+                'rowcount': 0,
+            },
+        }
+
+        geo_db = get_geodb_service_mock(tgt=tgt)
+
+        with self.assertRaises(ValueError) as cm:
+            geo_db.drop_collection('test2')
+
+        self.assertEqual("Collection test2 does not exist", str(cm.exception))
+
+    def test_add_features(self):
+        record = {'type': 'Feature',
+                  'properties':
+                      {'id': '74',
+                       'METADATA_U': 'http://www.wasserblick.net',
+                       'RESTRICTED': '1',
+                       'TEMPLATE': 'Lwseggeom',
+                       'S_NAME': 'Einfelder_See',
+                       'EU_CD_LS': 'DE_LS_DESH_0072', },
+                  'geometry': {'type': 'Polygon',
+                               'coordinates': [[[9.993225, 54.1375089999961, 0],
+                                                [9.993311, 54.1376349999961, 0],
+                                                [9.993225, 54.1375089999961, 0]]]}}
+        tgt = {
+            '_get_collections': {
+                'fetchall': [],
+                'rowcount': 0,
+            },
+        }
+
+        geo_db = get_geodb_service_mock(tgt=tgt)
+        geo_db.add_features(collection_name='test', features=[record])
+
+    def test_find_feature_collection_not_exists(self):
+        tgt = {
+            '_collection_exists': {
+                'fetchall': [False],
+                'rowcount': 1,
+            },
+            '_get_collections': {
+                'fetchall': [],
+                'rowcount': 0,
+            },
+        }
+
+        geo_db = get_geodb_service_mock(tgt=tgt)
+
+        with self.assertRaises(ValueError) as cm:
+            geo_db.find_features(collection_name='germany-sh', query='S_NAME == "Lago di Garda"')
+
+        self.assertEqual("Collection germany-sh not found", str(cm.exception))
