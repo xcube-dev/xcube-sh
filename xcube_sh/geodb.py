@@ -31,22 +31,31 @@ import json
 
 Feature = Dict[str, Any]
 Schema = Dict[str, Any]
+BBox = Sequence
 
 
 class GeoDBService(metaclass=ABCMeta):
 
+
     @abstractmethod
-    def find_feature(self, collection_name: str, query: str) -> Optional[Feature]:
+    def find_feature(self, collection_name: str, query: str, bbox: BBox = None, bbox_mode: str = 'contains') -> \
+            Optional[Feature]:
         """
 
+        :param bbox_mode: Can be 'contains' or 'within'. Refer to https://postgis.net/docs/ST_Within.html and https://postgis.net/docs/ST_Contains.html
+        :param bbox: bbox as array [minx, miny, maxx, maxy]
+        :param collection_name:
         :param query: a query to filter features from all collections
         """
 
     @abstractmethod
-    def find_features(self, collection_name: str, query: str, max_records: int, fmt: str) -> \
+    def find_features(self, collection_name: str, query: str, max_records: int, fmt: str, bbox: BBox = None,
+                      bbox_mode: str = 'contains') -> \
             Union[Sequence[Feature], gpd.GeoDataFrame]:
         """
 
+        :param bbox_mode: bbox_mode: Can be 'contains' or 'within'. Refer to https://postgis.net/docs/ST_Within.html and https://postgis.net/docs/ST_Contains.html
+        :param bbox: bbox as array [minx, miny, maxx, maxy]
         :param collection_name: Name of the collection
         :param fmt: format of return type
         :param query: a query to filter features from all collections
@@ -91,12 +100,15 @@ class LocalGeoDBService(GeoDBService):
     def __init__(self):
         super().__init__()
 
-    def find_feature(self, collection_name: str, query: str) -> Optional[Feature]:
+    def find_feature(self, collection_name: str, query: str, bbox: BBox = None, bbox_mode: str = 'contains') -> \
+            Optional[Feature]:
         features = self.find_features(collection_name, query, max_records=1)
         return features[0] if features else None
 
-    def find_features(self, collection_name: str, query: str, max_records: int = -1, fmt: str = 'geojson') -> \
+    def find_features(self, collection_name: str, query: str, max_records: int = -1, fmt: str = 'geojson',
+                      bbox: BBox = None, bbox_mode: str = 'contains') -> \
             Union[Sequence[Feature], gpd.GeoDataFrame]:
+
         compiled_query = compile(query, 'query', 'eval')
         result_set = []
 
@@ -144,7 +156,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         'geometry', ST_AsGeoJSON(geometry)::json
         )
         FROM "{table_prefix}{collection}" 
-        WHERE properties->>{query} {max}
+        WHERE {query} {max}
     """
 
     _FILTER_LONG_SQL = """SELECT  *
@@ -225,12 +237,13 @@ class RemoteGeoPostgreSQLService(GeoDBService):
     def collections(self) -> Optional[Sequence[str]]:
         return self._collections
 
-    def find_feature(self, collection_name: str, query: str) -> Optional[Feature]:
+    def find_feature(self, collection_name: str, query: str, bbox: BBox = None, bbox_mode: str = 'contains') -> \
+            Optional[Feature]:
         features = self.find_features(collection_name, query, max_records=1)
         return features[0] if features else None
 
-    def find_features(self, collection_name: str, query: str, max_records: int = -1, fmt: str = 'geojson') -> \
-            Union[Sequence[Feature], gpd.GeoDataFrame]:
+    def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geojson',
+                      bbox: BBox = None, bbox_mode: str = 'contains') -> Union[Sequence[Feature], gpd.GeoDataFrame]:
         if not self._collection_exists(collection_name=collection_name):
             raise ValueError(f"Collection {collection_name} not found")
 
@@ -238,7 +251,23 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         if max_records > -1:
             limit = 'LIMIT ' + str(max_records)
 
+        if bbox:
+            minx = bbox[0]
+            miny = bbox[1]
+            maxx = bbox[2]
+            maxy = bbox[3]
+            bbox = f"POLYGON(({minx} {miny},{minx} {maxy},{maxx} {maxy},{maxx} {miny},{minx} {miny}))::geometry"
+            if bbox_mode == 'contains':
+                bbox_query = f" AND ST_Contains('{bbox}', geometry)\n"
+            elif bbox_mode == 'within':
+                bbox_query = f" AND ST_Within('SRID=4326;{bbox}', geometry)\n"
+            else:
+                raise ValueError(f"bbox_mode {bbox_mode} unkown")
+
         if fmt == 'geojson':
+            query = f"properties->>{query}" if query is not None else "1"
+            query += bbox_query
+
             sql = self._FILTER_SQL.format(collection=collection_name, max=limit, query=query,
                                           table_prefix=self._TABLE_PREFIX)
             cursor = self._conn.cursor()
@@ -249,6 +278,9 @@ class RemoteGeoPostgreSQLService(GeoDBService):
                 result_set.append(f[0])
             return result_set
         elif fmt == 'gdf':
+            query = f"{query}" if query is not None else "1"
+            query += bbox_query
+
             sql2 = self._FILTER_LONG_SQL.format(collection=collection_name, max=limit, query=query,
                                                 table_prefix=self._TABLE_PREFIX)
             return gpd.GeoDataFrame.from_postgis(sql2, self._conn, geom_col='geometry')
