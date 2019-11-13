@@ -61,6 +61,9 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         self._trace_store_calls = trace_store_calls
         self._time_ranges = self.get_time_ranges()
 
+        if not self._time_ranges:
+            raise ValueError('Could not determine any valid time stamps')
+
         width, height = self._cube_config.size
         spatial_res = self._cube_config.spatial_res
         x1, y1, x2, y2 = self._cube_config.geometry
