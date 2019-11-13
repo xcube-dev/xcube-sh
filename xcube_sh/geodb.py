@@ -211,6 +211,8 @@ class RemoteGeoPostgreSQLService(GeoDBService):
                 OWNER to postgres;
             """
 
+    _GET_SRID_SQL = "SELECT  ST_SRID(geometry) FROM {collection} LIMIT 1;"
+
     _TABLE_PREFIX = ''
 
     def __init__(self, host: str, user: Optional[str] = None, password: Optional[str] = None, port: int = 5432,
@@ -250,6 +252,9 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         features = self.find_features(collection_name, query, max_records=1)
         return features[0] if features else None
 
+    def _get_srid_from_collection(self, collection_name: str) -> str:
+        sql = self._
+
     def _alter_query(self, query, bbox, bbox_mode, fmt):
         bbox_query = None
         if bbox:
@@ -257,7 +262,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             miny = bbox[1]
             maxx = bbox[2]
             maxy = bbox[3]
-            bbox = f"POLYGON(({minx} {miny},{minx} {maxy},{maxx} {maxy},{maxx} {miny},{minx} {miny}))::geometry"
+            bbox = f" SRID=4326;POLYGON(({minx} {miny},{minx} {maxy},{maxx} {maxy},{maxx} {miny},{minx} {miny}))::geometry"
             if bbox_mode == 'contains':
                 bbox_query = f" ST_Contains('{bbox}', geometry)"
             elif bbox_mode == 'within':
@@ -285,7 +290,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
                 raise ValueError(f"format {fmt} not known")
         return query
 
-    def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geojson',
+    def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geopandas',
                       bbox: BBox = None, bbox_mode: str = 'contains') -> Union[Sequence[Feature], gpd.GeoDataFrame]:
         if not self._collection_exists(collection_name=collection_name):
             raise ValueError(f"Collection {collection_name} not found")
@@ -306,7 +311,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             for f in cursor.fetchall():
                 result_set.append(f[0])
             return result_set
-        elif fmt == 'gdf':
+        elif fmt == 'geopandas':
             self._sql = self._FILTER_LONG_SQL.format(collection=collection_name, max=limit, query=query,
                                                      table_prefix=self._TABLE_PREFIX)
             return gpd.GeoDataFrame.from_postgis(self._sql, self._conn, geom_col='geometry')
