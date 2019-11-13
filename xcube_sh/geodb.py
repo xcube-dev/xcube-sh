@@ -251,6 +251,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         if max_records > -1:
             limit = 'LIMIT ' + str(max_records)
 
+        bbox_query = None
         if bbox:
             minx = bbox[0]
             miny = bbox[1]
@@ -266,7 +267,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
 
         if fmt == 'geojson':
             query = f"properties->>{query}" if query is not None else "1"
-            query += bbox_query
+            query = query + bbox_query if bbox else query
 
             sql = self._FILTER_SQL.format(collection=collection_name, max=limit, query=query,
                                           table_prefix=self._TABLE_PREFIX)
@@ -279,7 +280,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             return result_set
         elif fmt == 'gdf':
             query = f"{query}" if query is not None else "1"
-            query += bbox_query
+            query = query + bbox_query if bbox else query
 
             sql2 = self._FILTER_LONG_SQL.format(collection=collection_name, max=limit, query=query,
                                                 table_prefix=self._TABLE_PREFIX)
