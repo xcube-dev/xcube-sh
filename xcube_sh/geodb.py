@@ -153,37 +153,37 @@ class LocalGeoDBService(GeoDBService):
 
 # noinspection SqlNoDataSourceInspection
 class RemoteGeoPostgreSQLService(GeoDBService):
-    _FILTER_SQL = """SELECT  json_build_object(
-        'type', 'Feature',
-	    'properties', properties::json,
-        'geometry', ST_AsGeoJSON(geometry)::json
-        )
-        FROM "{table_prefix}{collection}" 
-        WHERE {query} {max}
-        """
+    _FILTER_SQL = ("SELECT  json_build_object(\n"
+                   "        'type', 'Feature',\n"
+                   "	    'properties', properties::json,\n"
+                   "        'geometry', ST_AsGeoJSON(geometry)::json\n"
+                   "        )\n"
+                   "        FROM \"{table_prefix}{collection}\" \n"
+                   "        WHERE {query} {max}\n"
+                   "        ")
 
-    _FILTER_LONG_SQL = """SELECT  *
-        FROM "{table_prefix}{collection}" 
-        WHERE {query} {max}
-    """
+    _FILTER_LONG_SQL = ("SELECT  *\n"
+                        "        FROM \"{table_prefix}{collection}\" \n"
+                        "        WHERE {query} {max}\n"
+                        "    ")
 
-    _GET_TABLES_SQL = """SELECT t.table_name
-        FROM information_schema.tables t
-        INNER JOIN information_schema.columns c on c.table_name = t.table_name 
-                                        and c.table_schema = t.table_schema
-        WHERE c.column_name = 'properties'
-              AND t.table_schema not in ('information_schema', 'pg_catalog')
-              AND t.table_type = 'BASE TABLE'
-              
-        ORDER BY t.table_schema;
-    """
+    _GET_TABLES_SQL = ("SELECT t.table_name\n"
+                       "        FROM information_schema.tables t\n"
+                       "        INNER JOIN information_schema.columns c on c.table_name = t.table_name \n"
+                       "                                        and c.table_schema = t.table_schema\n"
+                       "        WHERE c.column_name = 'properties'\n"
+                       "              AND t.table_schema not in ('information_schema', 'pg_catalog')\n"
+                       "              AND t.table_type = 'BASE TABLE'\n"
+                       "              \n"
+                       "        ORDER BY t.table_schema;\n"
+                       "    ")
 
-    _TABLE_EXISTS_SQL = """SELECT EXISTS (
-            SELECT 1
-            FROM   information_schema.tables
-            WHERE  table_schema = 'public'
-            AND    table_name = '{table_prefix}{collection}')
-            """
+    _TABLE_EXISTS_SQL = ("SELECT EXISTS (\n"
+                         "            SELECT 1\n"
+                         "            FROM   information_schema.tables\n"
+                         "            WHERE  table_schema = 'public'\n"
+                         "            AND    table_name = '{table_prefix}{collection}')\n"
+                         "            ")
 
     _DROP_COLLECTION_SQL = "DROP TABLE {table_prefix}{collection}"
 
