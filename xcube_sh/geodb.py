@@ -109,6 +109,9 @@ class LocalGeoDBService(GeoDBService):
                       bbox: BBox = None, bbox_mode: str = 'contains') -> \
             Union[Sequence[Feature], gpd.GeoDataFrame]:
 
+        if bbox:
+            raise NotImplementedError("bbox feature not implemented for driver local")
+
         compiled_query = compile(query, 'query', 'eval')
         result_set = []
 
