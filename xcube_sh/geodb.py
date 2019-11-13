@@ -211,7 +211,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
                 OWNER to postgres;
             """
 
-    _TABLE_PREFIX = 'geodb_'
+    _TABLE_PREFIX = ''
 
     def __init__(self, host: str, user: Optional[str] = None, password: Optional[str] = None, port: int = 5432,
                  conn: object = None):
