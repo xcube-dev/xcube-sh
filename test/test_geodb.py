@@ -108,6 +108,63 @@ class GeoDBremotePsqlServiceTest(unittest.TestCase):
         self.assertDictEqual(expected, x)
 
     @mock.patch('psycopg2.connect')
+    def test_find_feature_bbox(self, mock_connect):
+        mock_con = mock_connect.return_value
+        geo_db = RemoteGeoPostgreSQLService(conn=mock_con, host='test')
+
+        x = geo_db.find_features(collection_name='test', query="'S_NAME'='Einfelder_See'",
+                                 bbox=[1, 1, 1, 1], bbox_mode='contains')
+        self.assertIsNotNone(geo_db.sql)
+        expected = """SELECT  json_build_object(
+        'type', 'Feature',
+	    'properties', properties::json,
+        'geometry', ST_AsGeoJSON(geometry)::json
+        )
+        FROM "geodb_test" 
+        WHERE properties->>'S_NAME'='Einfelder_See' and  ST_Contains('POLYGON((1 1,1 1,1 1,1 1,1 1))::geometry', geometry) 
+        """
+        self.assertEqual(expected, geo_db.sql)
+
+        x = geo_db.find_features(collection_name='test', query="'S_NAME'='Einfelder_See'",
+                                 bbox=None, bbox_mode='contains')
+        self.assertIsNotNone(geo_db.sql)
+        expected = """SELECT  json_build_object(
+        'type', 'Feature',
+	    'properties', properties::json,
+        'geometry', ST_AsGeoJSON(geometry)::json
+        )
+        FROM "geodb_test" 
+        WHERE properties->>'S_NAME'='Einfelder_See' 
+        """
+        self.assertEqual(expected, geo_db.sql)
+
+
+        x = geo_db.find_features(collection_name='test', query=None, bbox=[1, 1, 1, 1], bbox_mode='contains',
+                                fmt='geojson')
+        self.assertIsNotNone(geo_db.sql)
+        expected = """SELECT  json_build_object(
+        'type', 'Feature',
+	    'properties', properties::json,
+        'geometry', ST_AsGeoJSON(geometry)::json
+        )
+        FROM "geodb_test" 
+        WHERE  ST_Contains('POLYGON((1 1,1 1,1 1,1 1,1 1))::geometry', geometry) 
+        """
+        self.assertEqual(expected, geo_db.sql)
+
+        x = geo_db._alter_query(query=None, bbox=None, bbox_mode='contains', fmt='geojson')
+        self.assertIsNotNone(x)
+        expected = """SELECT  json_build_object(
+        'type', 'Feature',
+	    'properties', properties::json,
+        'geometry', ST_AsGeoJSON(geometry)::json
+        )
+        FROM "geodb_test" 
+        WHERE  ST_Contains('POLYGON((1 1,1 1,1 1,1 1,1 1))::geometry', geometry) 
+        """
+        self.assertEqual(expected, geo_db.sql)
+
+    @mock.patch('psycopg2.connect')
     def test_new_collection(self, mock_connect):
         schema = {'geometry': 'Polygon',
                   'properties': {'CAT': 'float:16',

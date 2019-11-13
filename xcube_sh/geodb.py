@@ -105,7 +105,7 @@ class LocalGeoDBService(GeoDBService):
         features = self.find_features(collection_name, query, max_records=1)
         return features[0] if features else None
 
-    def find_features(self, collection_name: str, query: str, max_records: int = -1, fmt: str = 'geojson',
+    def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geojson',
                       bbox: BBox = None, bbox_mode: str = 'contains') -> \
             Union[Sequence[Feature], gpd.GeoDataFrame]:
 
@@ -160,7 +160,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         )
         FROM "{table_prefix}{collection}" 
         WHERE {query} {max}
-    """
+        """
 
     _FILTER_LONG_SQL = """SELECT  *
         FROM "{table_prefix}{collection}" 
@@ -235,15 +235,55 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             self._conn = psycopg2.connect(f"host={host} port={port} user={user} password={password}")
 
         self._collections = self._get_collections()
+        self._sql = None
 
     @property
     def collections(self) -> Optional[Sequence[str]]:
         return self._collections
 
+    @property
+    def sql(self) -> str:
+        return self._sql
+
     def find_feature(self, collection_name: str, query: str, bbox: BBox = None, bbox_mode: str = 'contains') -> \
             Optional[Feature]:
         features = self.find_features(collection_name, query, max_records=1)
         return features[0] if features else None
+
+    def _alter_query(self, query, bbox, bbox_mode, fmt):
+        bbox_query = None
+        if bbox:
+            minx = bbox[0]
+            miny = bbox[1]
+            maxx = bbox[2]
+            maxy = bbox[3]
+            bbox = f"POLYGON(({minx} {miny},{minx} {maxy},{maxx} {maxy},{maxx} {miny},{minx} {miny}))::geometry"
+            if bbox_mode == 'contains':
+                bbox_query = f" ST_Contains('{bbox}', geometry)"
+            elif bbox_mode == 'within':
+                bbox_query = f" ST_Within('{bbox}', geometry)"
+            else:
+                raise ValueError(f"bbox_mode {bbox_mode} unknown")
+
+        if not query and not bbox_query:
+            query = 'TRUE'
+        elif query and not bbox_query:
+            if fmt == 'geojson':
+                query = f"properties->>{query}"
+            elif fmt == 'gdf':
+                query = f"{query}"
+            else:
+                raise ValueError(f"format {fmt} not known")
+        elif not query and bbox_query:
+            query = bbox_query
+        elif query and bbox_query:
+            if fmt == 'geojson':
+                query = f"properties->>{query} and {bbox_query}"
+            elif fmt == 'gdf':
+                query = f"{query} and {bbox_query}"
+            else:
+                raise ValueError(f"format {fmt} not known")
+        return query
 
     def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geojson',
                       bbox: BBox = None, bbox_mode: str = 'contains') -> Union[Sequence[Feature], gpd.GeoDataFrame]:
@@ -254,40 +294,22 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         if max_records > -1:
             limit = 'LIMIT ' + str(max_records)
 
-        bbox_query = None
-        if bbox:
-            minx = bbox[0]
-            miny = bbox[1]
-            maxx = bbox[2]
-            maxy = bbox[3]
-            bbox = f"POLYGON(({minx} {miny},{minx} {maxy},{maxx} {maxy},{maxx} {miny},{minx} {miny}))::geometry"
-            if bbox_mode == 'contains':
-                bbox_query = f" AND ST_Contains('{bbox}', geometry)\n"
-            elif bbox_mode == 'within':
-                bbox_query = f" AND ST_Within('SRID=4326;{bbox}', geometry)\n"
-            else:
-                raise ValueError(f"bbox_mode {bbox_mode} unkown")
+        query = self._alter_query(query=query, bbox=bbox, bbox_mode=bbox_mode, fmt=fmt)
 
         if fmt == 'geojson':
-            query = f"properties->>{query}" if query is not None else "1"
-            query = query + bbox_query if bbox else query
-
-            sql = self._FILTER_SQL.format(collection=collection_name, max=limit, query=query,
-                                          table_prefix=self._TABLE_PREFIX)
+            self._sql = self._FILTER_SQL.format(collection=collection_name, max=limit, query=query,
+                                                table_prefix=self._TABLE_PREFIX)
             cursor = self._conn.cursor()
-            cursor.execute(sql)
+            cursor.execute(self._sql)
 
             result_set = []
             for f in cursor.fetchall():
                 result_set.append(f[0])
             return result_set
         elif fmt == 'gdf':
-            query = f"{query}" if query is not None else "1"
-            query = query + bbox_query if bbox else query
-
-            sql2 = self._FILTER_LONG_SQL.format(collection=collection_name, max=limit, query=query,
-                                                table_prefix=self._TABLE_PREFIX)
-            return gpd.GeoDataFrame.from_postgis(sql2, self._conn, geom_col='geometry')
+            self._sql = self._FILTER_LONG_SQL.format(collection=collection_name, max=limit, query=query,
+                                                     table_prefix=self._TABLE_PREFIX)
+            return gpd.GeoDataFrame.from_postgis(self._sql, self._conn, geom_col='geometry')
         else:
             raise ValueError(f"format {fmt} unknown")
 
