@@ -354,11 +354,11 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         if self._trace_store_calls:
             print(f'{self._class_name}.listdir(key={key!r})')
         if key == '':
-            return (k for k in self._vfs.keys() if '/' not in k)
+            return list((k for k in self._vfs.keys() if '/' not in k))
         else:
             prefix = key + '/'
             start = len(prefix)
-            return (k for k in self._vfs.keys() if k.startswith(prefix) and k.find('/', start) == -1)
+            return list((k for k in self._vfs.keys() if k.startswith(prefix) and k.find('/', start) == -1))
 
     def getsize(self, key: str) -> int:
         if self._trace_store_calls:

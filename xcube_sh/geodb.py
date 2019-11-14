@@ -36,26 +36,29 @@ BBox = Sequence
 
 class GeoDBService(metaclass=ABCMeta):
 
-
     @abstractmethod
-    def find_feature(self, collection_name: str, query: str, bbox: BBox = None, bbox_mode: str = 'contains',
-                     bbox_srid: int = 4326) -> Optional[Feature]:
+    def find_feature(self, collection_name: str, query: str, fmt: str = 'geojson', bbox: BBox = None,
+                     bbox_mode: str = 'contains', bbox_crs: int = 4326) -> Optional[Feature]:
         """
 
-        :param bbox_srid: The SRID of the bbox. It has to match the SRID of the targeted collection
-        :param bbox_mode: Can be 'contains' or 'within'. Refer to https://postgis.net/docs/ST_Within.html and https://postgis.net/docs/ST_Contains.html
+        :param fmt: format of return type
+        :param bbox_crs: The CRS (SRID) of the bbox. It has to match the SRID of the targeted collection
+        :param bbox_mode: Can be 'contains' or 'within'. Refer to https://postgis.net/docs/ST_Within.html and
+        https://postgis.net/docs/ST_Contains.html
         :param bbox: bbox as array [minx, miny, maxx, maxy]
         :param collection_name:
         :param query: a query to filter features from all collections
         """
 
     @abstractmethod
-    def find_features(self, collection_name: str, query: str, max_records: int, fmt: str, bbox: BBox = None,
-                      bbox_mode: str = 'contains') -> \
+    def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geopandas',
+                      bbox: BBox = None, bbox_mode: str = 'contains', bbox_crs: int = 4326) -> \
             Union[Sequence[Feature], gpd.GeoDataFrame]:
         """
 
-        :param bbox_mode: bbox_mode: Can be 'contains' or 'within'. Refer to https://postgis.net/docs/ST_Within.html and https://postgis.net/docs/ST_Contains.html
+        :param bbox_crs: The CRS (SRID) of the bbox. It has to match the SRID of the targeted collection
+        :param bbox_mode: bbox_mode: Can be 'contains' or 'within'. Refer to https://postgis.net/docs/ST_Within.html
+        and https://postgis.net/docs/ST_Contains.html
         :param bbox: bbox as array [minx, miny, maxx, maxy]
         :param collection_name: Name of the collection
         :param fmt: format of return type
@@ -101,13 +104,15 @@ class LocalGeoDBService(GeoDBService):
     def __init__(self):
         super().__init__()
 
-    def find_feature(self, collection_name: str, query: str, bbox: BBox = None, bbox_mode: str = 'contains',
-                     bbox_srid: int = 4326) -> Optional[Feature]:
-        features = self.find_features(collection_name, query, max_records=1)
+    def find_feature(self, collection_name: str, query: str, fmt: str = 'geojson', bbox: BBox = None,
+                     bbox_mode: str = 'contains', bbox_crs: int = 4326) -> Optional[Feature]:
+
+        features = self.find_features(collection_name, query, bbox=bbox, bbox_crs=bbox_crs, fmt=fmt,
+                                      bbox_mode=bbox_mode, max_records=1)
         return features[0] if features else None
 
-    def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geojson',
-                      bbox: BBox = None, bbox_mode: str = 'contains', bbox_srid: int = 4326) -> \
+    def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geopandas',
+                      bbox: BBox = None, bbox_mode: str = 'contains', bbox_crs: int = 4326) -> \
             Union[Sequence[Feature], gpd.GeoDataFrame]:
 
         if bbox:
@@ -143,6 +148,7 @@ class LocalGeoDBService(GeoDBService):
     def add_features(self, collection_name: str, features: Sequence[Feature]) -> str:
         raise NotImplementedError("new_collection not yet implemented")
 
+    # noinspection PyMethodMayBeStatic
     def _get_collection(self, collection_name: str):
         source_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'geodb'))
         file_path = os.path.join(source_path, collection_name + '.geojson')
@@ -152,7 +158,7 @@ class LocalGeoDBService(GeoDBService):
             raise FileNotFoundError(f"Could not find file {collection_name}.geojson")
 
 
-# noinspection SqlNoDataSourceInspection
+# noinspection SqlNoDataSourceInspection,PyMethodMayBeStatic
 class RemoteGeoPostgreSQLService(GeoDBService):
     _FILTER_SQL = ("SELECT  json_build_object(\n"
                    "        'type', 'Feature',\n"
@@ -160,13 +166,11 @@ class RemoteGeoPostgreSQLService(GeoDBService):
                    "        'geometry', ST_AsGeoJSON(geometry)::json\n"
                    "        )\n"
                    "        FROM \"{table_prefix}{collection}\" \n"
-                   "        WHERE {query} {max}\n"
-                   "        ")
+                   "        WHERE {query} {max}")
 
     _FILTER_LONG_SQL = ("SELECT  *\n"
                         "        FROM \"{table_prefix}{collection}\" \n"
-                        "        WHERE {query} {max}\n"
-                        "    ")
+                        "        WHERE {query} {max}")
 
     _GET_TABLES_SQL = ("SELECT t.table_name\n"
                        "        FROM information_schema.tables t\n"
@@ -176,41 +180,43 @@ class RemoteGeoPostgreSQLService(GeoDBService):
                        "              AND t.table_schema not in ('information_schema', 'pg_catalog')\n"
                        "              AND t.table_type = 'BASE TABLE'\n"
                        "              \n"
-                       "        ORDER BY t.table_schema;\n"
-                       "    ")
+                       "        ORDER BY t.table_schema;")
 
     _TABLE_EXISTS_SQL = ("SELECT EXISTS (\n"
                          "            SELECT 1\n"
                          "            FROM   information_schema.tables\n"
                          "            WHERE  table_schema = 'public'\n"
-                         "            AND    table_name = '{table_prefix}{collection}')\n"
-                         "            ")
+                         "            AND    table_name = '{table_prefix}{collection}')")
 
     _DROP_COLLECTION_SQL = "DROP TABLE {table_prefix}{collection}"
 
-    _CREATE_COLLECTION_SQL = """
-            -- Table: public.{table_prefix}{collection}
-
-            -- DROP TABLE public.{table_prefix}{collection};
-            
-            CREATE TABLE public.{table_prefix}{collection}
-            (
-                -- Inherited from table public.{table_prefix}master: id integer NOT NULL DEFAULT nextval('{table_prefix}id_seq1'::regclass),
-                -- Inherited from table public.{table_prefix}master: properties json,
-                -- Inherited from table public.{table_prefix}master: name character varying(512) COLLATE pg_catalog."default",
-                -- Inherited from table public.{table_prefix}master: geometry geometry,
-                -- Inherited from table public.{table_prefix}master: type character varying COLLATE pg_catalog."default" NOT NULL
-                {columns}
-            )
-                INHERITS (public.{table_prefix}master)
-            WITH (
-                OIDS = FALSE
-            )
-            TABLESPACE pg_default;
-            
-            ALTER TABLE public.{table_prefix}{collection}
-                OWNER to postgres;
-            """
+    _CREATE_COLLECTION_SQL = ("\n"
+                              "            -- Table: public.{table_prefix}{collection}\n"
+                              "\n"
+                              "            -- DROP TABLE public.{table_prefix}{collection};\n"
+                              "            \n"
+                              "            CREATE TABLE public.{table_prefix}{collection}\n"
+                              "            (\n"
+                              "                -- Inherited from table public.{table_prefix}master: "
+                              "id integer NOT NULL DEFAULT nextval('{table_prefix}id_seq1'::regclass),\n"
+                              "                -- Inherited from table public.{table_prefix}master: properties json,\n"
+                              "                -- Inherited from table public.{table_prefix}master: "
+                              "name character varying(512) COLLATE pg_catalog.\"default\",\n"
+                              "                -- Inherited from table public.{table_prefix}master: "
+                              "geometry geometry,\n"
+                              "                -- Inherited from table public.{table_prefix}master: "
+                              "type character varying COLLATE pg_catalog.\"default\" NOT NULL\n"
+                              "                {columns}\n"
+                              "            )\n"
+                              "                INHERITS (public.{table_prefix}master)\n"
+                              "            WITH (\n"
+                              "                OIDS = FALSE\n"
+                              "            )\n"
+                              "            TABLESPACE pg_default;\n"
+                              "            \n"
+                              "            ALTER TABLE public.{table_prefix}{collection}\n"
+                              "                OWNER to postgres;\n"
+                              "            ")
 
     _GET_SRID_SQL = "SELECT  ST_SRID(geometry) FROM {collection} LIMIT 1;"
 
@@ -230,7 +236,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         if not user:
             user = os.getenv("PSQL_USER")
         if not password:
-            user = os.getenv("PSQL_PASSWD")
+            password = os.getenv("PSQL_PASSWD")
 
         if conn:
             self._conn = conn
@@ -248,9 +254,9 @@ class RemoteGeoPostgreSQLService(GeoDBService):
     def sql(self) -> str:
         return self._sql
 
-    def find_feature(self, collection_name: str, query: str = None, bbox: BBox = None, bbox_mode: str = 'contains',
-                     bbox_srid: int = 4326) -> Optional[Feature]:
-        features = self.find_features(collection_name, query, max_records=1)
+    def find_feature(self, collection_name: str, query: str, fmt: str = 'geojson', bbox: BBox = None,
+                     bbox_mode: str = 'contains', bbox_crs: int = 4326) -> Optional[Feature]:
+        features = self.find_features(collection_name, query, bbox=bbox, fmt=fmt, bbox_mode=bbox_mode,  max_records=1)
         return features[0] if features else None
 
     def _get_srid_from_collection(self, collection_name: str) -> str:
@@ -270,7 +276,8 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             if srid is not None:
                 srid_str = f'SRID={srid};'
 
-            bbox = f" {srid_str}POLYGON(({minx} {miny},{minx} {maxy},{maxx} {maxy},{maxx} {miny},{minx} {miny}))::geometry"
+            bbox = f" {srid_str}POLYGON(({minx} {miny},{minx} {maxy},{maxx} {maxy},{maxx} {miny},{minx} {miny}))" \
+                f"::geometry"
             if bbox_mode == 'contains':
                 bbox_query = f" ST_Contains('{bbox}', geometry)"
             elif bbox_mode == 'within':
@@ -283,7 +290,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         elif query and not bbox_query:
             if fmt == 'geojson':
                 query = f"properties->>{query}"
-            elif fmt == 'gdf':
+            elif fmt == 'geopandas':
                 query = f"{query}"
             else:
                 raise ValueError(f"format {fmt} not known")
@@ -292,14 +299,14 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         elif query and bbox_query:
             if fmt == 'geojson':
                 query = f"properties->>{query} and {bbox_query}"
-            elif fmt == 'gdf':
+            elif fmt == 'geopandas':
                 query = f"{query} and {bbox_query}"
             else:
                 raise ValueError(f"format {fmt} not known")
         return query
 
     def find_features(self, collection_name: str, query: str = None, max_records: int = -1, fmt: str = 'geopandas',
-                      bbox: BBox = None, bbox_mode: str = 'contains', bbox_srid: int = 4326) -> \
+                      bbox: BBox = None, bbox_mode: str = 'contains', bbox_crs: int = 4326) -> \
             Union[Sequence[Feature], gpd.GeoDataFrame]:
         if not self._collection_exists(collection_name=collection_name):
             raise ValueError(f"Collection {collection_name} not found")
@@ -308,7 +315,7 @@ class RemoteGeoPostgreSQLService(GeoDBService):
         if max_records > -1:
             limit = 'LIMIT ' + str(max_records)
 
-        query = self._alter_query(query=query, bbox=bbox, bbox_mode=bbox_mode, fmt=fmt, srid=bbox_srid)
+        query = self._alter_query(query=query, bbox=bbox, bbox_mode=bbox_mode, fmt=fmt, srid=bbox_crs)
 
         if fmt == 'geojson':
             self._sql = self._FILTER_SQL.format(collection=collection_name, max=limit, query=query,
@@ -379,7 +386,8 @@ class RemoteGeoPostgreSQLService(GeoDBService):
             properties = f['properties']
 
             sql = f"INSERT INTO {self._TABLE_PREFIX}{collection_name}(properties, name, {columns}, geometry) " \
-                f"VALUES('{json.dumps(properties)}', '{properties['S_NAME']}', {values}, ST_GeomFromGeoJSON('{json.dumps(geometry)}')) "
+                f"VALUES('{json.dumps(properties)}', '{properties['S_NAME']}', {values}, " \
+                f"ST_GeomFromGeoJSON('{json.dumps(geometry)}')) "
             self.query(sql=sql)
         return "Features Added"
 
@@ -466,3 +474,4 @@ def get_geo_db_service(driver: str = 'local', **kwargs) -> GeoDBService:
         return LocalGeoDBService()
     else:
         return RemoteGeoPostgreSQLService(**kwargs)
+
