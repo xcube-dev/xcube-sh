@@ -169,7 +169,7 @@ class SentinelHub:
                 mime_type = outputs[0]['format'].get('type', 'image/tiff')
 
         # TODO (forman): make "retry_backoff_max" a config param
-        retry_backoff_max = 100  # ms
+        retry_backoff_max = 250  # ms
         # TODO (forman): make "retry_backoff_base" a config param
         retry_backoff_base = 2
         # TODO (forman): make "num_retries" a config param
