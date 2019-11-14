@@ -169,11 +169,11 @@ class SentinelHub:
                 mime_type = outputs[0]['format'].get('type', 'image/tiff')
 
         # TODO (forman): make "retry_backoff_max" a config param
-        retry_backoff_max = 100  # ms
+        retry_backoff_max = 40  # ms
         # TODO (forman): make "retry_backoff_base" a config param
-        retry_backoff_base = 2
+        retry_backoff_base = 1.001
         # TODO (forman): make "num_retries" a config param
-        num_retries = 5
+        num_retries = 200
         response = None
         for i in range(num_retries):
             response = self.session.post(self.api_url + f'/process',

@@ -25,7 +25,8 @@ from typing import Tuple, Union, Optional, Sequence, Dict, Any
 
 import pandas as pd
 
-from .constants import DEFAULT_CRS, DEFAULT_TIME_TOLERANCE, DEFAULT_NUM_TILE_PIXELS, SH_MAX_IMAGE_SIZE
+from .constants import DEFAULT_CRS, DEFAULT_TIME_TOLERANCE
+from .constants import SH_MAX_IMAGE_SIZE, DEFAULT_TILE_SIZE
 
 
 def _safe_int_div(x: int, y: int) -> int:
@@ -105,19 +106,19 @@ class CubeConfig:
         else:
             tile_width, tile_height = tile_size
         if tile_width is None:
-            tile_width = int(math.sqrt(_safe_int_div(DEFAULT_NUM_TILE_PIXELS * width, height)) + 0.5)
+            tile_width = DEFAULT_TILE_SIZE
         if tile_height is None:
-            tile_height = _safe_int_div(DEFAULT_NUM_TILE_PIXELS, tile_width)
+            tile_height = DEFAULT_TILE_SIZE
         if tile_width > SH_MAX_IMAGE_SIZE:
             tile_width = SH_MAX_IMAGE_SIZE
         if tile_height > SH_MAX_IMAGE_SIZE:
             tile_height = SH_MAX_IMAGE_SIZE
 
-        if width < 2 * tile_width:
+        if width < 1.5 * tile_width:
             tile_width = width
         else:
             width = self._adjust_size(width, tile_width)
-        if height < 2 * tile_height:
+        if height < 1.5 * tile_height:
             tile_height = height
         else:
             height = self._adjust_size(height, tile_height)
