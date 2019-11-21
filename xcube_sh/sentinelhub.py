@@ -180,7 +180,7 @@ class SentinelHub:
                                          json=request,
                                          headers={
                                              'Accept': mime_type,
-                                             'User-Agent': f'xcube-dcfs/{version} '
+                                             'User-Agent': f'xcube_sh/{version} '
                                                            f'{platform.python_implementation()}/{platform.python_version()} '
                                                            f'{platform.system()}/{platform.version()}'
                                          })
