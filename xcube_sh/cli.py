@@ -19,9 +19,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import sys
-
 import click
+from typing import Any, Dict, Optional
 
 from xcube_sh.constants import DEFAULT_CRS, DEFAULT_TIME_TOLERANCE
 from xcube_sh.version import version
@@ -36,6 +35,12 @@ DEFAULT_OUTPUT = 'out.zarr'
 @click.option('--output', '-o', 'output_path',
               help=f'Output ZARR directory. Defaults to "{DEFAULT_OUTPUT}".',
               default=DEFAULT_OUTPUT)
+@click.option('--cube-config', 'cube_config_path',
+              help='A cube configuration JSON or YAML file.')
+@click.option('--source-config', 'source_config_path',
+              help='A JSON or YAML file containing location and credentials of the data source for the data cube.')
+@click.option('--dest-config', 'dest_config_path',
+              help='A JSON or YAML file containing location and credentials of destination for the data cube.')
 @click.option('--band', '-b', 'band_names',
               help='Band name. Can be repeated for multiple bands. Defaults to all bands of a dataset.',
               multiple=True)
@@ -74,6 +79,9 @@ DEFAULT_OUTPUT = 'out.zarr'
               help='Print information about each single SH request to stdout.')
 def gen(dataset,
         output_path,
+        cube_config_path,
+        source_config_path,
+        dest_config_path,
         band_names,
         tile_size,
         geometry,
@@ -103,22 +111,33 @@ def gen(dataset,
     if os.path.exists(output_path):
         raise click.ClickException(f'Output {output_path} already exists. Move it away first.')
 
-    cube_config = CubeConfig(dataset_name=dataset,
-                             band_names=band_names,
-                             tile_size=tile_size,
-                             geometry=geometry,
-                             spatial_res=spatial_res,
-                             crs=crs,
-                             time_range=time_range,
-                             time_period=time_period,
-                             time_tolerance=time_tolerance,
-                             four_d=four_d,
-                             exception_type=click.ClickException)
+    cube_config_dict = _load_config_dict(cube_config_path)
+    source_config_dict = _load_config_dict(source_config_path)
+    dest_config_dict = _load_config_dict(dest_config_path)
 
-    sentinel_hub = SentinelHub()
+    cube_config_dict.update({k: v
+                             for k, v in dict(dataset_name=dataset,
+                                              band_names=band_names,
+                                              tile_size=tile_size,
+                                              geometry=geometry,
+                                              spatial_res=spatial_res,
+                                              crs=crs,
+                                              time_range=time_range,
+                                              time_period=time_period,
+                                              time_tolerance=time_tolerance,
+                                              four_d=four_d)
+                             if v is not None})
+
+    cube_config = CubeConfig.from_dict(cube_config_dict,
+                                       exception_type=click.ClickException)
+
+    # TODO: validate source_config_dict
+    sentinel_hub = SentinelHub(**source_config_dict)
 
     print(f'Writing cube to {output_path}...')
 
+    # TODO: validate dest_config_dict
+    # TODO: use dest_config_dict and output_path to determine actuial output, which may be AWS S3
     t0 = time.perf_counter()
     store = SentinelHubStore(sentinel_hub, cube_config)
     request_collector = Observers.request_collector()
@@ -126,7 +145,7 @@ def gen(dataset,
     if verbose:
         store.add_observer(Observers.request_dumper())
     cube = xr.open_zarr(store)
-    cube.to_zarr(output_path)
+    cube.to_zarr(output_path, **dest_config_dict)
     duration = time.perf_counter() - t0
 
     print(f"Cube written to {output_path}, took {'%.2f' % duration} seconds.")
@@ -173,20 +192,18 @@ cli.add_command(gen)
 cli.add_command(info)
 
 
-def main(args=None):
-    # noinspection PyBroadException
+def _load_config_dict(config_path: Optional[str]) -> Dict[str, Any]:
+    if not config_path:
+        return {}
+    if not os.path.exists(config_path):
+        raise click.ClickException(f'Configuration file {config_path} not found.')
     try:
-        exit_code = cli.main(args=args, standalone_mode=False)
-    except click.ClickException as e:
-        e.show()
-        exit_code = 1
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        exit_code = 2
-        print(f'Error: {e}')
-    sys.exit(exit_code)
-
-
-if __name__ == '__main__':
-    main()
+        with open(config_path, 'r') as fp:
+            if config_path.endswith('.json'):
+                import json
+                return json.load(fp)
+            else:
+                import yaml
+                return yaml.load(fp)
+    except BaseException as e:
+        raise click.ClickException(f'Error loading configuration file {config_path}: {e}')
