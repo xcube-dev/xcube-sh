@@ -75,3 +75,47 @@ class CubeConfigTest(unittest.TestCase):
         self.assertAlmostEqual(54.53864, y2, places=4)
         self.assertEqual(w, round((x2 - x1) / spatial_res))
         self.assertEqual(h, round((y2 - y1) / spatial_res))
+
+    def test_from_and_to_dict(self):
+        config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                           band_names=('B01', 'B02', 'B03'),
+                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           spatial_res=0.00001,
+                                           tile_size=(512, 512),
+                                           time_range=('2019-01-01', '2019-01-02')))
+        self.assertEqual({'band_names': ('B01', 'B02', 'B03'),
+                          'band_sample_types': None,
+                          'band_units': None,
+                          'collection_id': None,
+                          'crs': 'http://www.opengis.net/def/crs/EPSG/0/4326',
+                          'dataset_name': 'S2L2A',
+                          'four_d': False,
+                          'geometry': (10.11, 54.17, 10.14072, 54.19048),
+                          'spatial_res': 1e-05,
+                          'tile_size': (512, 512),
+                          'time_period': None,
+                          'time_range': ('2019-01-01T00:00:00+00:00', '2019-01-02T00:00:00+00:00'),
+                          'time_tolerance': '0 days 00:10:00'
+                          },
+                         config.as_dict())
+
+    def test_from_dict_invalids(self):
+        with self.assertRaises(ValueError) as cm:
+            CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                      band_names=('B01', 'B02', 'B03'),
+                                      geometry=(10.11, 54.17, 10.14, 54.19),
+                                      special_res=0.00001,
+                                      tile_size=(512, 512),
+                                      time_range=('2019-01-01', '2019-01-02')))
+        self.assertEqual("Found invalid parameter 'special_res' in cube configuration",
+                         f'{cm.exception}')
+
+        with self.assertRaises(ValueError) as cm:
+            CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                      band_names=('B01', 'B02', 'B03'),
+                                      geometrix=(10.11, 54.17, 10.14, 54.19),
+                                      special_res=0.00001,
+                                      tile_size=(512, 512),
+                                      time_range=('2019-01-01', '2019-01-02')))
+        self.assertEqual("Found invalid parameters in cube configuration: 'geometrix', 'special_res'",
+                         f'{cm.exception}')

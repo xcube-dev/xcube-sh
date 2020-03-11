@@ -19,7 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import math
 import warnings
 from typing import Tuple, Union, Optional, Sequence, Dict, Any
 
@@ -63,10 +62,10 @@ class CubeConfig:
                  chunk_size: Union[str, Tuple[int, int]] = None,
                  geometry: Union[str, Tuple[float, float, float, float]] = None,
                  spatial_res: float = None,
-                 crs: str = DEFAULT_CRS,
+                 crs: str = None,
                  time_range: Union[str, pd.Timestamp, Tuple[str, str], Tuple[pd.Timestamp, pd.Timestamp]] = None,
                  time_period: Union[str, pd.Timedelta] = None,
-                 time_tolerance: Union[str, pd.Timedelta] = DEFAULT_TIME_TOLERANCE,
+                 time_tolerance: Union[str, pd.Timedelta] = None,
                  collection_id: str = None,
                  four_d: bool = False,
                  exception_type=ValueError):
@@ -79,6 +78,9 @@ class CubeConfig:
             x1, y1, x2, y2 = tuple(map(float, geometry.split(',', maxsplit=3)))
         else:
             x1, y1, x2, y2 = geometry
+
+        crs = crs or DEFAULT_CRS
+        time_tolerance = time_tolerance or DEFAULT_TIME_TOLERANCE
 
         if chunk_size is not None:
             warnings.warn('the chunk_size parameter is no longer supported, use tile_size instead')
@@ -177,6 +179,21 @@ class CubeConfig:
         self._size = width, height
         self._tile_size = tile_width, tile_height
         self._num_tiles = width // tile_width, height // tile_height
+
+    @classmethod
+    def from_dict(cls, cube_config_dict: Dict[str, Any], exception_type=ValueError) -> 'CubeConfig':
+        code = CubeConfig.__init__.__code__
+        valid_keywords = set(code.co_varnames[1: code.co_argcount])
+        given_keywords = set(cube_config_dict.keys())
+        for keyword in cube_config_dict.keys():
+            if keyword in valid_keywords:
+                given_keywords.remove(keyword)
+        if len(given_keywords) == 1:
+            raise exception_type(f'Found invalid parameter {given_keywords.pop()!r} in cube configuration')
+        elif len(given_keywords) > 1:
+            given_keywords_text = ', '.join(map(lambda s: f'{s!r}', given_keywords))
+            raise exception_type(f'Found invalid parameters in cube configuration: {given_keywords_text}')
+        return CubeConfig(exception_type=exception_type, **cube_config_dict)
 
     def as_dict(self) -> Dict[str, Any]:
         """Convert to JSON-serializable dictionary that can be passed to ctor as kwargs"""
