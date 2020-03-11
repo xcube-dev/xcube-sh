@@ -1,4 +1,11 @@
-## Changes in 0.2 (in development)
+## Changes in 0.3
+
+* Added three new options to CLI:
+  - `--cube-config` cube configuration JSON or YAML file  
+  - `--source-config` data source configuration JSON or YAML file  
+  - `--dest-config` data cube destination configuration JSON or YAML file  
+
+## Changes in 0.2
 
 * Added support for BYOD (#1): To utilize, create new `CubeConfig` 
   with `dataset_name="CUSTOM"` and provide value for new 
