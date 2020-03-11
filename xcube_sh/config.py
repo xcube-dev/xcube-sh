@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import math
 import warnings
 from typing import Tuple, Union, Optional, Sequence, Dict, Any
 
@@ -107,10 +108,14 @@ class CubeConfig:
                 raise exception_type(f'invalid tile size: {tile_size}')
         else:
             tile_width, tile_height = tile_size
-        if tile_width is None:
-            tile_width = DEFAULT_TILE_SIZE
-        if tile_height is None:
-            tile_height = DEFAULT_TILE_SIZE
+        if tile_width is None and tile_height is None:
+            num_pixels_per_tile = DEFAULT_TILE_SIZE * DEFAULT_TILE_SIZE
+            tile_width = math.ceil(math.sqrt(width * num_pixels_per_tile / height))
+            tile_height = (num_pixels_per_tile + tile_width - 1) // tile_width
+        elif tile_width is None:
+            tile_width = tile_height
+        elif tile_height is None:
+            tile_height = tile_width
         if tile_width > SH_MAX_IMAGE_SIZE:
             tile_width = SH_MAX_IMAGE_SIZE
         if tile_height > SH_MAX_IMAGE_SIZE:
