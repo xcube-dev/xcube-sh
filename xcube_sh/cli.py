@@ -125,7 +125,7 @@ def gen(dataset,
                                               time_range=time_range,
                                               time_period=time_period,
                                               time_tolerance=time_tolerance,
-                                              four_d=four_d)
+                                              four_d=four_d).items()
                              if v is not None})
 
     cube_config = CubeConfig.from_dict(cube_config_dict,
