@@ -75,6 +75,17 @@ class CubeConfig:
             raise exception_type('dataset name must be given')
         if not geometry:
             raise exception_type('geometry must be given')
+        if spatial_res is None:
+            raise exception_type('spatial resolution must be given')
+        if spatial_res <= 0.0:
+            raise exception_type('spatial resolution must be a positive number')
+        if not band_names:
+            raise exception_type('band names must be a given')
+        if not crs:
+            raise exception_type('CRS must be a given')
+        if not time_range:
+            raise exception_type('time range must be given')
+
         if isinstance(geometry, str):
             x1, y1, x2, y2 = tuple(map(float, geometry.split(',', maxsplit=3)))
         else:
@@ -87,11 +98,6 @@ class CubeConfig:
             warnings.warn('the chunk_size parameter is no longer supported, use tile_size instead')
             if tile_size is None:
                 tile_size = chunk_size
-
-        if spatial_res is None:
-            raise exception_type('spatial resolution must be given')
-        if spatial_res <= 0.0:
-            raise exception_type('spatial resolution must be a positive number')
 
         width, height = (max(1, round((x2 - x1) / spatial_res)),
                          max(1, round((y2 - y1) / spatial_res)))
@@ -134,14 +140,6 @@ class CubeConfig:
 
         geometry = x1, y1, x2, y2
 
-        if not band_names:
-            raise exception_type('band names must be a given')
-
-        if not crs:
-            raise exception_type('CRS must be a given')
-
-        if not time_range:
-            raise exception_type('time range must be given')
         if isinstance(time_range, str):
             time_range = tuple(map(lambda s: s.strip(),
                                    time_range.split(',', maxsplit=1) if ',' in time_range else (

@@ -82,7 +82,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             history=[
                 dict(
                     program=f'{self._class_name}',
-                    config=self._cube_config.as_dict(),
+                    cube_config=self._cube_config.as_dict(),
                 )
             ],
             date_created=pd.Timestamp.now().isoformat(),
