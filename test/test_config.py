@@ -21,6 +21,8 @@
 
 import unittest
 
+import pandas as pd
+
 from xcube_sh.config import CubeConfig
 
 
@@ -75,6 +77,43 @@ class CubeConfigTest(unittest.TestCase):
         self.assertAlmostEqual(54.53864, y2, places=4)
         self.assertEqual(w, round((x2 - x1) / spatial_res))
         self.assertEqual(h, round((y2 - y1) / spatial_res))
+
+    def test_time_deltas(self):
+        config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                           band_names=('B01', 'B02', 'B03'),
+                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           spatial_res=0.00001,
+                                           time_range=('2019-01-01', '2019-01-02')))
+        self.assertEqual(None, config.time_period)
+        self.assertEqual(pd.Timedelta('0 days 00:10:00'), config.time_tolerance)
+
+        config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                           band_names=('B01', 'B02', 'B03'),
+                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           spatial_res=0.00001,
+                                           time_period='8D',
+                                           time_range=('2019-01-01', '2019-01-02')))
+        self.assertEqual(pd.Timedelta('8 days 00:00:00'), config.time_period)
+        self.assertEqual(None, config.time_tolerance)
+
+        config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                           band_names=('B01', 'B02', 'B03'),
+                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           spatial_res=0.00001,
+                                           time_tolerance='1H',
+                                           time_range=('2019-01-01', '2019-01-02')))
+        self.assertEqual(None, config.time_period)
+        self.assertEqual(pd.Timedelta('0 days 01:00:00'), config.time_tolerance)
+
+        config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                           band_names=('B01', 'B02', 'B03'),
+                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           spatial_res=0.00001,
+                                           time_period='8D',
+                                           time_tolerance='1H',
+                                           time_range=('2019-01-01', '2019-01-02')))
+        self.assertEqual(pd.Timedelta('8 days 00:00:00'), config.time_period)
+        self.assertEqual(pd.Timedelta('0 days 01:00:00'), config.time_tolerance)
 
     def test_from_and_to_dict(self):
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',

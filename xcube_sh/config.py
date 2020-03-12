@@ -72,22 +72,23 @@ class CubeConfig:
                  exception_type=ValueError):
 
         crs = crs or DEFAULT_CRS
-        time_tolerance = time_tolerance or DEFAULT_TIME_TOLERANCE
+        time_period = time_period or None
+        time_tolerance = time_tolerance or None
 
         if not dataset_name:
             raise exception_type('dataset name must be given')
+        if not band_names:
+            raise exception_type('band names must be a given')
         if not geometry:
             raise exception_type('geometry must be given')
         if spatial_res is None:
             raise exception_type('spatial resolution must be given')
         if spatial_res <= 0.0:
             raise exception_type('spatial resolution must be a positive number')
-        if not band_names:
-            raise exception_type('band names must be a given')
-        if not crs:
-            raise exception_type('CRS must be a given')
         if not time_range:
             raise exception_type('time range must be given')
+        if time_period is None and time_tolerance is None:
+            time_tolerance = DEFAULT_TIME_TOLERANCE
 
         if isinstance(geometry, str):
             x1, y1, x2, y2 = tuple(map(float, geometry.split(',', maxsplit=3)))
@@ -159,11 +160,9 @@ class CubeConfig:
 
         time_range = start_time, end_time
 
-        time_period = time_period or None
         if isinstance(time_period, str):
             time_period = pd.to_timedelta(time_period)
 
-        time_tolerance = time_tolerance or None
         if isinstance(time_tolerance, str):
             time_tolerance = pd.to_timedelta(time_tolerance)
 
