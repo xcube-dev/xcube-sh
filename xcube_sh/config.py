@@ -71,6 +71,9 @@ class CubeConfig:
                  four_d: bool = False,
                  exception_type=ValueError):
 
+        crs = crs or DEFAULT_CRS
+        time_tolerance = time_tolerance or DEFAULT_TIME_TOLERANCE
+
         if not dataset_name:
             raise exception_type('dataset name must be given')
         if not geometry:
@@ -90,9 +93,6 @@ class CubeConfig:
             x1, y1, x2, y2 = tuple(map(float, geometry.split(',', maxsplit=3)))
         else:
             x1, y1, x2, y2 = geometry
-
-        crs = crs or DEFAULT_CRS
-        time_tolerance = time_tolerance or DEFAULT_TIME_TOLERANCE
 
         if chunk_size is not None:
             warnings.warn('the chunk_size parameter is no longer supported, use tile_size instead')
@@ -194,7 +194,7 @@ class CubeConfig:
         if len(given_keywords) == 1:
             raise exception_type(f'Found invalid parameter {given_keywords.pop()!r} in cube configuration')
         elif len(given_keywords) > 1:
-            given_keywords_text = ', '.join(map(lambda s: f'{s!r}', given_keywords))
+            given_keywords_text = ', '.join(map(lambda s: f'{s!r}', sorted(given_keywords)))
             raise exception_type(f'Found invalid parameters in cube configuration: {given_keywords_text}')
         return CubeConfig(exception_type=exception_type, **cube_config_dict)
 

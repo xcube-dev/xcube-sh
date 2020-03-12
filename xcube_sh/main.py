@@ -92,8 +92,10 @@ def gen(request: Optional[str],
     with dimensions "time", "lat", "lon", "band".
 
     Please use command "xcube sh req" to generate example request files that can be passed as REQUEST.
-    You can also pipe a request into this command.
+    REQUEST may have JSON or YAML format.
+    You can also pipe a JSON request into this command. In this case
     """
+    import json
     import os.path
     import sys
     import xarray as xr
@@ -105,11 +107,9 @@ def gen(request: Optional[str],
     from xcube_sh.store import SentinelHubStore
 
     if request:
-        request_dict = _load_config_dict(request)
-    elif sys.stdin.isatty():
-        import json
+        request_dict = _load_request(request)
+    elif not sys.stdin.isatty():
         request_dict = json.load(sys.stdin)
-        print(request_dict)
     else:
         request_dict = {}
 
@@ -181,8 +181,12 @@ def req(output_path: str,
     """
     Write a request template file.
     The generated file will use default or example values for all request parameters.
-    It should be edited and can then be either passed as argument to "xcube sh gen request.json" or be piped
-    into it, e.g. "xcube sh req | xcube sh gen".
+    It should be edited and can then be passed as argument to the "xcube sh gen" command:
+
+    \b
+        $ xcube sg req -o request.json
+        $ vi request.json
+        $ xcube sh gen request.json
     """
     import json
     import os.path
@@ -271,22 +275,27 @@ cli.add_command(req)
 cli.add_command(info)
 
 
-def _load_config_dict(config_path: Optional[str]) -> Dict[str, Any]:
+def _load_request(request_file: Optional[str]) -> Dict[str, Any]:
+    import json
     import os.path
-    if not config_path:
-        return {}
-    if not os.path.exists(config_path):
-        raise click.ClickException(f'Configuration file {config_path} not found.')
+    import yaml
+
+    if request_file and not os.path.exists(request_file):
+        raise click.ClickException(f'Configuration file {request_file} not found.')
+
     try:
-        with open(config_path, 'r') as fp:
-            if config_path.endswith('.json'):
-                import json
+        if not request_file:
+            if not sys.stdin.isatty():
+                return json.load(sys.stdin)
+            else:
+                return {}
+        with open(request_file, 'r') as fp:
+            if request_file.endswith('.json'):
                 return json.load(fp)
             else:
-                import yaml
                 return yaml.safe_load(fp)
     except BaseException as e:
-        raise click.ClickException(f'Error loading configuration file {config_path}: {e}')
+        raise click.ClickException(f'Error loading configuration file {request_file}: {e}')
 
 
 def _overwrite_config_params(config: Dict[str, Any], **config_updates):
