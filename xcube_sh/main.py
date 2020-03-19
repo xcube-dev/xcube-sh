@@ -303,7 +303,7 @@ def _overwrite_config_params(config: Dict[str, Any], **config_updates):
 
 
 def _is_bucket_url(path: str):
-    url_parts = path.split('://')[0]
+    url_parts = path.split('://')
     return len(url_parts) >= 2 \
            and len(url_parts[0]) > 0 \
            and len(url_parts[1]) > 0 \
