@@ -28,6 +28,10 @@ DEFAULT_CLIENT_SECRET = os.environ.get('SH_CLIENT_SECRET')
 DEFAULT_SH_API_URL = 'https://services.sentinel-hub.com/api/v1'
 DEFAULT_SH_OAUTH2_URL = 'https://services.sentinel-hub.com/oauth'
 
+DEFAULT_RETRY_BACKOFF_MAX = 40  # milliseconds
+DEFAULT_RETRY_BACKOFF_BASE = 1.001
+DEFAULT_NUM_RETRIES = 200
+
 DEFAULT_CRS = 'http://www.opengis.net/def/crs/EPSG/0/4326'
 DEFAULT_BAND_UNITS = 'DN'
 DEFAULT_TIME_TOLERANCE = '10M'  # 10 minutes   TODO: ask SIN, whether 10 minutes are OK

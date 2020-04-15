@@ -25,7 +25,7 @@ import platform
 import random
 import time
 import warnings
-from typing import List, Any, Dict, Tuple, Union, Sequence
+from typing import List, Any, Dict, Tuple, Union, Sequence, Callable
 
 import oauthlib.oauth2
 import pandas as pd
@@ -33,25 +33,56 @@ import requests
 import requests_oauthlib
 
 from xcube_sh.constants import DEFAULT_INSTANCE_ID, DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
+from xcube_sh.constants import DEFAULT_NUM_RETRIES
+from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_BASE
+from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_MAX
 from xcube_sh.constants import DEFAULT_SH_API_URL, DEFAULT_SH_OAUTH2_URL, DEFAULT_CRS
 from xcube_sh.metadata import SentinelHubMetadata
 from xcube_sh.version import version
 
 
 class SentinelHub:
+    """
+    Represents the SENTINEL Hub Cloud API.
+
+    :param client_id: SENTINEL Hub client ID
+    :param client_secret: SENTINEL Hub client secret
+    :param instance_id:  SENTINEL Hub instance ID
+    :param api_url: Alternative SENTINEL Hub API URL.
+    :param oauth2_url: Alternative SENTINEL Hub OAuth2 API URL.
+    :param error_policy: "raise" or "warn". If "raise" an exception is raised on failed API requests.
+    :param error_handler: An optional function called with the response from a failed API request.
+    :param enable_warnings: Allow emitting warnings on failed API requests.
+    :param num_retries: Number of retries for failed API requests, e.g. ```50`` times.
+    :param retry_backoff_max: Request retry backoff time in milliseconds, e.g. ``100`` milliseconds
+    :param retry_backoff_base:  Request retry backoff base. Must be greater than one, e.g. ``1.5``
+    :param session: Optional request session object (mostly for testing).
+    """
+
     METADATA = SentinelHubMetadata()
 
     def __init__(self,
-                 instance_id=None,
-                 client_id=None,
-                 client_secret=None,
-                 session=None,
-                 api_url=None,
-                 oauth2_url=None,
-                 request_warnings=False):
+                 client_id: str = None,
+                 client_secret: str = None,
+                 instance_id: str = None,
+                 api_url: str = None,
+                 oauth2_url: str = None,
+                 enable_warnings: bool = False,
+                 error_policy: str = 'fail',
+                 error_handler: Callable[[Any], None] = None,
+                 num_retries: int = DEFAULT_NUM_RETRIES,
+                 retry_backoff_max: int = DEFAULT_RETRY_BACKOFF_MAX,
+                 retry_backoff_base: float = DEFAULT_RETRY_BACKOFF_BASE,
+                 session: Any = None):
         self.instance_id = instance_id or DEFAULT_INSTANCE_ID
         self.api_url = api_url or os.environ.get('SH_API_URL', DEFAULT_SH_API_URL)
         self.oauth2_url = oauth2_url or os.environ.get('SH_OAUTH2_URL', DEFAULT_SH_OAUTH2_URL)
+        self.error_policy = error_policy or 'fail'
+        self.error_handler = error_handler
+        self.enable_warnings = enable_warnings
+        self.num_retries = num_retries
+        self.retry_backoff_max = retry_backoff_max
+        self.retry_backoff_base = retry_backoff_base
         if session is None:
             # Client credentials
             client_id = client_id or DEFAULT_CLIENT_ID
@@ -75,7 +106,6 @@ class SentinelHub:
         else:
             self.session = session
             self.token = None
-        self.request_warnings = request_warnings
 
     def close(self):
         self.session.close()
@@ -147,7 +177,8 @@ class SentinelHub:
 
             if not response.ok:
                 response.raise_for_status()
-                # raise SentinelHubError(response)
+                raise SentinelHubError(response)
+
             feature_collection = json.loads(response.content)
             if feature_collection.get('type') != 'FeatureCollection' \
                     or not isinstance(feature_collection.get('features'), list):
@@ -168,12 +199,10 @@ class SentinelHub:
             else:
                 mime_type = outputs[0]['format'].get('type', 'image/tiff')
 
-        # TODO (forman): make "retry_backoff_max" a config param
-        retry_backoff_max = 40  # ms
-        # TODO (forman): make "retry_backoff_base" a config param
-        retry_backoff_base = 1.001
-        # TODO (forman): make "num_retries" a config param
-        num_retries = 200
+        num_retries = self.num_retries
+        retry_backoff_max = self.retry_backoff_max  # ms
+        retry_backoff_base = self.retry_backoff_base
+
         response = None
         for i in range(num_retries):
             response = self.session.post(self.api_url + f'/process',
@@ -199,7 +228,7 @@ class SentinelHub:
                 retry_min = int(response.headers.get('Retry-After', '100'))
                 retry_backoff = random.random() * retry_backoff_max
                 retry_total = retry_min + retry_backoff
-                if self.request_warnings:
+                if self.enable_warnings:
                     retry_message = f'Error 429: Too Many Requests. ' \
                                     f'Attempt {i + 1} of {num_retries} to retry after ' \
                                     f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff} = {"%.2f" % retry_total} ms...'
@@ -209,9 +238,14 @@ class SentinelHub:
             else:
                 break
 
-        # TODO (forman): make "error_policy" a config param.
-        # Error policy: "raise", or "warn". If "warn", return fill_value chunks
-        raise SentinelHubError(response)
+        if self.error_handler:
+            self.error_handler(response)
+        if self.error_policy == 'raise':
+            response.raise_for_status()
+            raise SentinelHubError(response)
+        else:
+            # TODO (forman): return NaN/Zero chunk
+            raise NotImplementedError('return NaN/Zero chunk')
 
     @classmethod
     def new_data_request(cls,
