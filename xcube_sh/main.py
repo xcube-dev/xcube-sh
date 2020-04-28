@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import warnings
 from typing import Any, Dict, Optional, List, Tuple
 
 import click
@@ -127,6 +128,11 @@ def gen(request: Optional[str],
                              four_d=four_d)
 
     input_config_dict = request_dict.get('input_config', {})
+    if 'datastore_id' in input_config_dict:
+        input_config_dict = dict(input_config_dict)
+        datastore_id = input_config_dict.pop('datastore_id')
+        if datastore_id != 'sentinelhub':
+            warnings.warn(f'Unknown datastore_id={datastore_id!r} encountered in request. Ignoring it...')
     # _overwrite_config_params(input_config_dict, ...)
     # TODO: validate input_config_dict
 
@@ -276,6 +282,7 @@ cli.add_command(info)
 
 
 def _load_request(request_file: Optional[str]) -> Dict[str, Any]:
+    import sys
     import json
     import os.path
     import yaml
