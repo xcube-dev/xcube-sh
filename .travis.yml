@@ -32,7 +32,7 @@ install:
   - conda update -n base conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - conda create -n xcube xcube:0.4.2
+  - conda create -n xcube -c conda-forge xcube:0.4.2
   - source activate xcube
   - conda env update -n xcube
   - conda list
