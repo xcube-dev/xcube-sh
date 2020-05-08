@@ -1,7 +1,7 @@
-FROM continuumio/miniconda3
+FROM quay.io/bcdev/xcube-python-deps:0.4.2
 
-LABEL version=0.3.0.dev1
-ARG XCUBE_VERSION=0.3.0.dev1
+LABEL version=0.3.0.dev2
+ARG XCUBE_VERSION=0.3.0.dev2
 ARG XCUBE_USER_NAME=xcube
 
 LABEL name=xcube-sh
@@ -9,34 +9,16 @@ LABEL maintainer=helge.dzierzon@brockmann-consult.de
 
 SHELL ["/bin/bash", "-c"]
 
-USER root
-RUN whoami
-RUN apt-get -y update && apt-get -y install vim
-
-SHELL ["/bin/bash", "-c"]
-RUN groupadd -g 1000 ${XCUBE_USER_NAME}
-RUN useradd -u 1000 -g 1000 -ms /bin/bash ${XCUBE_USER_NAME}
-RUN mkdir /workspace && chown ${XCUBE_USER_NAME}.${XCUBE_USER_NAME} /workspace
-RUN chown -R ${XCUBE_USER_NAME}.${XCUBE_USER_NAME} /opt/conda
-
 USER ${XCUBE_USER_NAME}
 RUN whoami
 
-RUN echo "conda activate xcube" >> ~/.bashrc
+WORKDIR /home/${XCUBE_USER_NAME}
+ADD --chown=1000:1000 environment.yml environment.yml
+RUN conda env update -n xcube
 
-
-RUN git clone https://github.com/dcs4cop/xcube /home/${XCUBE_USER_NAME}/xcube
-WORKDIR /home/${XCUBE_USER_NAME}/xcube
-RUN conda env create
+ADD --chown=1000:1000 ./ .
 RUN source activate xcube && python setup.py install
 
-RUN source activate xcube && conda install -c conda-forge oauthlib
-RUN source activate xcube && python setup.py install
-RUN source activate xcube && pip install requests_oauthlib
-
-RUN git clone https://github.com/dcs4cop/xcube-sh /home/${XCUBE_USER_NAME}/xcube-sh
-WORKDIR /home/${XCUBE_USER_NAME}/xcube-sh
-RUN source activate xcube && python setup.py install
-
+#RUN git clone https://github.com/dcs4cop/xcube-sh /home/${XCUBE_USER_NAME}/xcube-sh
 
 ENTRYPOINT ["/bin/bash", "-c"]
