@@ -18,7 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import pickle
+
 import unittest
 import zlib
 from abc import abstractmethod, ABCMeta
@@ -30,7 +30,6 @@ import zarr
 
 from xcube_sh.config import CubeConfig
 from xcube_sh.metadata import SentinelHubMetadata
-from xcube_sh.sentinelhub import SerializableOAuth2Session
 from xcube_sh.store import SentinelHubStore
 
 
@@ -79,7 +78,7 @@ class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
 class SentinelHubStore3DTest(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
-                          band_names=['B01', 'B08', 'B12'],
+                          variable_names=['B01', 'B08', 'B12'],
                           geometry=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
@@ -193,7 +192,7 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
 class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
-                          band_names=['B01', 'B08', 'B12'],
+                          variable_names=['B01', 'B08', 'B12'],
                           geometry=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
@@ -276,7 +275,7 @@ class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):
 class SentinelHubStore4DTest(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
-                          band_names=['B01', 'B08', 'B12'],
+                          variable_names=['B01', 'B08', 'B12'],
                           geometry=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),

@@ -38,7 +38,7 @@ class CubeConfig:
     Sentinel Hub cube configuration.
 
     :param dataset_name: Dataset name. Mandatory.
-    :param band_names: Band names. Mandatory.
+    :param variable_names: Band names. Mandatory.
     :param band_units: Band units. Optional.
     :param band_sample_types: Band sample types. Optional.
     :param tile_size: Tile size as tuple (width, height). Optional.
@@ -56,7 +56,7 @@ class CubeConfig:
 
     def __init__(self,
                  dataset_name: str = None,
-                 band_names: Sequence[str] = None,
+                 variable_names: Sequence[str] = None,
                  band_units: Union[str, Sequence[str]] = None,
                  band_sample_types: Union[str, Sequence[str]] = None,
                  tile_size: Union[str, Tuple[int, int]] = None,
@@ -77,7 +77,7 @@ class CubeConfig:
 
         if not dataset_name:
             raise exception_type('dataset name must be given')
-        if not band_names:
+        if not variable_names:
             raise exception_type('band names must be a given')
         if not geometry:
             raise exception_type('geometry must be given')
@@ -167,7 +167,7 @@ class CubeConfig:
             time_tolerance = pd.to_timedelta(time_tolerance)
 
         self._dataset_name = dataset_name
-        self._band_names = tuple(band_names)
+        self._band_names = tuple(variable_names)
         self._band_units = band_units or None
         self._band_sample_types = band_sample_types or None
         self._geometry = geometry
@@ -228,11 +228,11 @@ class CubeConfig:
         return self._band_names
 
     @property
-    def band_units(self) -> Union[None, str, Tuple[str, ...]]:
+    def band_units(self) -> Optional[Union[str, Tuple[str, ...]]]:
         return self._band_units
 
     @property
-    def band_sample_types(self) -> Union[None, str, Tuple[str, ...]]:
+    def band_sample_types(self) -> Optional[Union[str, Tuple[str, ...]]]:
         return self._band_sample_types
 
     @property
