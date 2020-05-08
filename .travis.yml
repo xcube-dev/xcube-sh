@@ -1,0 +1,48 @@
+#
+# This is a basic build configuration for Travis CI.
+# See http://conda.pydata.org/docs/travis.html for more info.
+#
+
+language: bash
+
+os:
+  - linux
+  - osx
+  - windows
+
+install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+      bash miniconda.sh -b -p $HOME/miniconda;
+      export PATH="$HOME/miniconda/bin:$PATH";
+    elif [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+      choco install -y openssl;
+      choco install -y miniconda3;
+      export PATH="/c/tools/miniconda3/Scripts:$PATH";
+      source activate base;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      bash miniconda.sh -b -p $HOME/miniconda;
+      export PATH="$HOME/miniconda/bin:$PATH";
+    fi
+  # - hash -r
+  - conda config --add channels conda-forge
+  # - conda config --set channel_priority strict
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -n base conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+  - conda create -n xcube xcube:0.4.2
+  - source activate xcube
+  - conda env update -n xcube
+  - conda list
+  - python setup.py install
+
+script:
+  - py.test -v --cov=xcube_sh
+  - pip install codecov
+  - codecov --env TRAVIS_PYTHON_VERSION
+
+
+
+
