@@ -167,7 +167,7 @@ class CubeConfig:
             time_tolerance = pd.to_timedelta(time_tolerance)
 
         self._dataset_name = dataset_name
-        self._band_names = tuple(variable_names)
+        self._variable_names = tuple(variable_names)
         self._band_units = band_units or None
         self._band_sample_types = band_sample_types or None
         self._geometry = geometry
@@ -206,7 +206,7 @@ class CubeConfig:
         time_tolerance = str(self.time_tolerance) \
             if self.time_tolerance else None
         return dict(dataset_name=self.dataset_name,
-                    band_names=self.band_names,
+                    variable_names=self.variable_names,
                     band_units=self.band_units,
                     band_sample_types=self.band_sample_types,
                     tile_size=self.tile_size,
@@ -224,8 +224,8 @@ class CubeConfig:
         return self._dataset_name
 
     @property
-    def band_names(self) -> Tuple[str, ...]:
-        return self._band_names
+    def variable_names(self) -> Tuple[str, ...]:
+        return self._variable_names
 
     @property
     def band_units(self) -> Optional[Union[str, Tuple[str, ...]]]:

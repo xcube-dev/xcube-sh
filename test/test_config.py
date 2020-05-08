@@ -31,7 +31,7 @@ class CubeConfigTest(unittest.TestCase):
     def test_adjust_sizes(self):
         spatial_res = 0.00018
         common_kwargs = dict(dataset_name='S2L2A',
-                             band_names=('B01', 'B02', 'B03'),
+                             variable_names=('B01', 'B02', 'B03'),
                              spatial_res=spatial_res,
                              tile_size=(512, 512),
                              time_range=('2019-01-01', '2019-01-02'))
@@ -80,7 +80,7 @@ class CubeConfigTest(unittest.TestCase):
 
     def test_time_deltas(self):
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
-                                           band_names=('B01', 'B02', 'B03'),
+                                           variable_names=('B01', 'B02', 'B03'),
                                            geometry=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            time_range=('2019-01-01', '2019-01-02')))
@@ -88,7 +88,7 @@ class CubeConfigTest(unittest.TestCase):
         self.assertEqual(pd.Timedelta('0 days 00:10:00'), config.time_tolerance)
 
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
-                                           band_names=('B01', 'B02', 'B03'),
+                                           variable_names=('B01', 'B02', 'B03'),
                                            geometry=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            time_period='8D',
@@ -97,7 +97,7 @@ class CubeConfigTest(unittest.TestCase):
         self.assertEqual(None, config.time_tolerance)
 
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
-                                           band_names=('B01', 'B02', 'B03'),
+                                           variable_names=('B01', 'B02', 'B03'),
                                            geometry=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            time_tolerance='1H',
@@ -106,7 +106,7 @@ class CubeConfigTest(unittest.TestCase):
         self.assertEqual(pd.Timedelta('0 days 01:00:00'), config.time_tolerance)
 
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
-                                           band_names=('B01', 'B02', 'B03'),
+                                           variable_names=('B01', 'B02', 'B03'),
                                            geometry=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            time_period='8D',
@@ -117,12 +117,12 @@ class CubeConfigTest(unittest.TestCase):
 
     def test_from_and_to_dict(self):
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
-                                           band_names=('B01', 'B02', 'B03'),
+                                           variable_names=('B01', 'B02', 'B03'),
                                            geometry=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            tile_size=(512, 512),
                                            time_range=('2019-01-01', '2019-01-02')))
-        self.assertEqual({'band_names': ('B01', 'B02', 'B03'),
+        self.assertEqual({'variable_names': ('B01', 'B02', 'B03'),
                           'band_sample_types': None,
                           'band_units': None,
                           'collection_id': None,
@@ -141,7 +141,7 @@ class CubeConfigTest(unittest.TestCase):
     def test_from_dict_invalids(self):
         with self.assertRaises(ValueError) as cm:
             CubeConfig.from_dict(dict(dataset_name='S2L2A',
-                                      band_names=('B01', 'B02', 'B03'),
+                                      variable_names=('B01', 'B02', 'B03'),
                                       geometry=(10.11, 54.17, 10.14, 54.19),
                                       special_res=0.00001,
                                       tile_size=(512, 512),
@@ -151,7 +151,7 @@ class CubeConfigTest(unittest.TestCase):
 
         with self.assertRaises(ValueError) as cm:
             CubeConfig.from_dict(dict(dataset_name='S2L2A',
-                                      band_names=('B01', 'B02', 'B03'),
+                                      variable_names=('B01', 'B02', 'B03'),
                                       geometrix=(10.11, 54.17, 10.14, 54.19),
                                       special_res=0.00001,
                                       tile_size=(512, 512),
