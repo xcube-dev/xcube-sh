@@ -31,7 +31,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda install mamba -c conda-forge
   # Useful for debugging any issues with conda
-  - mamba create -n xcube -c conda-forge xcube
+  - mamba create -y -n xcube -c conda-forge xcube
   - source activate xcube
   - conda env update -n xcube
   - conda list
