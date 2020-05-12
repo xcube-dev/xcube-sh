@@ -7,34 +7,32 @@ language: bash
 
 os:
   - linux
-  - osx
-  - windows
+#  - osx
+#  - windows
 
 install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
-      bash miniconda.sh -b -p $HOME/miniconda;
-      export PATH="$HOME/miniconda/bin:$PATH";
-    elif [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-      choco install -y openssl;
-      choco install -y miniconda3;
-      export PATH="/c/tools/miniconda3/Scripts:$PATH";
-      source activate base;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-      bash miniconda.sh -b -p $HOME/miniconda;
-      export PATH="$HOME/miniconda/bin:$PATH";
-    fi
-  # - hash -r
-  - conda config --add channels conda-forge
-  # - conda config --set channel_priority strict
-  - conda config --set always_yes yes --set changeps1 no
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+#      wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+#      bash miniconda.sh -b -p $HOME/miniconda;
+#      export PATH="$HOME/miniconda/bin:$PATH";
+#    elif [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+#      choco install -y openssl;
+#      choco install -y miniconda3;
+#      export PATH="/c/tools/miniconda3/Scripts:$PATH";
+#      source activate base;
+#    else
+#      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+#      bash miniconda.sh -b -p $HOME/miniconda;
+#      export PATH="$HOME/miniconda/bin:$PATH";
+#    fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda;
+  - export PATH="$HOME/miniconda/bin:$PATH";
   - conda install mamba -c conda-forge
   # Useful for debugging any issues with conda
   - mamba create -y -n xcube -c conda-forge xcube
   - source activate xcube
-  - conda env update -n xcube
-  - conda list
+  - conda env update -y -n xcube
   - python setup.py install
 
 script:
