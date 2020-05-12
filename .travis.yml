@@ -25,11 +25,11 @@ install:
 #      bash miniconda.sh -b -p $HOME/miniconda;
 #      export PATH="$HOME/miniconda/bin:$PATH";
 #    fi
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda;
-  - export PATH="$HOME/miniconda/bin:$PATH";
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
   - conda install -y mamba -c conda-forge
-  # Useful for debugging any issues with conda
+  - conda info
   - mamba create -y -n xcube -c conda-forge xcube
   - source activate xcube
   - conda env update -y -n xcube
