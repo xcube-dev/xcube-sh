@@ -1,9 +1,9 @@
 FROM quay.io/bcdev/xcube-python-deps:0.4.2
 
-LABEL version=0.3.0.dev2
-ARG XCUBE_VERSION=0.3.0.dev2
+ARG XCUBE_SH_VERSION=latest
 ARG XCUBE_USER_NAME=xcube
 
+LABEL version=${XCUBE_SH_VERSION}
 LABEL name=xcube-sh
 LABEL maintainer=helge.dzierzon@brockmann-consult.de
 
@@ -12,7 +12,8 @@ SHELL ["/bin/bash", "-c"]
 USER ${XCUBE_USER_NAME}
 RUN whoami
 
-WORKDIR /home/${XCUBE_USER_NAME}
+RUN mkdir /home/${XCUBE_USER_NAME}/xcube-sh
+WORKDIR /home/${XCUBE_USER_NAME}/xcube-sh
 ADD --chown=1000:1000 environment.yml environment.yml
 RUN conda env update -n xcube
 

@@ -157,14 +157,14 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             else:
                 band_array_dimensions = ['time', 'y', 'x', 'band']
             tile_width, tile_height = self._cube_config.tile_size
-            num_bands = len(self._cube_config.band_names)
+            num_bands = len(self._cube_config.variable_names)
             self._add_static_array('band',
-                                   np.array(self._cube_config.band_names),
+                                   np.array(self._cube_config.variable_names),
                                    attrs=dict(_ARRAY_DIMENSIONS=['band']))
             band_encoding = self.get_band_encoding(BAND_DATA_ARRAY_NAME)
             band_attrs = self.get_band_attrs(BAND_DATA_ARRAY_NAME)
             band_attrs.update(_ARRAY_DIMENSIONS=band_array_dimensions,
-                              band_names=self._cube_config.band_names)
+                              band_names=self._cube_config.variable_names)
             self._add_remote_array(BAND_DATA_ARRAY_NAME,
                                    [t_array.size, height, width, num_bands],
                                    [1, tile_height, tile_width, num_bands],
@@ -176,7 +176,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             else:
                 band_array_dimensions = ['time', 'y', 'x']
             tile_width, tile_height = self._cube_config.tile_size
-            for band_name in self._cube_config.band_names:
+            for band_name in self._cube_config.variable_names:
                 band_encoding = self.get_band_encoding(band_name)
                 band_attrs = self.get_band_attrs(band_name)
                 band_attrs.update(_ARRAY_DIMENSIONS=band_array_dimensions)
