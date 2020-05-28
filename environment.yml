@@ -12,3 +12,8 @@ dependencies:
   - pip:
     # Required
     - requests_oauthlib
+
+  # testing
+  - flake8
+  - pytest
+  - pytest-cov
