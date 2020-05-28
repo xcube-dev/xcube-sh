@@ -31,6 +31,7 @@ install:
   - git clone https://github.com/dcs4cop/xcube
   - conda install -y mamba -c conda-forge
   - conda info
+  - sed 's/- blas/#- blas/g' xcube/environment.yml
   - mamba env create -f xcube/environment.yml
   - source activate xcube
   - mamba env update -n xcube
