@@ -28,9 +28,10 @@ install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
+  - git clone https://github.com/dcs4cop/xcube
   - conda install -y mamba -c conda-forge
   - conda info
-  - mamba create -y -n xcube -c conda-forge xcube
+  - mamba env create -f xcube/environment.yml
   - source activate xcube
   - mamba env update -n xcube
   - python setup.py install
