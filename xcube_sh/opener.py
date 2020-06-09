@@ -1,7 +1,9 @@
 import xarray as xr
 import zarr
 
+from xcube.core.store.dataaccess import DatasetDescriber
 from xcube.core.store.dataaccess import ZarrDatasetOpener
+from xcube.core.store.descriptor import DatasetDescriptor
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
 from xcube.util.jsonschema import JsonIntegerSchema
@@ -10,15 +12,20 @@ from xcube.util.jsonschema import JsonObjectSchema
 from xcube.util.jsonschema import JsonStringSchema
 from xcube_cci.config import CubeConfig
 from xcube_sh.constants import DEFAULT_NUM_RETRIES, DEFAULT_RETRY_BACKOFF_MAX, DEFAULT_RETRY_BACKOFF_BASE, \
-    DEFAULT_SH_API_URL, DEFAULT_SH_OAUTH2_URL, DEFAULT_CRS, DEFAULT_TIME_TOLERANCE
+    DEFAULT_SH_API_URL, DEFAULT_SH_OAUTH2_URL, DEFAULT_CRS, DEFAULT_TIME_TOLERANCE, DEFAULT_TILE_SIZE
 from xcube_sh.sentinelhub import SentinelHub
 from xcube_sh.store import SentinelHubStore
 
 
+class ZarrSentinelHubDatasetOpener(ZarrDatasetOpener, DatasetDescriber):
 
-class ZarrSentinelHubDatasetOpener(ZarrDatasetOpener):
-    @property
-    def write_dataset_params_schema(self) -> JsonObjectSchema:
+    def describe_dataset(self, dataset_id: str) -> DatasetDescriptor:
+        # TODO
+        return DatasetDescriptor(dataset_id=dataset_id)
+
+    def get_open_dataset_params_schema(self, dataset_id: str = None) -> JsonObjectSchema:
+        dsd = self.describe_dataset(dataset_id) if dataset_id else None
+
         # TODO: extract individual parameter schemas as constants
         sh_params = dict(
             client_id=JsonStringSchema(),
@@ -34,19 +41,21 @@ class ZarrSentinelHubDatasetOpener(ZarrDatasetOpener):
         )
         cube_params = dict(
             dataset_name=JsonStringSchema(min_length=1),
-            band_names=JsonArraySchema(),
+            band_names=JsonArraySchema(items=JsonStringSchema(enum=[v.name for v in dsd.data_vars] if dsd and dsd.data_vars else None)),
             band_units=JsonArraySchema(),
             band_sample_types=JsonArraySchema(),
-            tile_size=JsonArraySchema(items=[JsonNumberSchema(minimum=1, maximum=2500),
-                                             JsonNumberSchema(minimum=1, maximum=2500)]),
-            geometry=JsonArraySchema(items=[JsonNumberSchema(),
-                                            JsonNumberSchema(),
-                                            JsonNumberSchema(),
-                                            JsonNumberSchema()]),
-            spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
+            tile_size=JsonArraySchema(items=(JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE),
+                                             JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE)),
+                                      default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
             crs=JsonStringSchema(default=DEFAULT_CRS),
-            time_range=JsonArraySchema(items=[JsonStringSchema(format='date-time'),
-                                              JsonStringSchema(format='date-time')]),
+            geometry=JsonArraySchema(items=(JsonNumberSchema(),
+                                            JsonNumberSchema(),
+                                            JsonNumberSchema(),
+                                            JsonNumberSchema())),
+            spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
+            time_range=JsonArraySchema(items=(JsonStringSchema(format='date-time'),
+                                              JsonStringSchema(format='date-time'))),
+            # TODO: add pattern
             time_period=JsonStringSchema(default='1D'),
             time_tolerance=JsonStringSchema(default=DEFAULT_TIME_TOLERANCE),
             collection_id=JsonStringSchema(),
@@ -74,7 +83,8 @@ class ZarrSentinelHubDatasetOpener(ZarrDatasetOpener):
             additional_properties=False
         )
 
-    def open_dataset(self, path: str, **open_params) -> xr.Dataset:
+    def open_dataset(self, dataset_id: str, **open_params) -> xr.Dataset:
+        self.get_open_dataset_params_schema(dataset_id).validate_instance(open_params)
         # TODO: use function that pops from open_params using the extracted individual parameter schemas constants
         sh_kwargs = dict(
             client_id=open_params.pop('client_id'),
@@ -89,11 +99,11 @@ class ZarrSentinelHubDatasetOpener(ZarrDatasetOpener):
             retry_backoff_base=open_params.pop('retry_backoff_base', DEFAULT_RETRY_BACKOFF_BASE),
         )
         cube_config_kwargs = dict(
-            dataset_name=open_params.pop('dataset_name'),
+            dataset_name=dataset_id,
             band_names=open_params.pop('band_names', None),
             band_units=open_params.pop('band_units', None),
             band_sample_types=open_params.pop('band_sample_types', None),
-            tile_size=open_params.pop('tile_size', None),
+            tile_size=open_params.pop('tile_size', (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
             geometry=open_params.pop('geometry'),
             spatial_res=open_params.pop('spatial_res'),
             crs=open_params.pop('crs', DEFAULT_CRS),
