@@ -19,18 +19,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from xcube.constants import EXTENSION_POINT_CLI_COMMANDS
-from xcube.constants import EXTENSION_POINT_DATA_ACCESSORS
-from xcube.util import extension
+import os.path
+import unittest
+
+from xcube.core.store.dataaccess import DatasetOpener
+from xcube.core.store.dataaccess import get_data_accessor_infos
+from xcube.core.store.dataaccess import new_data_accessor
+from xcube_sh.dataaccess import SentinelHubDataAccessor
+from .test_sentinelhub import HAS_SH_CREDENTIALS
+from .test_sentinelhub import REQUIRE_SH_CREDENTIALS
+
+THIS_DIR = os.path.dirname(__file__)
 
 
-def init_plugin(ext_registry: extension.ExtensionRegistry):
-    # xcube SentinelHub extensions
-    ext_registry.add_extension(loader=extension.import_component('xcube_sh.main:cli'),
-                               point=EXTENSION_POINT_CLI_COMMANDS,
-                               name='sh_cli')
+class SentinelHubDataAccessorTest(unittest.TestCase):
 
-    # xcube DataAccessor extensions
-    ext_registry.add_extension(loader=extension.import_component('xcube_sh.dataaccess:SentinelHubDataAccessor'),
-                               point=EXTENSION_POINT_DATA_ACCESSORS,
-                               name='sentinelhub')
+    def test_data_accessor_infos(self):
+        data_accessor_infos = get_data_accessor_infos()
+        self.assertIn('sentinelhub', data_accessor_infos)
+
+    def test_data_accessor(self):
+        data_accessor = new_data_accessor('sentinelhub')
+        self.assertIsInstance(data_accessor, SentinelHubDataAccessor)
+
+    @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+    def test_dataset_opener(self):
+        data_accessor = new_data_accessor('sentinelhub')
+        self.assertIsInstance(data_accessor, DatasetOpener)
