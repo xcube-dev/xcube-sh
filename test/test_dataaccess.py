@@ -22,10 +22,9 @@
 import os.path
 import unittest
 
-from xcube.core.store.dataaccess import DatasetOpener
+from xcube.core.store.dataaccess import get_data_accessor_class
 from xcube.core.store.dataaccess import get_data_accessor_infos
 from xcube.core.store.dataaccess import new_data_accessor
-from xcube.core.store.dataaccess import get_data_accessor_class
 from xcube.util.jsonschema import JsonObjectSchema
 from xcube_sh.dataaccess import SentinelHubDataAccessor
 from .test_sentinelhub import HAS_SH_CREDENTIALS
@@ -46,11 +45,7 @@ class SentinelHubDataAccessorTest(unittest.TestCase):
         schema = data_accessor_class.get_data_accessor_params_schema()
         self.assertIsInstance(schema, JsonObjectSchema)
 
-    def test_data_accessor(self):
-        data_accessor = new_data_accessor('sentinelhub')
-        self.assertIsInstance(data_accessor, SentinelHubDataAccessor)
-
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_dataset_opener(self):
         data_accessor = new_data_accessor('sentinelhub')
-        self.assertIsInstance(data_accessor, DatasetOpener)
+        self.assertIsInstance(data_accessor, SentinelHubDataAccessor)

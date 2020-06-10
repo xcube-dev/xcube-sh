@@ -52,13 +52,13 @@ from xcube_sh.sentinelhub import SentinelHub
 from xcube_sh.store import SentinelHubChunkStore
 
 
-class ZarrSentinelHubDatasetAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterator, DataAccessor):
+class SentinelHubDataAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterator, DataAccessor):
 
     def iter_dataset_ids(self) -> Iterator[str]:
         return iter(SentinelHubMetadata().dataset_names)
 
     def describe_dataset(self, dataset_id: str) -> DatasetDescriptor:
-        # TODO
+        # TODO: use sentinel_hub
         md = SentinelHubMetadata()
         return DatasetDescriptor(dataset_id=dataset_id,
                                  data_vars=[VariableDescriptor(name=band_name,
