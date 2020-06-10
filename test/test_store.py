@@ -31,7 +31,7 @@ import zarr
 from xcube_sh.config import CubeConfig
 from xcube_sh.metadata import SentinelHubMetadata
 from xcube_sh.sentinelhub import SerializableOAuth2Session
-from xcube_sh.store import SentinelHubStore
+from xcube_sh.store import SentinelHubChunkStore
 
 
 class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
@@ -47,9 +47,9 @@ class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
 
         self.cube_config = cube_config
         # noinspection PyTypeChecker
-        self.store = SentinelHubStore(SentinelHubMock(cube_config),
-                                      cube_config,
-                                      observer=self.observe_store)
+        self.store = SentinelHubChunkStore(SentinelHubMock(cube_config),
+                                           cube_config,
+                                           observer=self.observe_store)
 
     def observe_store(self, **kwargs):
         key = '{band_name}-{chunk_index}'.format(**kwargs)
@@ -167,7 +167,7 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
                       {'date': '2019-10-15', 'time': '10:45:36'}, {'date': '2019-10-15', 'time': '10:45:44'},
                       {'date': '2019-10-17', 'time': '10:35:46'}, {'date': '2019-10-17', 'time': '10:35:50'}]
         tile_features = [dict(type='Feature', geometry=dict(type='MULTIPOLYGON'), properties=p) for p in properties]
-        time_ranges = SentinelHubStore.tile_features_to_time_ranges(tile_features)
+        time_ranges = SentinelHubChunkStore.tile_features_to_time_ranges(tile_features)
         self.assertEqual([('2019-09-17T10:35:42+00:00', '2019-09-17T10:35:46+00:00'),
                           ('2019-09-19T10:25:44+00:00', '2019-09-19T10:25:44+00:00'),
                           ('2019-09-20T10:45:35+00:00', '2019-09-20T10:45:43+00:00'),

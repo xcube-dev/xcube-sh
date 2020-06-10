@@ -402,7 +402,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         raise TypeError(f'{self._class_name} is read-only')
 
 
-class SentinelHubStore(RemoteStore):
+class SentinelHubChunkStore(RemoteStore):
     """
     A remote Zarr Store using SentinelHub as backend.
 

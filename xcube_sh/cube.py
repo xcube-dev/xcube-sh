@@ -26,7 +26,7 @@ import zarr
 
 from .config import CubeConfig
 from .sentinelhub import SentinelHub
-from .store import SentinelHubStore
+from .store import SentinelHubChunkStore
 
 
 def open_cube(cube_config: CubeConfig,
@@ -47,7 +47,7 @@ def open_cube(cube_config: CubeConfig,
     :return: the data cube represented by an xarray Dataset object.
     """
     sentinel_hub = SentinelHub(**sh_kwargs)
-    cube_store = SentinelHubStore(sentinel_hub, cube_config, observer=observer, trace_store_calls=trace_store_calls)
+    cube_store = SentinelHubChunkStore(sentinel_hub, cube_config, observer=observer, trace_store_calls=trace_store_calls)
     if max_cache_size:
         cube_store = zarr.LRUStoreCache(cube_store, max_cache_size)
     return xr.open_zarr(cube_store)

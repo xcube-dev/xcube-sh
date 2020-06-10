@@ -49,10 +49,10 @@ from xcube_sh.constants import DEFAULT_TILE_SIZE
 from xcube_sh.constants import DEFAULT_TIME_TOLERANCE
 from xcube_sh.metadata import SentinelHubMetadata
 from xcube_sh.sentinelhub import SentinelHub
-from xcube_sh.store import SentinelHubStore
+from xcube_sh.store import SentinelHubChunkStore
 
 
-class ZarrSentinelHubDatasetOpener(DatasetIterator, ZarrDatasetOpener, DatasetDescriber):
+class ZarrSentinelHubDatasetAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterator, DataAccessor):
 
     def iter_dataset_ids(self) -> Iterator[str]:
         return iter(SentinelHubMetadata().dataset_names)
@@ -168,12 +168,8 @@ class ZarrSentinelHubDatasetOpener(DatasetIterator, ZarrDatasetOpener, DatasetDe
 
         sentinel_hub = SentinelHub(**sh_kwargs)
         cube_config = CubeConfig(dataset_name=dataset_id, **cube_config_kwargs)
-        cube_store = SentinelHubStore(sentinel_hub, cube_config, **chunk_store_kwargs)
+        chunk_store = SentinelHubChunkStore(sentinel_hub, cube_config, **chunk_store_kwargs)
         max_cache_size = open_params.pop('max_cache_size', None)
         if max_cache_size:
-            cube_store = zarr.LRUStoreCache(cube_store, max_size=max_cache_size)
-        return xr.open_zarr(cube_store, **open_params)
-
-
-class SentinelHubDataAccessor(DataAccessor, ZarrSentinelHubDatasetOpener):
-    pass
+            chunk_store = zarr.LRUStoreCache(chunk_store, max_size=max_cache_size)
+        return xr.open_zarr(chunk_store, **open_params)
