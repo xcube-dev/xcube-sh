@@ -35,7 +35,7 @@ from xcube.util.jsonschema import JsonIntegerSchema
 from xcube.util.jsonschema import JsonNumberSchema
 from xcube.util.jsonschema import JsonObjectSchema
 from xcube.util.jsonschema import JsonStringSchema
-from xcube_cci.config import CubeConfig
+from xcube_sh.config import CubeConfig
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
@@ -108,22 +108,25 @@ class ZarrSentinelHubDatasetOpener(DatasetIterator, ZarrDatasetOpener, DatasetDe
         cache_params = dict(
             max_cache_size=JsonIntegerSchema(),
         )
+        # required cube_params
+        required = [
+            'band_names',
+            'geometry',
+            'spatial_res',
+            'time_range',
+        ]
+        # required sh_params
+        if DEFAULT_CLIENT_ID is None:
+            required.append('client_id')
+        if DEFAULT_CLIENT_SECRET is None:
+            required.append('client_secret')
         return JsonObjectSchema(
             properties=dict(
                 **sh_params,
                 **cube_params,
                 **cache_params
             ),
-            required=[
-                # sh_params
-                'client_id',
-                'client_secret',
-                # cube_params
-                'dataset_name',
-                'geometry',
-                'spatial_res',
-                'time_range',
-            ],
+            required=required,
             additional_properties=False
         )
 

@@ -33,4 +33,5 @@ def init_plugin(ext_registry: extension.ExtensionRegistry):
     # xcube DataAccessor extensions
     ext_registry.add_extension(loader=extension.import_component('xcube_sh.dataaccess:SentinelHubDataAccessor'),
                                point=EXTENSION_POINT_DATA_ACCESSORS,
-                               name='sentinelhub')
+                               name='sentinelhub',
+                               description='SENTINEL Hub Cloud API')
