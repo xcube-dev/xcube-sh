@@ -18,14 +18,17 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from typing import Iterator
 
 import xarray as xr
 import zarr
 
 from xcube.core.store.dataaccess import DataAccessor
 from xcube.core.store.dataaccess import DatasetDescriber
+from xcube.core.store.dataaccess import DatasetIterator
 from xcube.core.store.dataaccess import ZarrDatasetOpener
 from xcube.core.store.descriptor import DatasetDescriptor
+from xcube.core.store.descriptor import VariableDescriptor
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
 from xcube.util.jsonschema import JsonIntegerSchema
@@ -44,15 +47,25 @@ from xcube_sh.constants import DEFAULT_SH_API_URL
 from xcube_sh.constants import DEFAULT_SH_OAUTH2_URL
 from xcube_sh.constants import DEFAULT_TILE_SIZE
 from xcube_sh.constants import DEFAULT_TIME_TOLERANCE
+from xcube_sh.metadata import SentinelHubMetadata
 from xcube_sh.sentinelhub import SentinelHub
 from xcube_sh.store import SentinelHubStore
 
 
-class ZarrSentinelHubDatasetOpener(ZarrDatasetOpener, DatasetDescriber):
+class ZarrSentinelHubDatasetOpener(DatasetIterator, ZarrDatasetOpener, DatasetDescriber):
+
+    def iter_dataset_ids(self) -> Iterator[str]:
+        return iter(SentinelHubMetadata().dataset_names)
 
     def describe_dataset(self, dataset_id: str) -> DatasetDescriptor:
         # TODO
-        return DatasetDescriptor(dataset_id=dataset_id)
+        md = SentinelHubMetadata()
+        return DatasetDescriptor(dataset_id=dataset_id,
+                                 data_vars=[VariableDescriptor(name=band_name,
+                                                               dtype='FLOAT32',
+                                                               dims=('time', 'lat', 'lon'),
+                                                               attrs=md.dataset_band(dataset_id, band_name))
+                                            for band_name in md.dataset_band_names(dataset_id)])
 
     def get_open_dataset_params_schema(self, dataset_id: str = None) -> JsonObjectSchema:
         dsd = self.describe_dataset(dataset_id) if dataset_id else None
