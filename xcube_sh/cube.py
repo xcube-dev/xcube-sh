@@ -26,7 +26,7 @@ import zarr
 
 from .config import CubeConfig
 from .sentinelhub import SentinelHub
-from .store import SentinelHubChunkStore
+from .chunkstore import SentinelHubChunkStore
 
 
 def open_cube(cube_config: CubeConfig,

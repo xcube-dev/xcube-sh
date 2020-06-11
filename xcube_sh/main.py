@@ -105,7 +105,7 @@ def gen(request: Optional[str],
     from xcube_sh.config import CubeConfig
     from xcube_sh.observers import Observers
     from xcube_sh.sentinelhub import SentinelHub
-    from xcube_sh.store import SentinelHubChunkStore
+    from xcube_sh.chunkstore import SentinelHubChunkStore
 
     if request:
         request_dict = _load_request(request)
