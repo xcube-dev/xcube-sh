@@ -18,23 +18,21 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from typing import Iterator
+from typing import Iterator, Tuple
 
 import xarray as xr
 import zarr
 
-from xcube.core.store.dataaccess import DataAccessor
-from xcube.core.store.dataaccess import DatasetDescriber
-from xcube.core.store.dataaccess import DatasetIterator
-from xcube.core.store.dataaccess import ZarrDatasetOpener
-from xcube.core.store.descriptor import DatasetDescriptor
+from xcube.core.store.descriptor import DatasetDescriptor, DataDescriptor
 from xcube.core.store.descriptor import VariableDescriptor
+from xcube.core.store.store import DataStore
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
 from xcube.util.jsonschema import JsonIntegerSchema
 from xcube.util.jsonschema import JsonNumberSchema
 from xcube.util.jsonschema import JsonObjectSchema
 from xcube.util.jsonschema import JsonStringSchema
+from xcube_sh.chunkstore import SentinelHubChunkStore
 from xcube_sh.config import CubeConfig
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
@@ -49,27 +47,14 @@ from xcube_sh.constants import DEFAULT_TILE_SIZE
 from xcube_sh.constants import DEFAULT_TIME_TOLERANCE
 from xcube_sh.metadata import SentinelHubMetadata
 from xcube_sh.sentinelhub import SentinelHub
-from xcube_sh.chunkstore import SentinelHubChunkStore
 
 
-class SentinelHubDataAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterator, DataAccessor):
+class SentinelHubDataStore(DataStore):
+    def __init__(self, **sh_kwargs):
+        self._sentinel_hub = SentinelHub(**sh_kwargs)
 
-    def iter_dataset_ids(self) -> Iterator[str]:
-        return iter(SentinelHubMetadata().dataset_names)
-
-    def describe_dataset(self, dataset_id: str) -> DatasetDescriptor:
-        # TODO: use sentinel_hub
-        md = SentinelHubMetadata()
-        return DatasetDescriptor(dataset_id=dataset_id,
-                                 data_vars=[VariableDescriptor(name=band_name,
-                                                               dtype='FLOAT32',
-                                                               dims=('time', 'lat', 'lon'),
-                                                               attrs=md.dataset_band(dataset_id, band_name))
-                                            for band_name in md.dataset_band_names(dataset_id)])
-
-    def get_open_dataset_params_schema(self, dataset_id: str = None) -> JsonObjectSchema:
-        dsd = self.describe_dataset(dataset_id) if dataset_id else None
-
+    @classmethod
+    def get_data_store_params_schema(cls) -> JsonObjectSchema:
         sh_params = dict(
             client_id=JsonStringSchema(default=DEFAULT_CLIENT_ID),
             client_secret=JsonStringSchema(default=DEFAULT_CLIENT_SECRET),
@@ -82,6 +67,41 @@ class SentinelHubDataAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterat
             retry_backoff_max=JsonIntegerSchema(default=DEFAULT_RETRY_BACKOFF_MAX, minimum=0),
             retry_backoff_base=JsonNumberSchema(default=DEFAULT_RETRY_BACKOFF_BASE, exclusive_minimum=1.0),
         )
+        required = None
+        if not DEFAULT_CLIENT_ID or not DEFAULT_CLIENT_SECRET:
+            required = []
+            if DEFAULT_CLIENT_ID is None:
+                required.append('client_id')
+            if DEFAULT_CLIENT_SECRET is None:
+                required.append('client_secret')
+        return JsonObjectSchema(
+            properties=sh_params,
+            required=required,
+            additional_properties=False
+        )
+
+    def get_data_ids(self, type_id: str = None) -> Iterator[str]:
+        return iter(SentinelHubMetadata().dataset_names)
+
+    def describe_data(self, data_id: str) -> DataDescriptor:
+        # TODO: use self._sentinel_hub
+        md = SentinelHubMetadata()
+        return DatasetDescriptor(data_id=data_id,
+                                 data_vars=[VariableDescriptor(name=band_name,
+                                                               dtype='FLOAT32',
+                                                               dims=('time', 'lat', 'lon'),
+                                                               attrs=md.dataset_band(data_id, band_name))
+                                            for band_name in md.dataset_band_names(data_id)])
+
+    def search_data(self, type_id: str = None, **search_params) -> Iterator[DataDescriptor]:
+        # TODO: implement using new SENTINEL Hub catalogue API
+        raise NotImplementedError()
+
+    def get_data_opener_ids(self, type_id: str = None, data_id: str = None) -> Tuple[str, ...]:
+        return ()
+
+    def get_open_data_params_schema(self, data_id: str = None, opener_id: str = None) -> JsonObjectSchema:
+        dsd = self.describe_data(data_id) if data_id else None
         cube_params = dict(
             dataset_name=JsonStringSchema(min_length=1),
             band_names=JsonArraySchema(
@@ -106,7 +126,7 @@ class SentinelHubDataAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterat
             four_d=JsonBooleanSchema(default=False),
         )
         cache_params = dict(
-            max_cache_size=JsonIntegerSchema(),
+            max_cache_size=JsonIntegerSchema(minimum=0),
         )
         # required cube_params
         required = [
@@ -115,14 +135,8 @@ class SentinelHubDataAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterat
             'spatial_res',
             'time_range',
         ]
-        # required sh_params
-        if DEFAULT_CLIENT_ID is None:
-            required.append('client_id')
-        if DEFAULT_CLIENT_SECRET is None:
-            required.append('client_secret')
         return JsonObjectSchema(
             properties=dict(
-                **sh_params,
                 **cube_params,
                 **cache_params
             ),
@@ -130,22 +144,9 @@ class SentinelHubDataAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterat
             additional_properties=False
         )
 
-    def open_dataset(self, dataset_id: str, **open_params) -> xr.Dataset:
-        schema = self.get_open_dataset_params_schema(dataset_id)
+    def open_data(self, data_id: str, **open_params) -> xr.Dataset:
+        schema = self.get_open_data_params_schema(data_id)
         schema.validate_instance(open_params)
-
-        sh_kwargs, open_params = schema.process_kwargs_subset(open_params, (
-            'client_id',
-            'client_secret',
-            'instance_id',
-            'api_url',
-            'oauth2_url',
-            'enable_warnings',
-            'error_policy',
-            'num_retries',
-            'retry_backoff_max',
-            'retry_backoff_base',
-        ))
 
         cube_config_kwargs, open_params = schema.process_kwargs_subset(open_params, (
             'band_names',
@@ -166,9 +167,8 @@ class SentinelHubDataAccessor(ZarrDatasetOpener, DatasetDescriber, DatasetIterat
             'trace_store_calls'
         ))
 
-        sentinel_hub = SentinelHub(**sh_kwargs)
-        cube_config = CubeConfig(dataset_name=dataset_id, **cube_config_kwargs)
-        chunk_store = SentinelHubChunkStore(sentinel_hub, cube_config, **chunk_store_kwargs)
+        cube_config = CubeConfig(dataset_name=data_id, **cube_config_kwargs)
+        chunk_store = SentinelHubChunkStore(self._sentinel_hub, cube_config, **chunk_store_kwargs)
         max_cache_size = open_params.pop('max_cache_size', None)
         if max_cache_size:
             chunk_store = zarr.LRUStoreCache(chunk_store, max_size=max_cache_size)

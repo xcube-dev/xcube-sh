@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 from xcube.constants import EXTENSION_POINT_CLI_COMMANDS
-from xcube.constants import EXTENSION_POINT_DATA_ACCESSORS
+from xcube.constants import EXTENSION_POINT_DATA_STORES
 from xcube.util import extension
 
 
@@ -31,7 +31,8 @@ def init_plugin(ext_registry: extension.ExtensionRegistry):
                                name='sh_cli')
 
     # xcube DataAccessor extensions
-    ext_registry.add_extension(loader=extension.import_component('xcube_sh.dataaccess:SentinelHubDataAccessor'),
-                               point=EXTENSION_POINT_DATA_ACCESSORS,
+    ext_registry.add_extension(loader=extension.import_component('xcube_sh.store:SentinelHubDataStore'),
+                               point=EXTENSION_POINT_DATA_STORES,
                                name='sentinelhub',
-                               description='SENTINEL Hub Cloud API')
+                               description='xarray.Dataset from SENTINEL Hub Cloud API')
+
