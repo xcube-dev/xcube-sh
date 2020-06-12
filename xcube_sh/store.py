@@ -23,7 +23,9 @@ from typing import Iterator, Tuple
 import xarray as xr
 import zarr
 
-from xcube.core.store.descriptor import DatasetDescriptor, DataDescriptor
+from xcube.core.store.descriptor import DataDescriptor
+from xcube.core.store.descriptor import DatasetDescriptor
+from xcube.core.store.descriptor import TYPE_ID_DATASET
 from xcube.core.store.descriptor import VariableDescriptor
 from xcube.core.store.store import DataStore
 from xcube.util.jsonschema import JsonArraySchema
@@ -50,6 +52,7 @@ from xcube_sh.sentinelhub import SentinelHub
 
 
 class SentinelHubDataStore(DataStore):
+
     def __init__(self, **sh_kwargs):
         self._sentinel_hub = SentinelHub(**sh_kwargs)
 
@@ -80,6 +83,10 @@ class SentinelHubDataStore(DataStore):
             additional_properties=False
         )
 
+    @classmethod
+    def get_type_ids(cls) -> Tuple[str, ...]:
+        return TYPE_ID_DATASET,
+
     def get_data_ids(self, type_id: str = None) -> Iterator[str]:
         return iter(SentinelHubMetadata().dataset_names)
 
@@ -97,7 +104,7 @@ class SentinelHubDataStore(DataStore):
         # TODO: implement using new SENTINEL Hub catalogue API
         raise NotImplementedError()
 
-    def get_data_opener_ids(self, type_id: str = None, data_id: str = None) -> Tuple[str, ...]:
+    def get_data_opener_ids(self, data_id: str = None, type_id: str = None) -> Tuple[str, ...]:
         return ()
 
     def get_open_data_params_schema(self, data_id: str = None, opener_id: str = None) -> JsonObjectSchema:

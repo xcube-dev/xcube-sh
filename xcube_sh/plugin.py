@@ -34,5 +34,4 @@ def init_plugin(ext_registry: extension.ExtensionRegistry):
     ext_registry.add_extension(loader=extension.import_component('xcube_sh.store:SentinelHubDataStore'),
                                point=EXTENSION_POINT_DATA_STORES,
                                name='sentinelhub',
-                               description='xarray.Dataset from SENTINEL Hub Cloud API')
-
+                               description='SENTINEL Hub Cloud API')
