@@ -41,3 +41,6 @@ DEFAULT_TILE_SIZE = 1000
 SH_MAX_IMAGE_SIZE = 2500
 
 BAND_DATA_ARRAY_NAME = 'band_data'
+
+SH_DATA_STORE_ID = 'sentinelhub'
+SH_DATA_OPENER_ID = 'dataset:zarr:sentinelhub'

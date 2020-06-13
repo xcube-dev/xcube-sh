@@ -21,9 +21,14 @@
 
 import unittest
 
+from xcube.core.store.accessor import find_data_opener_extensions
+from xcube.core.store.accessor import new_data_opener
 from xcube.core.store.store import find_data_store_extensions
 from xcube.core.store.store import new_data_store
+from xcube_sh.constants import SH_DATA_OPENER_ID
+from xcube_sh.constants import SH_DATA_STORE_ID
 from xcube_sh.store import SentinelHubDataStore
+from xcube_sh.store import SentinelHubDataOpener
 from .test_sentinelhub import HAS_SH_CREDENTIALS
 from .test_sentinelhub import REQUIRE_SH_CREDENTIALS
 
@@ -32,9 +37,18 @@ class SentinelHubDataAccessorTest(unittest.TestCase):
     def test_find_data_store_extensions(self):
         extensions = find_data_store_extensions()
         actual_ext = set(ext.name for ext in extensions)
-        self.assertIn('sentinelhub', actual_ext)
+        self.assertIn(SH_DATA_STORE_ID, actual_ext)
+
+    def test_find_data_opener_extensions(self):
+        extensions = find_data_opener_extensions()
+        actual_ext = set(ext.name for ext in extensions)
+        self.assertIn(SH_DATA_OPENER_ID, actual_ext)
 
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_new_data_store(self):
-        store = new_data_store('sentinelhub')
+        store = new_data_store(SH_DATA_STORE_ID)
         self.assertIsInstance(store, SentinelHubDataStore)
+
+    def test_new_data_opener(self):
+        store = new_data_opener(SH_DATA_OPENER_ID)
+        self.assertIsInstance(store, SentinelHubDataOpener)
