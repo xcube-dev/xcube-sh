@@ -55,6 +55,8 @@ from xcube_sh.sentinelhub import SentinelHub
 
 
 class SentinelHubDataOpener(DataOpener):
+    #############################################################################
+    # Specific interface
 
     def __init__(self, sentinel_hub: SentinelHub = None):
         self._sentinel_hub = sentinel_hub
@@ -70,6 +72,9 @@ class SentinelHubDataOpener(DataOpener):
                                                                dims=('time', 'lat', 'lon'),
                                                                attrs=md.dataset_band(data_id, band_name))
                                             for band_name in md.dataset_band_names(data_id)])
+
+    #############################################################################
+    # DataOpener impl.
 
     def get_open_data_params_schema(self, data_id: str = None) -> JsonObjectSchema:
         dsd = self.describe_data(data_id) if data_id else None
@@ -175,6 +180,9 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
     def __init__(self, **sh_kwargs):
         super().__init__(SentinelHub(**sh_kwargs))
 
+    #############################################################################
+    # DataStore impl.
+
     @classmethod
     def get_data_store_params_schema(cls) -> JsonObjectSchema:
         sh_params = dict(
@@ -210,6 +218,9 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
         self._assert_valid_type_id(type_id)
         return iter(SentinelHubMetadata().dataset_names)
 
+    def has_data(self, data_id: str) -> bool:
+        return data_id in SentinelHubMetadata().dataset_names
+
     def describe_data(self, data_id: str) -> DataDescriptor:
         return super().describe_data(data_id)
 
@@ -230,6 +241,9 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
     def open_data(self, data_id: str, opener_id: str = None, **open_params) -> xr.Dataset:
         self._assert_valid_opener_id(opener_id)
         return super().open_data(data_id, **open_params)
+
+    #############################################################################
+    # Implementation helpers
 
     def _assert_valid_type_id(self, type_id):
         if type_id is not None and type_id != TYPE_ID_DATASET:
