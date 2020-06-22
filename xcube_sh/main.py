@@ -105,7 +105,7 @@ def gen(request: Optional[str],
     from xcube_sh.config import CubeConfig
     from xcube_sh.observers import Observers
     from xcube_sh.sentinelhub import SentinelHub
-    from xcube_sh.store import SentinelHubStore
+    from xcube_sh.chunkstore import SentinelHubChunkStore
 
     if request:
         request_dict = _load_request(request)
@@ -156,7 +156,7 @@ def gen(request: Optional[str],
     print(f'Writing cube to {output_path}...')
 
     with measure_time() as cm:
-        store = SentinelHubStore(sentinel_hub, cube_config)
+        store = SentinelHubChunkStore(sentinel_hub, cube_config)
         request_collector = Observers.request_collector()
         store.add_observer(request_collector)
         if verbose:
