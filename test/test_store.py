@@ -29,8 +29,8 @@ from xcube_sh.constants import SH_DATA_OPENER_ID
 from xcube_sh.constants import SH_DATA_STORE_ID
 from xcube_sh.store import SentinelHubDataStore
 from xcube_sh.store import SentinelHubDataOpener
-from .test_sentinelhub import HAS_SH_CREDENTIALS
-from .test_sentinelhub import REQUIRE_SH_CREDENTIALS
+from test.test_sentinelhub import HAS_SH_CREDENTIALS
+from test.test_sentinelhub import REQUIRE_SH_CREDENTIALS
 
 
 class SentinelHubDataAccessorTest(unittest.TestCase):

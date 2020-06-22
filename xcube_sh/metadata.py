@@ -42,6 +42,10 @@ class SentinelHubMetadata:
     def dataset(self, dataset_name: str) -> Optional[Dict]:
         return dict(self._dataset_direct(dataset_name))
 
+    def dataset_title(self, dataset_name: str, default=None) -> Optional[str]:
+        dataset = self._dataset_direct(dataset_name)
+        return dataset['title'] if dataset else default
+
     def dataset_processing_level(self, dataset_name: str, default=None) -> Optional[str]:
         dataset = self._dataset_direct(dataset_name)
         return dataset['processing_level'] if dataset else default
@@ -138,6 +142,7 @@ S2L2A_BAND_METADATA.update({
 _SH_METADATA = dict(
     datasets={
         'S1GRD': dict(
+            title='Sentinel-1 - GRD',
             bands={
                 # TODO (forman): add static S1GRD bands metadata here...
             },
@@ -146,12 +151,14 @@ _SH_METADATA = dict(
             feature_type_name='S1.TILE',
         ),
         'S2L1C': dict(
+            title='Sentinel-2 - L1C',
             bands=S2L1C_BAND_METADATA,
             processing_level='L1C',
             request_period='1D',
             feature_type_name='S2.TILE',
         ),
         'S2L2A': dict(
+            title='Sentinel-2 - L2A',
             bands=S2L2A_BAND_METADATA,
             processing_level='L2A',
             request_period='1D',
@@ -159,6 +166,7 @@ _SH_METADATA = dict(
             feature_type_name='DSS2',
         ),
         'S3OCLI': dict(
+            title='Sentinel-3 - OCLI',
             bands={
                 # TODO (forman): add static S3OCLI bands metadata here...
             },
@@ -167,6 +175,7 @@ _SH_METADATA = dict(
             feature_type_name='S3.TILE',
         ),
         'S3SLSTR': dict(
+            title='Sentinel-3 - SLSTR',
             bands={
                 # TODO (forman): add static S3SLSTR bands metadata here...
             },
@@ -174,13 +183,38 @@ _SH_METADATA = dict(
             request_period='1D',
             feature_type_name='S3.TILE',
         ),
+        'S5PL2': dict(
+            title='Sentinel-5P - L2',
+            bands={
+                # TODO (forman): add static DEM bands metadata here...
+            },
+        ),
         'L8L1C': dict(
+            title='Landsat 8 - L1C',
             bands={
                 # TODO (forman): add static L8L1C bands metadata here...
             },
             processing_level='L1C',
             request_period='1D',
             feature_type_name='L8.TILE',
+        ),
+        'DEM': dict(
+            title='Mapzen DEM',
+            bands={
+                # TODO (forman): add static DEM bands metadata here...
+            },
+        ),
+        'MODIS': dict(
+            title='MODIS MCD43A4',
+            bands={
+                # TODO (forman): add static DEM bands metadata here...
+            },
+        ),
+        'CUSTOM': dict(
+            title='Bring Your Own COG',
+            bands={
+                # TODO (forman): add static DEM bands metadata here...
+            },
         ),
     }
 )

@@ -171,11 +171,12 @@ class SentinelHubCatalogueTest(unittest.TestCase):
         expected_dataset_names = ["DEM", "S2L1C", "S2L2A", "CUSTOM", "S1GRD"]
         sentinel_hub = SentinelHub(session=SessionMock({
             'get': {
-                'https://services.sentinel-hub.com/api/v1/process/dataset': {
-                    "data": expected_dataset_names
-                }
+                'https://services.sentinel-hub.com/configuration/v1/datasets':
+                    [{'id':"DEM"}, {'id':"S2L1C"}, {'id':"S2L2A"}, {'id':"CUSTOM"}, {'id':"S1GRD"}]
+
             }}))
-        self.assertEqual(expected_dataset_names, sentinel_hub.dataset_names)
+        self.assertEqual(expected_dataset_names,
+                         sentinel_hub.dataset_names)
 
     def test_variable_names(self):
         expected_band_names = ['B01',

@@ -32,11 +32,15 @@ import pandas as pd
 import requests
 import requests_oauthlib
 
-from xcube_sh.constants import DEFAULT_INSTANCE_ID, DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
+from xcube_sh.constants import DEFAULT_CLIENT_ID
+from xcube_sh.constants import DEFAULT_CLIENT_SECRET
+from xcube_sh.constants import DEFAULT_CRS
+from xcube_sh.constants import DEFAULT_INSTANCE_ID
 from xcube_sh.constants import DEFAULT_NUM_RETRIES
 from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_BASE
 from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_MAX
-from xcube_sh.constants import DEFAULT_SH_API_URL, DEFAULT_SH_OAUTH2_URL, DEFAULT_CRS
+from xcube_sh.constants import DEFAULT_SH_API_URL
+from xcube_sh.constants import DEFAULT_SH_OAUTH2_URL
 from xcube_sh.metadata import SentinelHubMetadata
 from xcube_sh.version import version
 
@@ -107,6 +111,9 @@ class SentinelHub:
             self.session = session
             self.token = None
 
+    def __del__(self):
+        self.close()
+
     def close(self):
         self.session.close()
 
@@ -118,12 +125,16 @@ class SentinelHub:
     # noinspection PyMethodMayBeStatic
     @property
     def dataset_names(self) -> List[str]:
-        resp = self.session.get(self.api_url + '/process/dataset')
-        obj = json.loads(resp.content)
-        return obj.get('data')
+        return [item.get('id') for item in self.datasets]
+
+    # noinspection PyMethodMayBeStatic
+    @property
+    def datasets(self) -> List[Dict[str, str]]:
+        resp = self.session.get(self.api_url + '/configuration/v1/datasets')
+        return json.loads(resp.content)
 
     def band_names(self, dataset_name) -> Dict[str, Any]:
-        resp = self.session.get(self.api_url + f'/process/dataset/{dataset_name}/bands')
+        resp = self.session.get(self.api_url + f'/api/v1/process/dataset/{dataset_name}/bands')
         obj = json.loads(resp.content)
         return obj.get('data')
 
@@ -138,8 +149,7 @@ class SentinelHub:
                                         bbox=bbox,
                                         time_range=time_range)
 
-    @classmethod
-    def fetch_tile_features(cls,
+    def fetch_tile_features(self,
                             instance_id: str = None,
                             feature_type_name: str = None,
                             bbox: Tuple[float, float, float, float] = None,
@@ -173,7 +183,7 @@ class SentinelHub:
         num_features = max_features
         while num_features == max_features:
             query_params.update(FEATURE_OFFSET=str(feature_offset))
-            response = requests.get(f'http://services.sentinel-hub.com/ogc/wfs/{instance_id}', params=query_params)
+            response = requests.get(self.api_url + f'/ogc/wfs/{instance_id}', params=query_params)
 
             if not response.ok:
                 response.raise_for_status()
@@ -205,7 +215,7 @@ class SentinelHub:
 
         response = None
         for i in range(num_retries):
-            response = self.session.post(self.api_url + f'/process',
+            response = self.session.post(self.api_url + f'/api/v1/process',
                                          json=request,
                                          headers={
                                              'Accept': mime_type,

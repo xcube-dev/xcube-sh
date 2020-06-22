@@ -25,7 +25,7 @@ DEFAULT_INSTANCE_ID = os.environ.get('SH_INSTANCE_ID')
 DEFAULT_CLIENT_ID = os.environ.get('SH_CLIENT_ID')
 DEFAULT_CLIENT_SECRET = os.environ.get('SH_CLIENT_SECRET')
 
-DEFAULT_SH_API_URL = 'https://services.sentinel-hub.com/api/v1'
+DEFAULT_SH_API_URL = 'https://services.sentinel-hub.com'
 DEFAULT_SH_OAUTH2_URL = 'https://services.sentinel-hub.com/oauth'
 
 DEFAULT_RETRY_BACKOFF_MAX = 40  # milliseconds

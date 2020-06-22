@@ -42,10 +42,10 @@ class ShWfsTest(unittest.TestCase):
         t1 = '2019-09-17'
         t2 = '2019-10-17'
 
-        tile_features = SentinelHub.fetch_tile_features(instance_id=instance_id,
-                                                        feature_type_name='S2.TILE',
-                                                        bbox=(x1, y1, x2, y2),
-                                                        time_range=(t1, t2))
+        tile_features = SentinelHub().fetch_tile_features(instance_id=instance_id,
+                                                          feature_type_name='S2.TILE',
+                                                          bbox=(x1, y1, x2, y2),
+                                                          time_range=(t1, t2))
 
         self.assertEqual(32, len(tile_features))
 

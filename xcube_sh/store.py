@@ -61,17 +61,34 @@ class SentinelHubDataOpener(DataOpener):
     def __init__(self, sentinel_hub: SentinelHub = None):
         self._sentinel_hub = sentinel_hub
 
-    def describe_data(self, data_id: str) -> DataDescriptor:
-        if self._sentinel_hub is not None:
-            # TODO: use self._sentinel_hub to make SH catalogue API calls
-            pass
+    def describe_data(self, data_id: str) -> DatasetDescriptor:
         md = SentinelHubMetadata()
+
+        dataset_title = None
+        band_names = None
+        if self._sentinel_hub is not None:
+            dataset_item = next((item for item in self._sentinel_hub.datasets
+                                 if item.get('id') == data_id), None)
+            dataset_title = dataset_item.get('name')
+            band_names = self._sentinel_hub.band_names(data_id)
+
+        if not dataset_title:
+            dataset_title = md.dataset_title(data_id)
+
+        if not band_names:
+            band_names = md.dataset_band_names(data_id)
+
+        data_vars = [VariableDescriptor(name=band_name,
+                                        dtype=md.dataset_band_sample_type(data_id, band_name),
+                                        dims=('time', 'lat', 'lon'),
+                                        attrs=md.dataset_band(data_id, band_name))
+                     for band_name in band_names]
+
+        dataset_attrs = dict(title=dataset_title) if dataset_title else None
+
         return DatasetDescriptor(data_id=data_id,
-                                 data_vars=[VariableDescriptor(name=band_name,
-                                                               dtype='FLOAT32',
-                                                               dims=('time', 'lat', 'lon'),
-                                                               attrs=md.dataset_band(data_id, band_name))
-                                            for band_name in md.dataset_band_names(data_id)])
+                                 data_vars=data_vars,
+                                 attrs=dataset_attrs)
 
     #############################################################################
     # DataOpener impl.
@@ -134,17 +151,16 @@ class SentinelHubDataOpener(DataOpener):
         sentinel_hub = self._sentinel_hub
         if sentinel_hub is None:
             sh_kwargs, open_params = schema.process_kwargs_subset(open_params, (
-                'band_names',
-                'band_units',
-                'band_sample_types',
-                'tile_size',
-                'geometry',
-                'spatial_res',
-                'time_range',
-                'time_period',
-                'time_tolerance',
-                'collection_id',
-                'four_d',
+                'client_id',
+                'client_secret',
+                'instance_id',
+                'api_url',
+                'oauth2_url',
+                'enable_warnings',
+                'error_policy',
+                'num_retries',
+                'retry_backoff_max',
+                'retry_backoff_base',
             ))
             sentinel_hub = SentinelHub(**sh_kwargs)
 

@@ -1,9 +1,6 @@
-## Changes in 0.3
+## Changes in 0.3 (in dev)
 
-* Added three new options to CLI:
-  - `--cube-config` cube configuration JSON or YAML file  
-  - `--source-config` data source configuration JSON or YAML file  
-  - `--dest-config` data cube destination configuration JSON or YAML file  
+* `xcube-sh` now implements the new `xcube.core.store.DataStore` interface.
 
 ## Changes in 0.2
 
