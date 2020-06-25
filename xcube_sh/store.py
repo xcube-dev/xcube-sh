@@ -18,18 +18,19 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
 from typing import Iterator, Tuple
 
 import xarray as xr
 import zarr
 
-from xcube.core.store.accessor import DataOpener
-from xcube.core.store.descriptor import DataDescriptor
-from xcube.core.store.descriptor import DatasetDescriptor
-from xcube.core.store.descriptor import TYPE_ID_DATASET
-from xcube.core.store.descriptor import VariableDescriptor
-from xcube.core.store.store import DataStore
-from xcube.core.store.store import DataStoreError
+from xcube.core.store import DataDescriptor
+from xcube.core.store import DataOpener
+from xcube.core.store import DataStore
+from xcube.core.store import DataStoreError
+from xcube.core.store import DatasetDescriptor
+from xcube.core.store import TYPE_ID_DATASET
+from xcube.core.store import VariableDescriptor
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
 from xcube.util.jsonschema import JsonIntegerSchema
@@ -106,9 +107,9 @@ class SentinelHubDataOpener(DataOpener):
                                       default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
             crs=JsonStringSchema(default=DEFAULT_CRS),
             bbox=JsonArraySchema(items=(JsonNumberSchema(),
-                                            JsonNumberSchema(),
-                                            JsonNumberSchema(),
-                                            JsonNumberSchema())),
+                                        JsonNumberSchema(),
+                                        JsonNumberSchema(),
+                                        JsonNumberSchema())),
             spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
             time_range=JsonArraySchema(items=(JsonStringSchema(format='date-time'),
                                               JsonStringSchema(format='date-time'))),
