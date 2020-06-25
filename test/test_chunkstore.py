@@ -43,6 +43,7 @@ class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
 
         self.assertEqual((4000, 4000), cube_config.size)
         self.assertEqual((1000, 1000), cube_config.tile_size)
+        np.testing.assert_almost_equal(cube_config.bbox, (10.2, 53.5, 10.3, 53.6))
         np.testing.assert_almost_equal(cube_config.geometry, (10.2, 53.5, 10.3, 53.6))
 
         self.cube_config = cube_config

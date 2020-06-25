@@ -32,7 +32,8 @@ DEFAULT_RETRY_BACKOFF_MAX = 40  # milliseconds
 DEFAULT_RETRY_BACKOFF_BASE = 1.001
 DEFAULT_NUM_RETRIES = 200
 
-DEFAULT_CRS = 'http://www.opengis.net/def/crs/EPSG/0/4326'
+WGS84_CRS = 'http://www.opengis.net/def/crs/EPSG/0/4326'
+DEFAULT_CRS = WGS84_CRS
 DEFAULT_BAND_UNITS = 'DN'
 DEFAULT_TIME_TOLERANCE = '10M'  # 10 minutes   TODO: ask SIN, whether 10 minutes are OK
 

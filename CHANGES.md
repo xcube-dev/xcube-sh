@@ -1,5 +1,8 @@
 ## Changes in 0.3 (in dev)
 
+* `CubeConfig` now accepts parameter `bbox` instead of parameter `geometry`.
+   `geometry` is deprecated, but will be supported later. It may then 
+   also be a WKG Geometry string. 
 * `xcube-sh` now implements the new `xcube.core.store.DataStore` interface.
 
 ## Changes in 0.2

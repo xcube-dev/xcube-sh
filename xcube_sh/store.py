@@ -97,16 +97,15 @@ class SentinelHubDataOpener(DataOpener):
         dsd = self.describe_data(data_id) if data_id else None
         cube_params = dict(
             dataset_name=JsonStringSchema(min_length=1),
-            band_names=JsonArraySchema(
+            variable_names=JsonArraySchema(
                 items=JsonStringSchema(enum=[v.name for v in dsd.data_vars] if dsd and dsd.data_vars else None)),
-            band_units=JsonArraySchema(),
-            band_sample_types=JsonArraySchema(),
+            variable_units=JsonArraySchema(),
+            variable_sample_types=JsonArraySchema(),
             tile_size=JsonArraySchema(items=(JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE),
                                              JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE)),
                                       default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
             crs=JsonStringSchema(default=DEFAULT_CRS),
-            # TODO: rename into bbox
-            geometry=JsonArraySchema(items=(JsonNumberSchema(),
+            bbox=JsonArraySchema(items=(JsonNumberSchema(),
                                             JsonNumberSchema(),
                                             JsonNumberSchema(),
                                             JsonNumberSchema())),
@@ -124,9 +123,8 @@ class SentinelHubDataOpener(DataOpener):
         )
         # required cube_params
         required = [
-            'band_names',
-            # TODO: rename into bbox
-            'geometry',
+            'variable_names',
+            'bbox',
             'spatial_res',
             'time_range',
         ]
@@ -165,11 +163,12 @@ class SentinelHubDataOpener(DataOpener):
             sentinel_hub = SentinelHub(**sh_kwargs)
 
         cube_config_kwargs, open_params = schema.process_kwargs_subset(open_params, (
-            'band_names',
-            'band_units',
-            'band_sample_types',
+            'variable_names',
+            'variable_units',
+            'variable_sample_types',
+            'crs',
             'tile_size',
-            'geometry',
+            'bbox',
             'spatial_res',
             'time_range',
             'time_period',
@@ -183,7 +182,14 @@ class SentinelHubDataOpener(DataOpener):
             'trace_store_calls'
         ))
 
-        cube_config = CubeConfig(dataset_name=data_id, **cube_config_kwargs)
+        band_names = cube_config_kwargs.pop('variable_names', None)
+        band_units = cube_config_kwargs.pop('variable_units', None)
+        band_sample_types = cube_config_kwargs.pop('variable_sample_types', None)
+        cube_config = CubeConfig(dataset_name=data_id,
+                                 band_names=band_names,
+                                 band_units=band_units,
+                                 band_sample_types=band_sample_types,
+                                 **cube_config_kwargs)
         chunk_store = SentinelHubChunkStore(sentinel_hub, cube_config, **chunk_store_kwargs)
         max_cache_size = open_params.pop('max_cache_size', None)
         if max_cache_size:

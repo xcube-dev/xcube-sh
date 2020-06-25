@@ -66,7 +66,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
 
         width, height = self._cube_config.size
         spatial_res = self._cube_config.spatial_res
-        x1, y1, x2, y2 = self._cube_config.geometry
+        x1, y1, x2, y2 = self._cube_config.bbox
         x_array = np.linspace(x1 + spatial_res / 2, x2 - spatial_res / 2, width, dtype=np.float64)
         y_array = np.linspace(y2 - spatial_res / 2, y1 + spatial_res / 2, height, dtype=np.float64)
 
@@ -95,7 +95,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             global_attrs.update(time_coverage_resolution=self._cube_config.time_period.isoformat())
 
         if self._cube_config.is_wgs84_crs:
-            x1, y2, x2, y2 = self._cube_config.geometry
+            x1, y2, x2, y2 = self._cube_config.bbox
             global_attrs.update(geospatial_lon_min=x1,
                                 geospatial_lat_min=y1,
                                 geospatial_lon_max=x2,
@@ -226,7 +226,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         x_index = x_tile_index * x_tile_size
         y_index = y_tile_index * y_tile_size
 
-        x01, _, _, y02 = self.cube_config.geometry
+        x01, _, _, y02 = self.cube_config.bbox
         spatial_res = self.cube_config.spatial_res
 
         x1 = x01 + spatial_res * x_index
@@ -449,7 +449,7 @@ class SentinelHubChunkStore(RemoteStore):
         if not feature_type_name:
             raise ValueError(f"cannot find feature type name for dataset name {self._cube_config.dataset_name!r}")
         tile_features = self._sentinel_hub.get_tile_features(feature_type_name=feature_type_name,
-                                                             bbox=self._cube_config.geometry,
+                                                             bbox=self._cube_config.bbox,
                                                              time_range=(time_start.strftime("%Y-%m-%d"),
                                                                          time_end.strftime("%Y-%m-%d")))
 

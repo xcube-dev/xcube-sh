@@ -25,8 +25,12 @@ from typing import Tuple, Union, Optional, Sequence, Dict, Any
 
 import pandas as pd
 
-from .constants import DEFAULT_CRS, DEFAULT_TIME_TOLERANCE
-from .constants import SH_MAX_IMAGE_SIZE, DEFAULT_TILE_SIZE
+from xcube.util.assertions import assert_given, assert_condition
+from .constants import DEFAULT_CRS
+from .constants import DEFAULT_TILE_SIZE
+from .constants import DEFAULT_TIME_TOLERANCE
+from .constants import SH_MAX_IMAGE_SIZE
+from .constants import WGS84_CRS
 
 
 def _safe_int_div(x: int, y: int) -> int:
@@ -38,19 +42,23 @@ class CubeConfig:
     Sentinel Hub cube configuration.
 
     :param dataset_name: Dataset name. Mandatory.
-    :param band_names: Band names. Mandatory.
+    :param variable_names: Variable (=band names). Mandatory.
+    :param band_names: Deprecated. Use *variable_names*.
     :param band_units: Band units. Optional.
     :param band_sample_types: Band sample types. Optional.
     :param tile_size: Tile size as tuple (width, height). Optional.
     :param chunk_size: Deprecated. Use *tile_size*.
-    :param geometry:
-    :param spatial_res:
-    :param crs:
-    :param time_range:
-    :param time_period:
-    :param time_tolerance:
-    :param collection_id:
-    :param four_d:
+    :param bbox: tuple of 4 numbers: (x1, y1, x2, y2)
+    :param geometry: Deprecated. Use *bbox*.
+    :param spatial_res: Staial resolution. Must be > 0.
+    :param crs: Coordinare reference system. If None, original source CRS will be used.
+    :param time_range: Time range tuple; (start time, end time).
+    :param time_period: A string denoting the temporal aggregation perriod, such as "8D", "1W", "2W".
+        If None, all observations are included.
+    :param time_tolerance: The tolerance used to identify whether a dataset
+        should still be included within a time period.
+    :param collection_id: Extra identifier used to identity a BYOC dataset.
+    :param four_d: If variables should appear as forth dimension rather than separate arrays.
     :param exception_type:
     """
 
@@ -61,6 +69,7 @@ class CubeConfig:
                  band_sample_types: Union[str, Sequence[str]] = None,
                  tile_size: Union[str, Tuple[int, int]] = None,
                  chunk_size: Union[str, Tuple[int, int]] = None,
+                 bbox: Tuple[float, float, float, float] = None,
                  geometry: Union[str, Tuple[float, float, float, float]] = None,
                  spatial_res: float = None,
                  crs: str = None,
@@ -72,28 +81,37 @@ class CubeConfig:
                  exception_type=ValueError):
 
         crs = crs or DEFAULT_CRS
+        crs = WGS84_CRS if crs in ('WGS84', 'EPSG:4326') else crs
+
+        assert_given(dataset_name, 'dataset_name')
+        assert_given(band_names, 'band_names')
+
+        assert_given(spatial_res, 'spatial_res')
+        assert_condition(spatial_res > 0.0, 'spatial_res must be a positive number')
+
+        assert_condition(not (geometry and bbox), 'geometry and bbox cannot both be given')
+        if geometry is not None:
+            warnings.warn('the geometry parameter is no longer supported, use bbox instead')
+            if bbox is None:
+                bbox = geometry
+                geometry = None
+        assert_given(bbox, 'bbox')
+
+        assert_given(time_range, 'time_range')
+
         time_period = time_period or None
         time_tolerance = time_tolerance or None
 
-        if not dataset_name:
-            raise exception_type('dataset name must be given')
-        if not band_names:
-            raise exception_type('band names must be a given')
-        if not geometry:
-            raise exception_type('geometry must be given')
-        if spatial_res is None:
-            raise exception_type('spatial resolution must be given')
-        if spatial_res <= 0.0:
-            raise exception_type('spatial resolution must be a positive number')
-        if not time_range:
-            raise exception_type('time range must be given')
         if time_period is None and time_tolerance is None:
             time_tolerance = DEFAULT_TIME_TOLERANCE
 
-        if isinstance(geometry, str):
-            x1, y1, x2, y2 = tuple(map(float, geometry.split(',', maxsplit=3)))
-        else:
-            x1, y1, x2, y2 = geometry
+        try:
+            if isinstance(bbox, str):
+                x1, y1, x2, y2 = tuple(map(float, bbox.split(',', maxsplit=3)))
+            else:
+                x1, y1, x2, y2 = bbox
+        except (TypeError, ValueError):
+            raise ValueError('bbox must be a tuple of 4 numbers')
 
         if chunk_size is not None:
             warnings.warn('the chunk_size parameter is no longer supported, use tile_size instead')
@@ -139,7 +157,7 @@ class CubeConfig:
 
         x2, y2 = x1 + width * spatial_res, y1 + height * spatial_res
 
-        geometry = x1, y1, x2, y2
+        bbox = x1, y1, x2, y2
 
         if isinstance(time_range, str):
             time_range = tuple(map(lambda s: s.strip(),
@@ -170,7 +188,7 @@ class CubeConfig:
         self._band_names = tuple(band_names)
         self._band_units = band_units or None
         self._band_sample_types = band_sample_types or None
-        self._geometry = geometry
+        self._bbox = bbox
         self._spatial_res = spatial_res
         self._crs = crs
         self._time_range = time_range
@@ -210,7 +228,7 @@ class CubeConfig:
                     band_units=self.band_units,
                     band_sample_types=self.band_sample_types,
                     tile_size=self.tile_size,
-                    geometry=self.geometry,
+                    bbox=self.bbox,
                     spatial_res=self.spatial_res,
                     crs=self.crs,
                     time_range=time_range,
@@ -240,8 +258,12 @@ class CubeConfig:
         return self._crs
 
     @property
+    def bbox(self) -> Tuple[float, float, float, float]:
+        return self._bbox
+
+    @property
     def geometry(self) -> Tuple[float, float, float, float]:
-        return self._geometry
+        return self.bbox
 
     @property
     def spatial_res(self) -> float:

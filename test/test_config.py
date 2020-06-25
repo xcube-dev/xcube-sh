@@ -39,7 +39,7 @@ class CubeConfigTest(unittest.TestCase):
         # size will be smaller than chunk sizes
         config = CubeConfig(geometry=(10.11, 54.17, 10.14, 54.19), **common_kwargs)
         w, h = config.size
-        x1, y1, x2, y2 = config.geometry
+        x1, y1, x2, y2 = config.bbox
         self.assertEqual((167, 111), (w, h))
         self.assertEqual((167, 111), config.tile_size)
         self.assertEqual((1, 1), config.num_tiles)
@@ -53,7 +53,7 @@ class CubeConfigTest(unittest.TestCase):
         # size will be smaller than 2x chunk sizes
         config = CubeConfig(geometry=(10.11, 54.17, 10.2025, 54.3), **common_kwargs)
         w, h = config.size
-        x1, y1, x2, y2 = config.geometry
+        x1, y1, x2, y2 = config.bbox
         self.assertEqual((514, 722), (w, h))
         self.assertEqual((514, 722), config.tile_size)
         self.assertEqual((1, 1), config.num_tiles)
@@ -67,7 +67,7 @@ class CubeConfigTest(unittest.TestCase):
         # size will be larger than or equal 2x chunk sizes
         config = CubeConfig(geometry=(10.11, 54.17, 10.5, 54.5), **common_kwargs)
         w, h = config.size
-        x1, y1, x2, y2 = config.geometry
+        x1, y1, x2, y2 = config.bbox
         self.assertEqual((2560, 2048), (w, h))
         self.assertEqual((512, 512), config.tile_size)
         self.assertEqual((5, 4), config.num_tiles)
@@ -129,7 +129,7 @@ class CubeConfigTest(unittest.TestCase):
                           'crs': 'http://www.opengis.net/def/crs/EPSG/0/4326',
                           'dataset_name': 'S2L2A',
                           'four_d': False,
-                          'geometry': (10.11, 54.17, 10.14072, 54.19048),
+                          'bbox': (10.11, 54.17, 10.14072, 54.19048),
                           'spatial_res': 1e-05,
                           'tile_size': (512, 512),
                           'time_period': None,
