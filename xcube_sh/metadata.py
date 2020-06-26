@@ -165,7 +165,7 @@ _SH_METADATA = dict(
             # feature_type_name='SEN4CAP_S2L2A.TILE',
             feature_type_name='DSS2',
         ),
-        'S3OCLI': dict(
+        'S3OLCI': dict(
             title='Sentinel-3 - OCLI',
             bands={
                 # TODO (forman): add static S3OCLI bands metadata here...

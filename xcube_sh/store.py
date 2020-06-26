@@ -55,6 +55,7 @@ from xcube_sh.sentinelhub import SentinelHub
 
 
 class SentinelHubDataOpener(DataOpener):
+
     #############################################################################
     # Specific interface
 
@@ -62,85 +63,15 @@ class SentinelHubDataOpener(DataOpener):
         self._sentinel_hub = sentinel_hub
 
     def describe_data(self, data_id: str) -> DatasetDescriptor:
-        md = SentinelHubMetadata()
-
-        dataset_title = None
-        band_names = None
-        if self._sentinel_hub is not None:
-            dataset_item = next((item for item in self._sentinel_hub.datasets
-                                 if item.get('id') == data_id), None)
-            dataset_title = dataset_item.get('name')
-            band_names = self._sentinel_hub.band_names(data_id)
-
-        if not dataset_title:
-            dataset_title = md.dataset_title(data_id)
-
-        if not band_names:
-            band_names = md.dataset_band_names(data_id)
-
-        data_vars = [VariableDescriptor(name=band_name,
-                                        dtype=md.dataset_band_sample_type(data_id, band_name),
-                                        dims=('time', 'lat', 'lon'),
-                                        attrs=md.dataset_band(data_id, band_name))
-                     for band_name in band_names]
-
-        dataset_attrs = dict(title=dataset_title) if dataset_title else None
-
-        return DatasetDescriptor(data_id=data_id,
-                                 data_vars=data_vars,
-                                 attrs=dataset_attrs)
+        dsd = self._describe_data(data_id)
+        dsd.open_params_schema = self._get_open_data_params_schema(dsd)
+        return dsd
 
     #############################################################################
     # DataOpener impl.
 
     def get_open_data_params_schema(self, data_id: str = None) -> JsonObjectSchema:
-        dsd = self.describe_data(data_id) if data_id else None
-        cube_params = dict(
-            dataset_name=JsonStringSchema(min_length=1),
-            variable_names=JsonArraySchema(
-                items=JsonStringSchema(enum=[v.name for v in dsd.data_vars] if dsd and dsd.data_vars else None)),
-            variable_units=JsonArraySchema(),
-            variable_sample_types=JsonArraySchema(),
-            tile_size=JsonArraySchema(items=(JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE),
-                                             JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE)),
-                                      default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-            crs=JsonStringSchema(default=DEFAULT_CRS),
-            bbox=JsonArraySchema(items=(JsonNumberSchema(),
-                                        JsonNumberSchema(),
-                                        JsonNumberSchema(),
-                                        JsonNumberSchema())),
-            spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
-            time_range=JsonArraySchema(items=(JsonStringSchema(format='date-time'),
-                                              JsonStringSchema(format='date-time'))),
-            # TODO: add pattern
-            time_period=JsonStringSchema(default='1D'),
-            time_tolerance=JsonStringSchema(default=DEFAULT_TIME_TOLERANCE),
-            collection_id=JsonStringSchema(),
-            four_d=JsonBooleanSchema(default=False),
-        )
-        cache_params = dict(
-            max_cache_size=JsonIntegerSchema(minimum=0),
-        )
-        # required cube_params
-        required = [
-            'variable_names',
-            'bbox',
-            'spatial_res',
-            'time_range',
-        ]
-        sh_params = {}
-        if self._sentinel_hub is None:
-            sh_schema = SentinelHubDataStore.get_data_store_params_schema()
-            sh_params = sh_schema.properties
-            required.extend(sh_schema.required or [])
-        return JsonObjectSchema(
-            properties=dict(
-                **sh_params,
-                **cube_params,
-                **cache_params
-            ),
-            required=required
-        )
+        return self._get_open_data_params_schema(self._describe_data(data_id))
 
     def open_data(self, data_id: str, **open_params) -> xr.Dataset:
         schema = self.get_open_data_params_schema(data_id)
@@ -195,6 +126,90 @@ class SentinelHubDataOpener(DataOpener):
         if max_cache_size:
             chunk_store = zarr.LRUStoreCache(chunk_store, max_size=max_cache_size)
         return xr.open_zarr(chunk_store, **open_params)
+
+    #############################################################################
+    # Implementation helpers
+
+    def _get_open_data_params_schema(self, dsd: DataDescriptor = None) -> JsonObjectSchema:
+        cube_params = dict(
+            dataset_name=JsonStringSchema(min_length=1),
+            variable_names=JsonArraySchema(
+                items=JsonStringSchema(enum=[v.name for v in dsd.data_vars] if dsd and dsd.data_vars else None)),
+            variable_units=JsonArraySchema(),
+            variable_sample_types=JsonArraySchema(),
+            tile_size=JsonArraySchema(items=(JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE),
+                                             JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE)),
+                                      default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
+            crs=JsonStringSchema(default=DEFAULT_CRS),
+            bbox=JsonArraySchema(items=(JsonNumberSchema(),
+                                        JsonNumberSchema(),
+                                        JsonNumberSchema(),
+                                        JsonNumberSchema())),
+            spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
+            time_range=JsonArraySchema(items=(JsonStringSchema(format='date-time'),
+                                              JsonStringSchema(format='date-time'))),
+            # TODO: add pattern
+            time_period=JsonStringSchema(default='1D'),
+            time_tolerance=JsonStringSchema(default=DEFAULT_TIME_TOLERANCE),
+            collection_id=JsonStringSchema(),
+            four_d=JsonBooleanSchema(default=False),
+        )
+        cache_params = dict(
+            max_cache_size=JsonIntegerSchema(minimum=0),
+        )
+        # required cube_params
+        required = [
+            'variable_names',
+            'bbox',
+            'spatial_res',
+            'time_range',
+        ]
+        sh_params = {}
+        if self._sentinel_hub is None:
+            sh_schema = SentinelHubDataStore.get_data_store_params_schema()
+            sh_params = sh_schema.properties
+            required.extend(sh_schema.required or [])
+        return JsonObjectSchema(
+            properties=dict(
+                **sh_params,
+                **cube_params,
+                **cache_params
+            ),
+            required=required
+        )
+
+    def _describe_data(self, data_id: str) -> DatasetDescriptor:
+        md = SentinelHubMetadata()
+
+        dataset_attrs = md.dataset(data_id)
+
+        band_names = None
+        if self._sentinel_hub is not None:
+            dataset_item = next((item for item in self._sentinel_hub.datasets
+                                 if item.get('id') == data_id), None)
+            if dataset_item is None:
+                raise DataStoreError(f'Unknown dataset identifier "{data_id}"')
+            band_names = self._sentinel_hub.band_names(data_id)
+            dataset_attrs = dict(**(dataset_attrs or {}))
+            dataset_attrs['title'] = dataset_item.get('name')
+        else:
+            if dataset_attrs is None:
+                raise DataStoreError(f'Unknown dataset identifier "{data_id}"')
+            dataset_attrs = dict(**dataset_attrs)
+            dataset_attrs.pop('bands', None)
+
+        if not band_names:
+            band_names = md.dataset_band_names(data_id) or []
+
+        data_vars = [VariableDescriptor(name=band_name,
+                                        dtype=md.dataset_band_sample_type(data_id, band_name),
+                                        dims=('time', 'lat', 'lon'),
+                                        attrs=md.dataset_band(data_id, band_name))
+                     for band_name in band_names]
+
+        return DatasetDescriptor(data_id=data_id,
+                                 data_vars=data_vars,
+                                 attrs=dataset_attrs)
 
 
 class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
