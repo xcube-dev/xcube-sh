@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, Optional
 
 import xarray as xr
 import zarr
@@ -237,9 +237,11 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
     def get_type_ids(cls) -> Tuple[str, ...]:
         return TYPE_ID_DATASET,
 
-    def get_data_ids(self, type_id: str = None) -> Iterator[str]:
+    def get_data_ids(self, type_id: str = None) -> Iterator[Tuple[str, Optional[str]]]:
         self._assert_valid_type_id(type_id)
-        return iter(SentinelHubMetadata().dataset_names)
+        metadata = SentinelHubMetadata()
+        for data_id, dataset in metadata.datasets.items():
+            yield data_id, dataset.get('title')
 
     def has_data(self, data_id: str) -> bool:
         return data_id in SentinelHubMetadata().dataset_names
