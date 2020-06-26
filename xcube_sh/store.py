@@ -42,7 +42,6 @@ from xcube_sh.config import CubeConfig
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
-from xcube_sh.constants import DEFAULT_INSTANCE_ID
 from xcube_sh.constants import DEFAULT_NUM_RETRIES
 from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_BASE
 from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_MAX
@@ -209,14 +208,23 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
     @classmethod
     def get_data_store_params_schema(cls) -> JsonObjectSchema:
         sh_params = dict(
-            client_id=JsonStringSchema(default=DEFAULT_CLIENT_ID),
-            client_secret=JsonStringSchema(default=DEFAULT_CLIENT_SECRET),
-            instance_id=JsonStringSchema(default=DEFAULT_INSTANCE_ID, nullable=True),
-            api_url=JsonStringSchema(default=DEFAULT_SH_API_URL),
-            oauth2_url=JsonStringSchema(default=DEFAULT_SH_OAUTH2_URL),
-            enable_warnings=JsonBooleanSchema(default=False),
-            error_policy=JsonStringSchema(default='fail', enum=['fail', 'warn', 'ignore']),
-            num_retries=JsonIntegerSchema(default=DEFAULT_NUM_RETRIES, minimum=0),
+            client_id=JsonStringSchema(title='SENTINEL Hub API client identifier',
+                                       description='Preferably set by environment variable SH_CLIENT_ID'),
+            client_secret=JsonStringSchema(title='SENTINEL Hub API client secret',
+                                           description='Preferably set by environment variable SH_CLIENT_SECRET'),
+            instance_id=JsonStringSchema(nullable=True,
+                                         title='SENTINEL Hub API instance identifier',
+                                         description='Preferably set by environment variable SH_INSTANCE_ID'),
+            api_url=JsonStringSchema(default=DEFAULT_SH_API_URL,
+                                     title='SENTINEL Hub API URL'),
+            oauth2_url=JsonStringSchema(default=DEFAULT_SH_OAUTH2_URL,
+                                        title='SENTINEL Hub API authorisation URL'),
+            enable_warnings=JsonBooleanSchema(default=False,
+                                              title='Whether to output warnings'),
+            error_policy=JsonStringSchema(default='fail', enum=['fail', 'warn', 'ignore'],
+                                          title='Policy for errors while requesting data'),
+            num_retries=JsonIntegerSchema(default=DEFAULT_NUM_RETRIES, minimum=0,
+                                          title='Number of retries when requesting data fails'),
             retry_backoff_max=JsonIntegerSchema(default=DEFAULT_RETRY_BACKOFF_MAX, minimum=0),
             retry_backoff_base=JsonNumberSchema(default=DEFAULT_RETRY_BACKOFF_BASE, exclusive_minimum=1.0),
         )
