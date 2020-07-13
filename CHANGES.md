@@ -4,6 +4,7 @@
    `geometry` is deprecated, but will be supported later. It may then 
    also be a WKG Geometry string. 
 * `xcube-sh` now implements the new `xcube.core.store.DataStore` interface.
+* Fixed `KeyError` exception when opening cube from dataset "DEM".
 
 ## Changes in 0.2
 

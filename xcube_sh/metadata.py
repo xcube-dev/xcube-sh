@@ -44,11 +44,11 @@ class SentinelHubMetadata:
 
     def dataset_title(self, dataset_name: str, default=None) -> Optional[str]:
         dataset = self._dataset_direct(dataset_name)
-        return dataset['title'] if dataset else default
+        return dataset.get('title', default) if dataset else default
 
     def dataset_processing_level(self, dataset_name: str, default=None) -> Optional[str]:
         dataset = self._dataset_direct(dataset_name)
-        return dataset['processing_level'] if dataset else default
+        return dataset.get('processing_level', default) if dataset else default
 
     def dataset_request_period(self, dataset_name: str, default=None) -> Optional[str]:
         dataset = self._dataset_direct(dataset_name)
