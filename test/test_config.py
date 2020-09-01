@@ -158,3 +158,11 @@ class CubeConfigTest(unittest.TestCase):
                                       time_range=('2019-01-01', '2019-01-02')))
         self.assertEqual("Found invalid parameters in cube configuration: 'geometrix', 'special_res'",
                          f'{cm.exception}')
+
+    def test_band_names_may_be_null(self):
+        config = CubeConfig(dataset_name='S2L2A',
+                            band_names=None,
+                            bbox=(10.11, 54.17, 10.14, 54.19),
+                            spatial_res=0.00001,
+                            time_range=('2019-01-01', '2019-01-02'))
+        self.assertEqual(None, config.band_names)

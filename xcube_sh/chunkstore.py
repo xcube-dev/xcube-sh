@@ -151,6 +151,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         self._add_static_array('time', t_array, time_attrs)
         self._add_static_array('time_bnds', t_bnds_array, time_bnds_attrs)
 
+
+
         if self._cube_config.four_d:
             if self._cube_config.is_wgs84_crs:
                 band_array_dimensions = ['time', 'lat', 'lon', 'band']
@@ -434,6 +436,10 @@ class SentinelHubChunkStore(RemoteStore):
                  observer: Callable = None,
                  trace_store_calls=False):
         self._sentinel_hub = sentinel_hub
+        if cube_config.band_names is None:
+            d = cube_config.as_dict()
+            d['band_names'] = sentinel_hub.band_names(cube_config.dataset_name)
+            cube_config = CubeConfig.from_dict(d)
         super().__init__(cube_config,
                          observer=observer,
                          trace_store_calls=trace_store_calls)

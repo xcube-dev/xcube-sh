@@ -42,16 +42,15 @@ class CubeConfig:
     Sentinel Hub cube configuration.
 
     :param dataset_name: Dataset name. Mandatory.
-    :param variable_names: Variable (=band names). Mandatory.
-    :param band_names: Deprecated. Use *variable_names*.
+    :param band_names: Optional sequence of band names. If omitted (=None) all bands are included.
     :param band_units: Band units. Optional.
     :param band_sample_types: Band sample types. Optional.
     :param tile_size: Tile size as tuple (width, height). Optional.
     :param chunk_size: Deprecated. Use *tile_size*.
     :param bbox: tuple of 4 numbers: (x1, y1, x2, y2)
     :param geometry: Deprecated. Use *bbox*.
-    :param spatial_res: Staial resolution. Must be > 0.
-    :param crs: Coordinare reference system. If None, original source CRS will be used.
+    :param spatial_res: Spatial resolution. Must be > 0.
+    :param crs: Coordinate reference system. If None, original source CRS will be used.
     :param time_range: Time range tuple; (start time, end time).
     :param time_period: A string denoting the temporal aggregation perriod, such as "8D", "1W", "2W".
         If None, all observations are included.
@@ -84,7 +83,6 @@ class CubeConfig:
         crs = WGS84_CRS if crs in ('WGS84', 'EPSG:4326') else crs
 
         assert_given(dataset_name, 'dataset_name')
-        assert_given(band_names, 'band_names')
 
         assert_given(spatial_res, 'spatial_res')
         assert_condition(spatial_res > 0.0, 'spatial_res must be a positive number')
@@ -185,7 +183,7 @@ class CubeConfig:
             time_tolerance = pd.to_timedelta(time_tolerance)
 
         self._dataset_name = dataset_name
-        self._band_names = tuple(band_names)
+        self._band_names = tuple(band_names) if band_names is not None else None
         self._band_units = band_units or None
         self._band_sample_types = band_sample_types or None
         self._bbox = bbox
@@ -242,7 +240,12 @@ class CubeConfig:
         return self._dataset_name
 
     @property
-    def band_names(self) -> Tuple[str, ...]:
+    def variable_names(self) -> Optional[Tuple[str, ...]]:
+        """Alias for *band_names*."""
+        return self.band_names
+
+    @property
+    def band_names(self) -> Optional[Tuple[str, ...]]:
         return self._band_names
 
     @property
