@@ -25,6 +25,7 @@ from xcube.core.store.accessor import find_data_opener_extensions
 from xcube.core.store.accessor import new_data_opener
 from xcube.core.store.store import find_data_store_extensions
 from xcube.core.store.store import new_data_store
+from xcube.util.jsonschema import JsonObjectSchema
 from xcube_sh.constants import SH_DATA_OPENER_ID
 from xcube_sh.constants import SH_DATA_STORE_ID
 from xcube_sh.store import SentinelHubDataStore
@@ -52,3 +53,16 @@ class SentinelHubDataAccessorTest(unittest.TestCase):
     def test_new_data_opener(self):
         store = new_data_opener(SH_DATA_OPENER_ID)
         self.assertIsInstance(store, SentinelHubDataOpener)
+
+    def test_data_opener_params_schema(self):
+        store = new_data_opener(SH_DATA_OPENER_ID)
+        schema = store.get_open_data_params_schema('S2L2A')
+        self.assertIsInstance(schema, JsonObjectSchema)
+        self.assertEqual('object', schema.type)
+        self.assertEqual({'time_range', 'spatial_res', 'bbox'}, schema.required)
+        self.assertIn('time_range', schema.properties)
+        self.assertIn('time_period', schema.properties)
+        self.assertIn('spatial_res', schema.properties)
+        self.assertIn('bbox', schema.properties)
+        self.assertIn('crs', schema.properties)
+        self.assertIn('force_cube', schema.properties)

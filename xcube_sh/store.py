@@ -31,6 +31,7 @@ from xcube.core.store import DataStoreError
 from xcube.core.store import DatasetDescriptor
 from xcube.core.store import TYPE_ID_DATASET
 from xcube.core.store import VariableDescriptor
+from xcube.util.assertions import assert_not_none
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
 from xcube.util.jsonschema import JsonIntegerSchema
@@ -39,6 +40,7 @@ from xcube.util.jsonschema import JsonObjectSchema
 from xcube.util.jsonschema import JsonStringSchema
 from xcube_sh.chunkstore import SentinelHubChunkStore
 from xcube_sh.config import CubeConfig
+from xcube_sh.constants import AVAILABLE_CRS_IDS
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
@@ -76,6 +78,7 @@ class SentinelHubDataOpener(DataOpener):
     # DataOpener impl.
 
     def get_open_data_params_schema(self, data_id: str = None) -> JsonObjectSchema:
+        assert_not_none(data_id, 'data_id')
         return self._get_open_data_params_schema(self._describe_data(data_id))
 
     def open_data(self, data_id: str, **open_params) -> xr.Dataset:
@@ -109,6 +112,8 @@ class SentinelHubDataOpener(DataOpener):
         :param open_params: Open parameters.
         :return: An xarray.Dataset instance
         """
+        assert_not_none(data_id, 'data_id')
+
         schema = self.get_open_data_params_schema(data_id)
         schema.validate_instance(open_params)
 
@@ -175,7 +180,8 @@ class SentinelHubDataOpener(DataOpener):
             tile_size=JsonArraySchema(items=(JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE),
                                              JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE)),
                                       default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-            crs=JsonStringSchema(default=DEFAULT_CRS),
+            crs=JsonStringSchema(default=DEFAULT_CRS,
+                                 enum=AVAILABLE_CRS_IDS),
             bbox=JsonArraySchema(items=(JsonNumberSchema(),
                                         JsonNumberSchema(),
                                         JsonNumberSchema(),
@@ -184,10 +190,17 @@ class SentinelHubDataOpener(DataOpener):
             time_range=JsonArraySchema(items=(JsonStringSchema(format='date-time'),
                                               JsonStringSchema(format='date-time'))),
             # TODO: add pattern
-            time_period=JsonStringSchema(default='1D'),
-            time_tolerance=JsonStringSchema(default=DEFAULT_TIME_TOLERANCE),
+            time_period=JsonStringSchema(default='1D', nullable=True,
+                                         enum=[None,
+                                               *map(lambda n: f'{n}D', range(1, 7)),
+                                               '1W', '2W']),
+            time_tolerance=JsonStringSchema(
+                default=DEFAULT_TIME_TOLERANCE),
             collection_id=JsonStringSchema(),
-            four_d=JsonBooleanSchema(default=False),
+            four_d=JsonBooleanSchema(
+                default=False),
+            force_cube=JsonBooleanSchema(
+                default=True),
         )
         cache_params = dict(
             max_cache_size=JsonIntegerSchema(minimum=0),

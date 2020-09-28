@@ -45,3 +45,39 @@ BAND_DATA_ARRAY_NAME = 'band_data'
 
 SH_DATA_STORE_ID = 'sentinelhub'
 SH_DATA_OPENER_ID = 'dataset:zarr:sentinelhub'
+
+# See https://docs.sentinel-hub.com/api/stage/api/process/crs/
+AVAILABLE_CRS_IDS = [
+    # WGS 84:
+    'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
+    'http://www.opengis.net/def/crs/EPSG/0/4326',
+    # WGS 84 / Pseudo-Mercator:
+    'http://www.opengis.net/def/crs/EPSG/0/3857',
+    'http://www.opengis.net/def/crs/EPSG/0/2154',
+    'http://www.opengis.net/def/crs/EPSG/0/2180',
+    'http://www.opengis.net/def/crs/EPSG/0/2193',
+    'http://www.opengis.net/def/crs/EPSG/0/3003',
+    'http://www.opengis.net/def/crs/EPSG/0/3004',
+    'http://www.opengis.net/def/crs/EPSG/0/3031',
+    'http://www.opengis.net/def/crs/EPSG/0/3035',
+    'http://www.opengis.net/def/crs/EPSG/0/3346',
+    'http://www.opengis.net/def/crs/EPSG/0/3416',
+    'http://www.opengis.net/def/crs/EPSG/0/3765',
+    'http://www.opengis.net/def/crs/EPSG/0/3794',
+    'http://www.opengis.net/def/crs/EPSG/0/3844',
+    'http://www.opengis.net/def/crs/EPSG/0/3912',
+    'http://www.opengis.net/def/crs/EPSG/0/3995',
+    'http://www.opengis.net/def/crs/EPSG/0/4026',
+    'http://www.opengis.net/def/crs/EPSG/0/5514',
+    'http://www.opengis.net/def/crs/EPSG/0/28992',
+    'http://www.opengis.net/def/crs/SR-ORG/0/98739',
+    # UTM northern hemisphere:
+    # The last two digits of EPSG codes above represent the number of
+    # corresponding UTM zone in northern hemisphere, e.g. use
+    # http://www.opengis.net/def/crs/EPSG/0/32612 for UTM zone 12N.
+    *map(lambda zone: 'http://www.opengis.net/def/crs/EPSG/0/326{:0>2d}'.format(
+        zone + 1), range(0, 60)),
+    # UTM southern hemisphere:
+    *map(lambda zone: 'http://www.opengis.net/def/crs/EPSG/0/327{:0>2d}'.format(
+        zone + 1), range(0, 60)),
+]
