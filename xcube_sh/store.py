@@ -31,6 +31,7 @@ from xcube.core.store import DataStoreError
 from xcube.core.store import DatasetDescriptor
 from xcube.core.store import TYPE_ID_DATASET
 from xcube.core.store import VariableDescriptor
+from xcube.util.assertions import assert_not_none
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
 from xcube.util.jsonschema import JsonIntegerSchema
@@ -39,6 +40,7 @@ from xcube.util.jsonschema import JsonObjectSchema
 from xcube.util.jsonschema import JsonStringSchema
 from xcube_sh.chunkstore import SentinelHubChunkStore
 from xcube_sh.config import CubeConfig
+from xcube_sh.constants import AVAILABLE_CRS_IDS
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
@@ -55,6 +57,11 @@ from xcube_sh.sentinelhub import SentinelHub
 
 
 class SentinelHubDataOpener(DataOpener):
+    """
+    Sentinel HUB implementation of the ``xcube.core.store.DataOpener`` interface.
+
+    Please refer to the :math:open_data method for the list of possible open parameters.
+    """
 
     #############################################################################
     # Specific interface
@@ -71,9 +78,43 @@ class SentinelHubDataOpener(DataOpener):
     # DataOpener impl.
 
     def get_open_data_params_schema(self, data_id: str = None) -> JsonObjectSchema:
+        assert_not_none(data_id, 'data_id')
         return self._get_open_data_params_schema(self._describe_data(data_id))
 
     def open_data(self, data_id: str, **open_params) -> xr.Dataset:
+        """
+        Opens the dataset with given *data_id* and *open_params*.
+
+        Possible values for *data_id* can be retrieved from the :meth:SentinelHubDataStore::get_data_ids method.
+        Possible keyword-arguments in *open_params* are:
+
+        * ``variable_names: Sequence[str]`` - optional list of variable names.
+            If not given, all variables are included.
+        * ``variable_units: Union[str, Sequence[str]]`` - units for all or each variable
+        * ``variable_sample_types: Union[str, Sequence[str]]`` - sample types for all or each variable
+        * ``crs: str`` - spatial CRS identifier. must be a valid OGC CRS URI.
+        * ``tile_size: Tuple[int, int]`` - optional tuple of spatial tile sizes in pixels.
+        * ``bbox: Tuple[float, float, float, float]`` - spatial coverage given as (minx, miny, maxx, maxy)
+            in units of the CRS. Required parameter.
+        * ``spatial_res: float`` - spatial resolution in unsits of the CRS^.
+            Required parameter.
+        * ``time_range: Tuple[Optional[str], Optional[str]]`` - tuple (start-time, end-time).
+            Both start-time and end-time, if given, should use ISO 8601 format.
+            Required parameter.
+        * ``time_period: str`` - Pandas-compatible time period/frequency, e.g. "4D", "2W"
+        * ``time_tolerance: str`` - Maximum time tolerance. Pandas-compatible time period/frequency.
+        * ``collection_id: str`` - An identifier used by Sentinel HUB to identify BYOC datasets.
+        * ``four_d: bool`` - If True, variables will represented as fourth dimension.
+
+        In addition, all store parameters can be used, if the data opener is used on its own.
+        See :meth:SentinelHubDataStore::get_data_store_params_schema method.
+
+        :param data_id: The data identifier.
+        :param open_params: Open parameters.
+        :return: An xarray.Dataset instance
+        """
+        assert_not_none(data_id, 'data_id')
+
         schema = self.get_open_data_params_schema(data_id)
         schema.validate_instance(open_params)
 
@@ -130,7 +171,7 @@ class SentinelHubDataOpener(DataOpener):
     #############################################################################
     # Implementation helpers
 
-    def _get_open_data_params_schema(self, dsd: DataDescriptor = None) -> JsonObjectSchema:
+    def _get_open_data_params_schema(self, dsd: DatasetDescriptor = None) -> JsonObjectSchema:
         cube_params = dict(
             dataset_name=JsonStringSchema(min_length=1),
             variable_names=JsonArraySchema(
@@ -140,7 +181,8 @@ class SentinelHubDataOpener(DataOpener):
             tile_size=JsonArraySchema(items=(JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE),
                                              JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE)),
                                       default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-            crs=JsonStringSchema(default=DEFAULT_CRS),
+            crs=JsonStringSchema(default=DEFAULT_CRS,
+                                 enum=AVAILABLE_CRS_IDS),
             bbox=JsonArraySchema(items=(JsonNumberSchema(),
                                         JsonNumberSchema(),
                                         JsonNumberSchema(),
@@ -149,17 +191,21 @@ class SentinelHubDataOpener(DataOpener):
             time_range=JsonArraySchema(items=(JsonStringSchema(format='date-time'),
                                               JsonStringSchema(format='date-time'))),
             # TODO: add pattern
-            time_period=JsonStringSchema(default='1D'),
-            time_tolerance=JsonStringSchema(default=DEFAULT_TIME_TOLERANCE),
+            time_period=JsonStringSchema(default='1D', nullable=True,
+                                         enum=[None,
+                                               *map(lambda n: f'{n}D', range(1, 7)),
+                                               '1W', '2W']),
+            time_tolerance=JsonStringSchema(default=DEFAULT_TIME_TOLERANCE,
+                                            format='^([1-9]*[0-9]*)[NULSTH]$'),
             collection_id=JsonStringSchema(),
-            four_d=JsonBooleanSchema(default=False),
+            four_d=JsonBooleanSchema(
+                default=False),
         )
         cache_params = dict(
             max_cache_size=JsonIntegerSchema(minimum=0),
         )
         # required cube_params
         required = [
-            'variable_names',
             'bbox',
             'spatial_res',
             'time_range',
@@ -213,6 +259,9 @@ class SentinelHubDataOpener(DataOpener):
 
 
 class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
+    """
+    Sentinel HUB implementation of the ``xcube.core.store.DataStore`` interface.
+    """
 
     def __init__(self, **sh_kwargs):
         super().__init__(SentinelHub(**sh_kwargs))

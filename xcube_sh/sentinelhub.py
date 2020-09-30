@@ -133,7 +133,7 @@ class SentinelHub:
         resp = self.session.get(self.api_url + '/configuration/v1/datasets')
         return json.loads(resp.content)
 
-    def band_names(self, dataset_name) -> Dict[str, Any]:
+    def band_names(self, dataset_name: str) -> Dict[str, Any]:
         resp = self.session.get(self.api_url + f'/api/v1/process/dataset/{dataset_name}/bands')
         obj = json.loads(resp.content)
         return obj.get('data')

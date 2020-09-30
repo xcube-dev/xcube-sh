@@ -434,6 +434,10 @@ class SentinelHubChunkStore(RemoteStore):
                  observer: Callable = None,
                  trace_store_calls=False):
         self._sentinel_hub = sentinel_hub
+        if cube_config.band_names is None:
+            d = cube_config.as_dict()
+            d['band_names'] = sentinel_hub.band_names(cube_config.dataset_name)
+            cube_config = CubeConfig.from_dict(d)
         super().__init__(cube_config,
                          observer=observer,
                          trace_store_calls=trace_store_calls)
@@ -472,7 +476,8 @@ class SentinelHubChunkStore(RemoteStore):
                       for properties in feature_properties]
         timestamps.sort()
         num_timestamps = len(timestamps)
-        time_ranges = []
+        # noinspection PyTypeChecker
+        time_ranges: List[Tuple[pd.Timestamp, pd.Timestamp]] = []
         i = 0
         while i < num_timestamps:
             timestamp1 = timestamp2 = timestamps[i]

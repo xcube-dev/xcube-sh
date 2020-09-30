@@ -18,20 +18,21 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import pickle
+
 import unittest
 import zlib
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta
+from abc import abstractmethod
 from collections import namedtuple
 
 import numpy as np
 import xarray as xr
 import zarr
 
-from xcube_sh.config import CubeConfig
-from xcube_sh.metadata import SentinelHubMetadata
-from xcube_sh.sentinelhub import SerializableOAuth2Session
 from xcube_sh.chunkstore import SentinelHubChunkStore
+from xcube_sh.config import CubeConfig
+from xcube_sh.metadata import S2_BAND_NAMES
+from xcube_sh.metadata import SentinelHubMetadata
 
 
 class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
@@ -189,6 +190,22 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
                           ('2019-10-15T10:45:36+00:00', '2019-10-15T10:45:44+00:00'),
                           ('2019-10-17T10:35:46+00:00', '2019-10-17T10:35:50+00:00')],
                          [(tr[0].isoformat(), tr[1].isoformat()) for tr in time_ranges])
+
+
+class SentinelHubStore3DTestWithAllBands(SentinelHubStoreTest):
+    def get_cube_config(self):
+        return CubeConfig(dataset_name='S2L2A',
+                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          spatial_res=0.1 / 4000,
+                          time_range=('2017-08-01', '2017-08-31'),
+                          time_period=None,
+                          four_d=False)
+
+    def test_all_bands_available(self):
+        # noinspection PyTypeChecker
+        cube = xr.open_zarr(self.store)
+        self.assertEqual(['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12', 'B8A'],
+                         sorted(cube.data_vars))
 
 
 class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):
@@ -394,6 +411,9 @@ class SentinelHubMock:
     def __init__(self, config: CubeConfig):
         self._config = config
         self._requests = []
+
+    def band_names(self, dataset_name: str):
+        return S2_BAND_NAMES
 
     def get_tile_features(self, feature_type_name, bbox, time_range):
         import pandas as pd
