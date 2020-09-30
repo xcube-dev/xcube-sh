@@ -195,8 +195,8 @@ class SentinelHubDataOpener(DataOpener):
                                          enum=[None,
                                                *map(lambda n: f'{n}D', range(1, 7)),
                                                '1W', '2W']),
-            time_tolerance=JsonStringSchema(
-                default=DEFAULT_TIME_TOLERANCE),
+            time_tolerance=JsonStringSchema(default=DEFAULT_TIME_TOLERANCE,
+                                            format='^([1-9]*[0-9]*)[NULSTH]$'),
             collection_id=JsonStringSchema(),
             four_d=JsonBooleanSchema(
                 default=False),
