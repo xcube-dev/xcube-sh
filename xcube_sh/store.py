@@ -99,6 +99,7 @@ class SentinelHubDataOpener(DataOpener):
         * ``spatial_res: float`` - spatial resolution in unsits of the CRS^.
             Required parameter.
         * ``time_range: Tuple[Optional[str], Optional[str]]`` - tuple (start-time, end-time).
+            Both start-time and end-time, if given, should use ISO 8601 format.
             Required parameter.
         * ``time_period: str`` - Pandas-compatible time period/frequency, e.g. "4D", "2W"
         * ``time_tolerance: str`` - Maximum time tolerance. Pandas-compatible time period/frequency.
@@ -199,8 +200,6 @@ class SentinelHubDataOpener(DataOpener):
             collection_id=JsonStringSchema(),
             four_d=JsonBooleanSchema(
                 default=False),
-            force_cube=JsonBooleanSchema(
-                default=True),
         )
         cache_params = dict(
             max_cache_size=JsonIntegerSchema(minimum=0),

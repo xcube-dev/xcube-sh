@@ -4,8 +4,8 @@
   `CubeConfig` parameter `band_names` may now be `None`. In this case all 
   variables/bands are included. (#12)
 * `CubeConfig` now accepts parameter `bbox` instead of parameter `geometry`.
-  `geometry` is deprecated, but will be supported later. It may then 
-  also be a WKG Geometry string. (#4)
+  `geometry` is currently deprecated, but may be supported again later. 
+  It may then also be a WKT Geometry string or GeoJSON object. (#4)
 * `xcube-sh` now implements the new `xcube.core.store.DataStore` interface.
 * Fixed `KeyError` exception when opening cube from dataset "DEM".
 

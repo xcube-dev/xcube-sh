@@ -151,8 +151,6 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         self._add_static_array('time', t_array, time_attrs)
         self._add_static_array('time_bnds', t_bnds_array, time_bnds_attrs)
 
-
-
         if self._cube_config.four_d:
             if self._cube_config.is_wgs84_crs:
                 band_array_dimensions = ['time', 'lat', 'lon', 'band']
@@ -478,7 +476,8 @@ class SentinelHubChunkStore(RemoteStore):
                       for properties in feature_properties]
         timestamps.sort()
         num_timestamps = len(timestamps)
-        time_ranges = []
+        # noinspection PyTypeChecker
+        time_ranges: List[Tuple[pd.Timestamp, pd.Timestamp]] = []
         i = 0
         while i < num_timestamps:
             timestamp1 = timestamp2 = timestamps[i]

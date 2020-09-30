@@ -65,4 +65,3 @@ class SentinelHubDataAccessorTest(unittest.TestCase):
         self.assertIn('spatial_res', schema.properties)
         self.assertIn('bbox', schema.properties)
         self.assertIn('crs', schema.properties)
-        self.assertIn('force_cube', schema.properties)

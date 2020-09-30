@@ -81,7 +81,7 @@ class CubeConfigTest(unittest.TestCase):
     def test_time_deltas(self):
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
                                            band_names=('B01', 'B02', 'B03'),
-                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           bbox=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            time_range=('2019-01-01', '2019-01-02')))
         self.assertEqual(None, config.time_period)
@@ -89,7 +89,7 @@ class CubeConfigTest(unittest.TestCase):
 
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
                                            band_names=('B01', 'B02', 'B03'),
-                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           bbox=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            time_period='8D',
                                            time_range=('2019-01-01', '2019-01-02')))
@@ -98,7 +98,7 @@ class CubeConfigTest(unittest.TestCase):
 
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
                                            band_names=('B01', 'B02', 'B03'),
-                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           bbox=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            time_tolerance='1H',
                                            time_range=('2019-01-01', '2019-01-02')))
@@ -107,7 +107,7 @@ class CubeConfigTest(unittest.TestCase):
 
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
                                            band_names=('B01', 'B02', 'B03'),
-                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           bbox=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            time_period='8D',
                                            time_tolerance='1H',
@@ -118,7 +118,7 @@ class CubeConfigTest(unittest.TestCase):
     def test_from_and_to_dict(self):
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
                                            band_names=('B01', 'B02', 'B03'),
-                                           geometry=(10.11, 54.17, 10.14, 54.19),
+                                           bbox=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            tile_size=(512, 512),
                                            time_range=('2019-01-01', '2019-01-02')))
@@ -142,7 +142,7 @@ class CubeConfigTest(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             CubeConfig.from_dict(dict(dataset_name='S2L2A',
                                       band_names=('B01', 'B02', 'B03'),
-                                      geometry=(10.11, 54.17, 10.14, 54.19),
+                                      bbox=(10.11, 54.17, 10.14, 54.19),
                                       special_res=0.00001,
                                       tile_size=(512, 512),
                                       time_range=('2019-01-01', '2019-01-02')))
@@ -166,3 +166,10 @@ class CubeConfigTest(unittest.TestCase):
                             spatial_res=0.00001,
                             time_range=('2019-01-01', '2019-01-02'))
         self.assertEqual(None, config.band_names)
+
+    def test_deprecated_geometry_still_works(self):
+        config = CubeConfig(dataset_name='S2L2A',
+                            geometry=(10.11, 54.17, 10.14, 54.19),
+                            spatial_res=0.00001,
+                            time_range=('2019-01-01', '2019-01-02'))
+        self.assertEqual(config.geometry, config.bbox)

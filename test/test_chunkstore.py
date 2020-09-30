@@ -18,9 +18,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
 import unittest
 import zlib
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta
+from abc import abstractmethod
 from collections import namedtuple
 
 import numpy as np
@@ -29,7 +31,8 @@ import zarr
 
 from xcube_sh.chunkstore import SentinelHubChunkStore
 from xcube_sh.config import CubeConfig
-from xcube_sh.metadata import SentinelHubMetadata, S2_BAND_NAMES
+from xcube_sh.metadata import S2_BAND_NAMES
+from xcube_sh.metadata import SentinelHubMetadata
 
 
 class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
