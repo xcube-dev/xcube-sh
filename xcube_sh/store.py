@@ -34,6 +34,7 @@ from xcube.core.store import VariableDescriptor
 from xcube.util.assertions import assert_not_none
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
+from xcube.util.jsonschema import JsonDatetimeSchema
 from xcube.util.jsonschema import JsonIntegerSchema
 from xcube.util.jsonschema import JsonNumberSchema
 from xcube.util.jsonschema import JsonObjectSchema
@@ -188,8 +189,7 @@ class SentinelHubDataOpener(DataOpener):
                                         JsonNumberSchema(),
                                         JsonNumberSchema())),
             spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
-            time_range=JsonArraySchema(items=(JsonStringSchema(format='date-time'),
-                                              JsonStringSchema(format='date-time'))),
+            time_range=JsonDatetimeSchema.new_datetime_range(),
             # TODO: add pattern
             time_period=JsonStringSchema(default='1D', nullable=True,
                                          enum=[None,
