@@ -29,7 +29,7 @@ from xcube.core.store import DataOpener
 from xcube.core.store import DataStore
 from xcube.core.store import DataStoreError
 from xcube.core.store import DatasetDescriptor
-from xcube.core.store import TYPE_ID_DATASET
+from xcube.core.store import TYPE_SPECIFIER_CUBE
 from xcube.core.store import VariableDescriptor
 from xcube.util.assertions import assert_not_none
 from xcube.util.jsonschema import JsonArraySchema
@@ -306,29 +306,32 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
         )
 
     @classmethod
-    def get_type_ids(cls) -> Tuple[str, ...]:
-        return TYPE_ID_DATASET,
+    def get_type_specifiers(cls) -> Tuple[str, ...]:
+        return str(TYPE_SPECIFIER_CUBE),
 
-    def get_data_ids(self, type_id: str = None) -> Iterator[Tuple[str, Optional[str]]]:
-        self._assert_valid_type_id(type_id)
+    def get_type_specifiers_for_data(self, data_id: str) -> Tuple[str, ...]:
+        return self.get_type_specifiers()
+
+    def get_data_ids(self, type_specifier: str = None, include_titles=True) -> Iterator[Tuple[str, Optional[str]]]:
+        self._assert_valid_type_specifier(type_specifier)
         metadata = SentinelHubMetadata()
         for data_id, dataset in metadata.datasets.items():
             yield data_id, dataset.get('title')
 
-    def has_data(self, data_id: str) -> bool:
+    def has_data(self, data_id: str, type_specifier: str = None) -> bool:
         return data_id in SentinelHubMetadata().dataset_names
 
     def describe_data(self, data_id: str) -> DataDescriptor:
         return super().describe_data(data_id)
 
     # noinspection PyTypeChecker
-    def search_data(self, type_id: str = None, **search_params) -> Iterator[DataDescriptor]:
-        self._assert_valid_type_id(type_id)
+    def search_data(self, type_specifier: str = None, **search_params) -> Iterator[DataDescriptor]:
+        self._assert_valid_type_specifier(type_specifier)
         # TODO: implement using new SENTINEL Hub catalogue API
         raise NotImplementedError()
 
-    def get_data_opener_ids(self, data_id: str = None, type_id: str = None) -> Tuple[str, ...]:
-        self._assert_valid_type_id(type_id)
+    def get_data_opener_ids(self, data_id: str = None, type_specifier: str = None) -> Tuple[str, ...]:
+        self._assert_valid_type_specifier(type_specifier)
         return SH_DATA_OPENER_ID,
 
     def get_open_data_params_schema(self, data_id: str = None, opener_id: str = None) -> JsonObjectSchema:
@@ -342,10 +345,12 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
     #############################################################################
     # Implementation helpers
 
-    def _assert_valid_type_id(self, type_id):
-        if type_id is not None and type_id != TYPE_ID_DATASET:
-            raise DataStoreError(f'Data type identifier must be "{TYPE_ID_DATASET}", but got "{type_id}"')
+    @classmethod
+    def _assert_valid_type_specifier(cls, type_specifier: Optional[str]):
+        if type_specifier is not None and not TYPE_SPECIFIER_CUBE.satisfies(type_specifier):
+            raise ValueError(f'type_specifier "{type_specifier}" cannot be satisfied by this store')
 
-    def _assert_valid_opener_id(self, opener_id):
+    @classmethod
+    def _assert_valid_opener_id(cls, opener_id):
         if opener_id is not None and opener_id != SH_DATA_OPENER_ID:
             raise DataStoreError(f'Data opener identifier must be "{SH_DATA_OPENER_ID}", but got "{opener_id}"')

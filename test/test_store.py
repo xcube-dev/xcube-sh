@@ -65,3 +65,8 @@ class SentinelHubDataAccessorTest(unittest.TestCase):
         self.assertIn('spatial_res', schema.properties)
         self.assertIn('bbox', schema.properties)
         self.assertIn('crs', schema.properties)
+
+    def test_get_type_specifiers(self):
+        store = new_data_store(SH_DATA_STORE_ID)
+        self.assertEqual(('dataset[cube]', ), store.get_type_specifiers())
+        self.assertEqual(('dataset[cube]', ), store.get_type_specifiers_for_data('S2L2A'))
