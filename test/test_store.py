@@ -70,3 +70,9 @@ class SentinelHubDataAccessorTest(unittest.TestCase):
         store = new_data_store(SH_DATA_STORE_ID)
         self.assertEqual(('dataset[cube]', ), store.get_type_specifiers())
         self.assertEqual(('dataset[cube]', ), store.get_type_specifiers_for_data('S2L2A'))
+
+    def test_get_data_opener_ids(self):
+        store = new_data_store(SH_DATA_STORE_ID)
+        self.assertEqual(('dataset[cube]:zarr:sentinelhub',), store.get_data_opener_ids())
+        self.assertEqual(('dataset[cube]:zarr:sentinelhub',), store.get_data_opener_ids(type_specifier='dataset'))
+        self.assertEqual((), store.get_data_opener_ids(type_specifier='geodataframe'))

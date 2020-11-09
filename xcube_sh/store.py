@@ -313,10 +313,10 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
         return self.get_type_specifiers()
 
     def get_data_ids(self, type_specifier: str = None, include_titles=True) -> Iterator[Tuple[str, Optional[str]]]:
-        self._assert_valid_type_specifier(type_specifier)
-        metadata = SentinelHubMetadata()
-        for data_id, dataset in metadata.datasets.items():
-            yield data_id, dataset.get('title')
+        if self._is_supported_type_specifier(type_specifier):
+            metadata = SentinelHubMetadata()
+            for data_id, dataset in metadata.datasets.items():
+                yield data_id, dataset.get('title')
 
     def has_data(self, data_id: str, type_specifier: str = None) -> bool:
         return data_id in SentinelHubMetadata().dataset_names
@@ -326,13 +326,13 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
 
     # noinspection PyTypeChecker
     def search_data(self, type_specifier: str = None, **search_params) -> Iterator[DataDescriptor]:
-        self._assert_valid_type_specifier(type_specifier)
         # TODO: implement using new SENTINEL Hub catalogue API
         raise NotImplementedError()
 
     def get_data_opener_ids(self, data_id: str = None, type_specifier: str = None) -> Tuple[str, ...]:
-        self._assert_valid_type_specifier(type_specifier)
-        return SH_DATA_OPENER_ID,
+        if self._is_supported_type_specifier(type_specifier):
+            return SH_DATA_OPENER_ID,
+        return ()
 
     def get_open_data_params_schema(self, data_id: str = None, opener_id: str = None) -> JsonObjectSchema:
         self._assert_valid_opener_id(opener_id)
@@ -346,9 +346,8 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
     # Implementation helpers
 
     @classmethod
-    def _assert_valid_type_specifier(cls, type_specifier: Optional[str]):
-        if type_specifier is not None and not TYPE_SPECIFIER_CUBE.satisfies(type_specifier):
-            raise ValueError(f'type_specifier "{type_specifier}" cannot be satisfied by this store')
+    def _is_supported_type_specifier(cls, type_specifier: Optional[str]):
+        return type_specifier is None or TYPE_SPECIFIER_CUBE.satisfies(type_specifier)
 
     @classmethod
     def _assert_valid_opener_id(cls, opener_id):
