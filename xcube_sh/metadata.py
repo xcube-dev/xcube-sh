@@ -40,7 +40,8 @@ class SentinelHubMetadata:
         return [ds_id for ds_id in self._metadata['datasets']]
 
     def dataset(self, dataset_name: str) -> Optional[Dict]:
-        return dict(self._dataset_direct(dataset_name))
+        dataset = self._dataset_direct(dataset_name)
+        return dict(dataset) if dataset is not None else None
 
     def dataset_title(self, dataset_name: str, default=None) -> Optional[str]:
         dataset = self._dataset_direct(dataset_name)

@@ -44,7 +44,7 @@ SH_MAX_IMAGE_SIZE = 2500
 BAND_DATA_ARRAY_NAME = 'band_data'
 
 SH_DATA_STORE_ID = 'sentinelhub'
-SH_DATA_OPENER_ID = 'dataset:zarr:sentinelhub'
+SH_DATA_OPENER_ID = 'dataset[cube]:zarr:sentinelhub'
 
 # See https://docs.sentinel-hub.com/api/stage/api/process/crs/
 AVAILABLE_CRS_IDS = [

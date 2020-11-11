@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Iterator, Tuple, Optional
+from typing import Iterator, Tuple, Optional, Dict, Any
 
 import xarray as xr
 import zarr
@@ -29,7 +29,7 @@ from xcube.core.store import DataOpener
 from xcube.core.store import DataStore
 from xcube.core.store import DataStoreError
 from xcube.core.store import DatasetDescriptor
-from xcube.core.store import TYPE_ID_DATASET
+from xcube.core.store import TYPE_SPECIFIER_CUBE
 from xcube.core.store import VariableDescriptor
 from xcube.util.assertions import assert_not_none
 from xcube.util.jsonschema import JsonArraySchema
@@ -225,9 +225,7 @@ class SentinelHubDataOpener(DataOpener):
         )
 
     def _describe_data(self, data_id: str) -> DatasetDescriptor:
-        md = SentinelHubMetadata()
-
-        dataset_attrs = md.dataset(data_id)
+        dataset_attrs = self.ensure_dataset_metadata(data_id)
 
         band_names = None
         if self._sentinel_hub is not None:
@@ -244,18 +242,25 @@ class SentinelHubDataOpener(DataOpener):
             dataset_attrs = dict(**dataset_attrs)
             dataset_attrs.pop('bands', None)
 
+        metadata = SentinelHubMetadata()
         if not band_names:
-            band_names = md.dataset_band_names(data_id) or []
+            band_names = metadata.dataset_band_names(data_id) or []
 
         data_vars = [VariableDescriptor(name=band_name,
-                                        dtype=md.dataset_band_sample_type(data_id, band_name),
+                                        dtype=metadata.dataset_band_sample_type(data_id, band_name),
                                         dims=('time', 'lat', 'lon'),
-                                        attrs=md.dataset_band(data_id, band_name))
+                                        attrs=metadata.dataset_band(data_id, band_name))
                      for band_name in band_names]
 
         return DatasetDescriptor(data_id=data_id,
                                  data_vars=data_vars,
                                  attrs=dataset_attrs)
+
+    def ensure_dataset_metadata(self, data_id: str) -> Dict[str, Any]:
+        dataset_attrs = SentinelHubMetadata().dataset(data_id)
+        if dataset_attrs is None:
+            raise DataStoreError(f'Dataset "{data_id}" not found.')
+        return dataset_attrs
 
 
 class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
@@ -306,30 +311,36 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
         )
 
     @classmethod
-    def get_type_ids(cls) -> Tuple[str, ...]:
-        return TYPE_ID_DATASET,
+    def get_type_specifiers(cls) -> Tuple[str, ...]:
+        return str(TYPE_SPECIFIER_CUBE),
 
-    def get_data_ids(self, type_id: str = None) -> Iterator[Tuple[str, Optional[str]]]:
-        self._assert_valid_type_id(type_id)
-        metadata = SentinelHubMetadata()
-        for data_id, dataset in metadata.datasets.items():
-            yield data_id, dataset.get('title')
+    def get_type_specifiers_for_data(self, data_id: str) -> Tuple[str, ...]:
+        self.ensure_dataset_metadata(data_id)
+        return self.get_type_specifiers()
 
-    def has_data(self, data_id: str) -> bool:
-        return data_id in SentinelHubMetadata().dataset_names
+    def get_data_ids(self, type_specifier: str = None, include_titles=True) -> Iterator[Tuple[str, Optional[str]]]:
+        if self._is_supported_type_specifier(type_specifier):
+            metadata = SentinelHubMetadata()
+            for data_id, dataset in metadata.datasets.items():
+                yield data_id, (dataset.get('title') if include_titles else None)
+
+    def has_data(self, data_id: str, type_specifier: str = None) -> bool:
+        if self._is_supported_type_specifier(type_specifier):
+            return data_id in SentinelHubMetadata().dataset_names
+        return False
 
     def describe_data(self, data_id: str) -> DataDescriptor:
         return super().describe_data(data_id)
 
     # noinspection PyTypeChecker
-    def search_data(self, type_id: str = None, **search_params) -> Iterator[DataDescriptor]:
-        self._assert_valid_type_id(type_id)
+    def search_data(self, type_specifier: str = None, **search_params) -> Iterator[DataDescriptor]:
         # TODO: implement using new SENTINEL Hub catalogue API
         raise NotImplementedError()
 
-    def get_data_opener_ids(self, data_id: str = None, type_id: str = None) -> Tuple[str, ...]:
-        self._assert_valid_type_id(type_id)
-        return SH_DATA_OPENER_ID,
+    def get_data_opener_ids(self, data_id: str = None, type_specifier: str = None) -> Tuple[str, ...]:
+        if self._is_supported_type_specifier(type_specifier):
+            return SH_DATA_OPENER_ID,
+        return ()
 
     def get_open_data_params_schema(self, data_id: str = None, opener_id: str = None) -> JsonObjectSchema:
         self._assert_valid_opener_id(opener_id)
@@ -342,10 +353,11 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
     #############################################################################
     # Implementation helpers
 
-    def _assert_valid_type_id(self, type_id):
-        if type_id is not None and type_id != TYPE_ID_DATASET:
-            raise DataStoreError(f'Data type identifier must be "{TYPE_ID_DATASET}", but got "{type_id}"')
+    @classmethod
+    def _is_supported_type_specifier(cls, type_specifier: Optional[str]):
+        return type_specifier is None or TYPE_SPECIFIER_CUBE.satisfies(type_specifier)
 
-    def _assert_valid_opener_id(self, opener_id):
+    @classmethod
+    def _assert_valid_opener_id(cls, opener_id):
         if opener_id is not None and opener_id != SH_DATA_OPENER_ID:
             raise DataStoreError(f'Data opener identifier must be "{SH_DATA_OPENER_ID}", but got "{opener_id}"')
