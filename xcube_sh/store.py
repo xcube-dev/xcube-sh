@@ -316,7 +316,7 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
         if self._is_supported_type_specifier(type_specifier):
             metadata = SentinelHubMetadata()
             for data_id, dataset in metadata.datasets.items():
-                yield data_id, dataset.get('title')
+                yield data_id, (dataset.get('title') if include_titles else None)
 
     def has_data(self, data_id: str, type_specifier: str = None) -> bool:
         return data_id in SentinelHubMetadata().dataset_names
