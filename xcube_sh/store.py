@@ -124,7 +124,6 @@ class SentinelHubDataOpener(DataOpener):
             sh_kwargs, open_params = schema.process_kwargs_subset(open_params, (
                 'client_id',
                 'client_secret',
-                'instance_id',
                 'api_url',
                 'oauth2_url',
                 'enable_warnings',

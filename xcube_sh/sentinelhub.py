@@ -35,7 +35,6 @@ import requests_oauthlib
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
-from xcube_sh.constants import DEFAULT_INSTANCE_ID
 from xcube_sh.constants import DEFAULT_NUM_RETRIES
 from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_BASE
 from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_MAX
@@ -220,7 +219,6 @@ class SentinelHub:
                 i += 1
             time_ranges.append((timestamp1, timestamp2))
         return time_ranges
-
 
     def get_data(self, request: Dict, mime_type=None) -> requests.Response:
         outputs = request['output']['responses']

@@ -54,8 +54,8 @@ class SentinelHubCatalogCollectionsTest(unittest.TestCase):
         self.assertTrue(len(collections) >= 1)
         sentinel_hub.close()
 
-        with open('collections.json', 'w') as fp:
-            json.dump(collections, fp, indent=2)
+        # with open('collections.json', 'w') as fp:
+        #     json.dump(collections, fp, indent=2)
 
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)

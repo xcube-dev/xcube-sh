@@ -1,5 +1,5 @@
 # The MIT License (MIT)
-# Copyright (c) 2019 by the xcube development team and contributors
+# Copyright (c) 2020 by the xcube development team and contributors
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -24,8 +24,13 @@ from typing import Any, Dict, Optional, List, Tuple
 
 import click
 
-from xcube_sh.constants import DEFAULT_CRS, DEFAULT_TIME_TOLERANCE, DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET, \
-    DEFAULT_SH_API_URL, DEFAULT_SH_OAUTH2_URL, DEFAULT_INSTANCE_ID, DEFAULT_TILE_SIZE
+from xcube_sh.constants import DEFAULT_CLIENT_ID
+from xcube_sh.constants import DEFAULT_CLIENT_SECRET
+from xcube_sh.constants import DEFAULT_CRS
+from xcube_sh.constants import DEFAULT_SH_API_URL
+from xcube_sh.constants import DEFAULT_SH_OAUTH2_URL
+from xcube_sh.constants import DEFAULT_TILE_SIZE
+from xcube_sh.constants import DEFAULT_TIME_TOLERANCE
 from xcube_sh.version import version
 
 DEFAULT_GEN_OUTPUT_PATH = 'out.zarr'
@@ -200,7 +205,6 @@ def req(output_path: str,
     import yaml
 
     input_config = dict(
-        instance_id=DEFAULT_INSTANCE_ID,
         client_id=DEFAULT_CLIENT_ID,
         client_secret=DEFAULT_CLIENT_SECRET,
         api_url=DEFAULT_SH_API_URL,
