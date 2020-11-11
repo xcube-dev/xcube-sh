@@ -44,6 +44,78 @@ REQUEST_MULTI_BYOD_JSON = os.path.join(THIS_DIR, 'request-multi-byod.json')
 
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+class SentinelHubCatalogCollectionsTest(unittest.TestCase):
+    def test_it(self):
+        sentinel_hub = SentinelHub(api_url='https://creodias.sentinel-hub.com')
+        # sentinel_hub = SentinelHub(api_url='https://services-uswest2.sentinel-hub.com')
+        # sentinel_hub = SentinelHub()
+        collections = sentinel_hub.collections()
+        self.assertIsInstance(collections, list)
+        self.assertTrue(len(collections) >= 1)
+        sentinel_hub.close()
+
+        with open('collections.json', 'w') as fp:
+            json.dump(collections, fp, indent=2)
+
+
+@unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+class SentinelHubCatalogSearchTest(unittest.TestCase):
+
+    def test_get_features(self):
+        features = SentinelHub().get_features(collection_name='sentinel-1-grd',
+                                              bbox=(13, 45, 14, 46),
+                                              time_range=('2019-12-10T00:00:00Z', '2019-12-11T00:00:00Z'))
+        # print(json.dumps(features, indent=2))
+        self.assertEqual(8, len(features))
+        for feature in features:
+            self.assertIn('properties', feature)
+            properties = feature['properties']
+            self.assertIn('datetime', properties)
+
+
+class SentinelHubCatalogFeaturesTest(unittest.TestCase):
+    def test_features_to_time_ranges(self):
+        properties = [{'datetime': '2019-09-17T10:35:42Z'}, {'datetime': '2019-09-17T10:35:46Z'},
+                      {'datetime': '2019-10-09T10:25:46Z'}, {'datetime': '2019-10-10T10:45:38Z'},
+                      {'datetime': '2019-09-19T10:25:44Z'}, {'datetime': '2019-09-20T10:45:35Z'},
+                      {'datetime': '2019-09-20T10:45:43Z'}, {'datetime': '2019-09-22T10:35:42Z'},
+                      {'datetime': '2019-09-27T10:35:44Z'}, {'datetime': '2019-09-27T10:35:48Z'},
+                      {'datetime': '2019-10-02T10:35:47Z'}, {'datetime': '2019-10-04T10:25:47Z'},
+                      {'datetime': '2019-10-05T10:45:36Z'}, {'datetime': '2019-10-05T10:45:44Z'},
+                      {'datetime': '2019-10-07T10:35:45Z'}, {'datetime': '2019-10-07T10:35:49Z'},
+                      {'datetime': '2019-09-29T10:25:46Z'}, {'datetime': '2019-09-30T10:45:37Z'},
+                      {'datetime': '2019-09-25T10:45:35Z'}, {'datetime': '2019-09-25T10:45:43Z'},
+                      {'datetime': '2019-09-30T10:45:45Z'}, {'datetime': '2019-10-02T10:35:43Z'},
+                      {'datetime': '2019-10-10T10:45:46Z'}, {'datetime': '2019-10-12T10:35:44Z'},
+                      {'datetime': '2019-09-22T10:35:46Z'}, {'datetime': '2019-09-24T10:25:46Z'},
+                      {'datetime': '2019-10-12T10:35:48Z'}, {'datetime': '2019-10-14T10:25:48Z'},
+                      {'datetime': '2019-10-15T10:45:36Z'}, {'datetime': '2019-10-15T10:45:44Z'},
+                      {'datetime': '2019-10-17T10:35:46Z'}, {'datetime': '2019-10-17T10:35:50Z'}, ]
+        features = [dict(properties=p) for p in properties]
+        time_ranges = SentinelHub.features_to_time_ranges(features)
+        self.assertEqual([('2019-09-17T10:35:42+00:00', '2019-09-17T10:35:46+00:00'),
+                          ('2019-09-19T10:25:44+00:00', '2019-09-19T10:25:44+00:00'),
+                          ('2019-09-20T10:45:35+00:00', '2019-09-20T10:45:43+00:00'),
+                          ('2019-09-22T10:35:42+00:00', '2019-09-22T10:35:46+00:00'),
+                          ('2019-09-24T10:25:46+00:00', '2019-09-24T10:25:46+00:00'),
+                          ('2019-09-25T10:45:35+00:00', '2019-09-25T10:45:43+00:00'),
+                          ('2019-09-27T10:35:44+00:00', '2019-09-27T10:35:48+00:00'),
+                          ('2019-09-29T10:25:46+00:00', '2019-09-29T10:25:46+00:00'),
+                          ('2019-09-30T10:45:37+00:00', '2019-09-30T10:45:45+00:00'),
+                          ('2019-10-02T10:35:43+00:00', '2019-10-02T10:35:47+00:00'),
+                          ('2019-10-04T10:25:47+00:00', '2019-10-04T10:25:47+00:00'),
+                          ('2019-10-05T10:45:36+00:00', '2019-10-05T10:45:44+00:00'),
+                          ('2019-10-07T10:35:45+00:00', '2019-10-07T10:35:49+00:00'),
+                          ('2019-10-09T10:25:46+00:00', '2019-10-09T10:25:46+00:00'),
+                          ('2019-10-10T10:45:38+00:00', '2019-10-10T10:45:46+00:00'),
+                          ('2019-10-12T10:35:44+00:00', '2019-10-12T10:35:48+00:00'),
+                          ('2019-10-14T10:25:48+00:00', '2019-10-14T10:25:48+00:00'),
+                          ('2019-10-15T10:45:36+00:00', '2019-10-15T10:45:44+00:00'),
+                          ('2019-10-17T10:35:46+00:00', '2019-10-17T10:35:50+00:00')],
+                         [(tr[0].isoformat(), tr[1].isoformat()) for tr in time_ranges])
+
+
+@unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
 class SentinelHubGetDataTest(unittest.TestCase):
     OUTPUTS_DIR = os.path.normpath(os.path.join(THIS_DIR, '..', 'test-outputs'))
     RESPONSE_SINGLE_ZARR = os.path.join(OUTPUTS_DIR, 'response-single.zarr')
@@ -172,7 +244,7 @@ class SentinelHubCatalogueTest(unittest.TestCase):
         sentinel_hub = SentinelHub(session=SessionMock({
             'get': {
                 'https://services.sentinel-hub.com/configuration/v1/datasets':
-                    [{'id':"DEM"}, {'id':"S2L1C"}, {'id':"S2L2A"}, {'id':"CUSTOM"}, {'id':"S1GRD"}]
+                    [{'id': "DEM"}, {'id': "S2L1C"}, {'id': "S2L2A"}, {'id': "CUSTOM"}, {'id': "S1GRD"}]
 
             }}))
         self.assertEqual(expected_dataset_names,

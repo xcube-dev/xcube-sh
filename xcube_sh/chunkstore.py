@@ -24,7 +24,7 @@ import json
 import time
 from abc import abstractmethod, ABCMeta
 from collections import MutableMapping
-from typing import Iterator, Any, List, Dict, Tuple, Callable, Iterable, KeysView, Union
+from typing import Iterator, Any, List, Dict, Tuple, Callable, Iterable, KeysView
 
 import numpy as np
 import pandas as pd
@@ -449,46 +449,16 @@ class SentinelHubChunkStore(RemoteStore):
         if time_period is not None:
             return super().get_time_ranges()
 
-        feature_type_name = self._METADATA.dataset_feature_type_name(self._cube_config.dataset_name)
-        if not feature_type_name:
-            raise ValueError(f"cannot find feature type name for dataset name {self._cube_config.dataset_name!r}")
-        tile_features = self._sentinel_hub.get_tile_features(feature_type_name=feature_type_name,
-                                                             bbox=self._cube_config.bbox,
-                                                             time_range=(time_start.strftime("%Y-%m-%d"),
-                                                                         time_end.strftime("%Y-%m-%d")))
+        collection_name = self._METADATA.dataset_collection_name(self._cube_config.dataset_name)
+        if not collection_name:
+            raise ValueError(f"cannot find collection name for dataset name {self._cube_config.dataset_name!r}")
+        datetime_format = "%Y-%m-%dT%H:%M:%SZ"
+        features = self._sentinel_hub.get_features(collection_name=collection_name,
+                                                   bbox=self._cube_config.bbox,
+                                                   time_range=(time_start.strftime(datetime_format),
+                                                               time_end.strftime(datetime_format)))
 
-        return self.tile_features_to_time_ranges(tile_features)
-
-    @classmethod
-    def tile_features_to_time_ranges(cls, tile_features, max_timedelta: Union[str, pd.Timedelta] = '1H') \
-            -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
-        """
-        Convert list of tiles as returned by SH WFS into list of time ranges whose time deltas are
-        not greater than *max_timedelta*.
-
-        :param tile_features: Tile dictionaries as returned by SH WFS
-        :param max_timedelta: Maximum time delta for each generated time range
-        :return: List time range tuples.
-        """
-        max_timedelta = pd.to_timedelta(max_timedelta) if isinstance(max_timedelta, str) else max_timedelta
-        feature_properties = [feature["properties"] for feature in tile_features]
-        timestamps = [pd.to_datetime(f'{properties["date"]}T{properties["time"]}', utc=True)
-                      for properties in feature_properties]
-        timestamps.sort()
-        num_timestamps = len(timestamps)
-        # noinspection PyTypeChecker
-        time_ranges: List[Tuple[pd.Timestamp, pd.Timestamp]] = []
-        i = 0
-        while i < num_timestamps:
-            timestamp1 = timestamp2 = timestamps[i]
-            while i < num_timestamps:
-                timestamp = timestamps[i]
-                if timestamp - timestamp1 >= max_timedelta:
-                    break
-                timestamp2 = timestamp
-                i += 1
-            time_ranges.append((timestamp1, timestamp2))
-        return time_ranges
+        return SentinelHub.features_to_time_ranges(features)
 
     def get_band_encoding(self, band_name: str) -> Dict[str, Any]:
         fill_value = self._METADATA.dataset_band_fill_value(self.cube_config.dataset_name,

@@ -26,7 +26,9 @@ DEFAULT_CLIENT_ID = os.environ.get('SH_CLIENT_ID')
 DEFAULT_CLIENT_SECRET = os.environ.get('SH_CLIENT_SECRET')
 
 DEFAULT_SH_API_URL = 'https://services.sentinel-hub.com'
-DEFAULT_SH_OAUTH2_URL = 'https://services.sentinel-hub.com/oauth'
+DEFAULT_SH_OAUTH2_URL = f'{DEFAULT_SH_API_URL}/oauth'
+
+SH_CATALOG_FEATURE_LIMIT = 100  # SH Catalog only allows this number of features to requested.
 
 DEFAULT_RETRY_BACKOFF_MAX = 40  # milliseconds
 DEFAULT_RETRY_BACKOFF_BASE = 1.001
@@ -42,6 +44,14 @@ DEFAULT_TILE_SIZE = 1000
 SH_MAX_IMAGE_SIZE = 2500
 
 BAND_DATA_ARRAY_NAME = 'band_data'
+
+SH_ENDPOINTS = {
+    "eu_central": "https://services.sentinel-hub.com/api/v1/catalog/collections",  # eu central
+    "us_west": "https://services-uswest2.sentinel-hub.com/api/v1/catalog/collections",  # us west
+    "creo": "https://creodias.sentinel-hub.com/api/v1/catalog/collections",  # CreaoDIAS
+    "mundi": "https://shservices.mundiwebservices.com/api/v1/catalog/collections",  # Mundi
+    "code_de": "https://code-de.sentinel-hub.com/api/v1/catalog/collections",
+}
 
 SH_DATA_STORE_ID = 'sentinelhub'
 SH_DATA_OPENER_ID = 'dataset[cube]:zarr:sentinelhub'

@@ -1,4 +1,15 @@
-## Changes in 0.3 (in dev)
+## Changes in 0.6.0 (in development)
+
+* Now using SENTINEL Hub's Catalogue API instead of the WFS (#14)
+  - to determine actual observations within given bounding box and time range;
+  - to determine time range of available data collections.  
+
+* The keyword argument `instance_id` of the `SentinelHub` and `SentinelHubStore` constructors
+  has been deprecated. It is no longer required    
+
+## Changes in 0.3.0.dev1
+ 
+*Note, this version has been accidently released as v0.5.0.*
 
 * Documented store open parameters. Store open parameter `variable_names` and  
   `CubeConfig` parameter `band_names` may now be `None`. In this case all 
