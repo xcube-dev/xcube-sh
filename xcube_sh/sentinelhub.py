@@ -124,6 +124,7 @@ class SentinelHub:
         return json.loads(resp.content)
 
     def collections(self) -> List[Dict[str, Any]]:
+        # TODO alicja: Ask Anja, if we should use this instead of datasets of Process API
         response = self.session.get(f'{self.api_url}/api/v1/catalog/collections')
         if not response.ok:
             response.raise_for_status()
@@ -138,6 +139,8 @@ class SentinelHub:
     # noinspection PyMethodMayBeStatic
     @property
     def datasets(self) -> List[Dict[str, str]]:
+        # TODO alicja: Ask Anja, if this is still valid, or should we use Catalog also here
+        # TODO alicja: make sure, that this list is the one used by SentinelHubStore
         resp = self.session.get(self.api_url + '/configuration/v1/datasets')
         return json.loads(resp.content)
 
@@ -149,15 +152,30 @@ class SentinelHub:
     def get_features(self,
                      collection_name: str,
                      bbox: Tuple[float, float, float, float] = None,
+                     # TODO alicja: add Process API CRS name
+                     # crs: str = None,
                      time_range: Tuple[str, str] = None) -> List[Dict[str, Any]]:
+        """
+        Get geometric intersections of dataset given by *collection_name*
+        with optional *bbox* and *time_range*. The result is returned as a list of
+        features, whose properties include a "datetime" field.
+
+        :param collection_name: dataset collection name
+        :param bbox: bounding box
+        :param time_range: time range
+        :return: list of features that include a "datetime" field for all intersections.
+        """
         max_feature_count = SH_CATALOG_FEATURE_LIMIT
 
         request = dict(collections=[collection_name],
                        limit=max_feature_count,
+                       # Exclude most of the response data, as this is not required (yet)
                        fields=dict(exclude=['geometry', 'bbox', 'assets', 'links'],
                                    include=['properties.datetime']))
         if bbox:
             request.update(bbox=bbox)
+            # TODO alicja: Find out how the Process API CRS names relate to Catalog CRS names
+            #    'bbox-crs' uses another convention, see
             # query_params.update({'bbox-crs': ''})
         if time_range:
             t1, t2 = time_range
