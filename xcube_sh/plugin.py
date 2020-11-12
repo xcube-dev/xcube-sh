@@ -43,4 +43,4 @@ def init_plugin(ext_registry: extension.ExtensionRegistry):
     ext_registry.add_extension(loader=extension.import_component('xcube_sh.store:SentinelHubDataOpener'),
                                point=EXTENSION_POINT_DATA_OPENERS,
                                name=SH_DATA_OPENER_ID,
-                               description='xarray.Dataset in Zarr format from SENTINEL Hub Cloud API')
+                               description='xarray.Dataset cubes in Zarr format from SENTINEL Hub Cloud API')
