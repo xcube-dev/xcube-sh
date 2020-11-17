@@ -89,7 +89,8 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         store = new_data_store(SH_DATA_STORE_ID)
         expected_set = {('S1GRD', 'Sentinel 1 GRD'),
                         ('S2L1C', 'Sentinel 2 L1C'),
-                        ('S2L2A', 'Sentinel 2 L2A')}
+                        ('S2L2A', 'Sentinel 2 L2A'),
+                        ('DEM', 'Digital Elevation Model'),}
         self.assertEqual(expected_set, set(store.get_data_ids()))
         self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset')))
         self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset[cube]')))

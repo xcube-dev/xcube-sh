@@ -21,6 +21,8 @@
 
 import os
 
+from urllib.parse import urlsplit
+
 DEFAULT_CLIENT_ID = os.environ.get('SH_CLIENT_ID')
 DEFAULT_CLIENT_SECRET = os.environ.get('SH_CLIENT_SECRET')
 
@@ -43,14 +45,6 @@ DEFAULT_TILE_SIZE = 1000
 SH_MAX_IMAGE_SIZE = 2500
 
 BAND_DATA_ARRAY_NAME = 'band_data'
-
-SH_ENDPOINTS = {
-    "eu_central": "https://services.sentinel-hub.com/api/v1/catalog/collections",  # eu central
-    "us_west": "https://services-uswest2.sentinel-hub.com/api/v1/catalog/collections",  # us west
-    "creo": "https://creodias.sentinel-hub.com/api/v1/catalog/collections",  # CreaoDIAS
-    "mundi": "https://shservices.mundiwebservices.com/api/v1/catalog/collections",  # Mundi
-    "code_de": "https://code-de.sentinel-hub.com/api/v1/catalog/collections",
-}
 
 SH_DATA_STORE_ID = 'sentinelhub'
 SH_DATA_OPENER_ID = 'dataset[cube]:zarr:sentinelhub'

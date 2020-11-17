@@ -341,15 +341,18 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
     def get_data_ids(self, type_specifier: str = None, include_titles=True) -> Iterator[Tuple[str, Optional[str]]]:
         if self._is_supported_type_specifier(type_specifier):
             if self._sentinel_hub is not None:
+                metadata = SentinelHubMetadata()
+                extra_collections = metadata.extra_collections(self._sentinel_hub.api_url)
                 # If we are connected to the API, we will return only datasets that are also collections
                 collections = self._sentinel_hub.collections()
-                collection_descriptors = SentinelHubMetadata().collections
+                collections.extend(extra_collections)
+                collection_datasets = metadata.collection_datasets
                 for collection in collections:
                     collection_id = collection.get('id')
                     collection_title = collection.get('title') if include_titles else None
-                    collection_descriptor = collection_descriptors.get(collection_id)
-                    if collection_descriptor is not None:
-                        dataset_name = collection_descriptor.get('dataset_name')
+                    collection_dataset = collection_datasets.get(collection_id)
+                    if collection_dataset is not None:
+                        dataset_name = collection_dataset.get('dataset_name')
                         if dataset_name is not None:
                             yield dataset_name, collection_title
             else:

@@ -23,23 +23,29 @@
 Static SH metadata.
 """
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
+from urllib.parse import urlparse
 
 
 class SentinelHubMetadata:
 
     def __init__(self):
         self._metadata = _SH_METADATA
+        self._extra_collections = _EXTRA_COLLECTIONS
 
     @property
     def datasets(self) -> Dict:
         return dict(self._metadata['datasets'])
 
     @property
-    def collections(self) -> Dict:
+    def collection_datasets(self) -> Dict:
         return {v['collection_name']: dict(**v, dataset_name=k)
                 for k, v in self.datasets.items()
                 if 'collection_name' in v}
+
+    def extra_collections(self, api_url: str) -> List[Dict[str, Any]]:
+        endpoint = urlparse(api_url).hostname
+        return list(self._extra_collections.get(endpoint, []))
 
     @property
     def dataset_names(self) -> List[str]:
@@ -96,6 +102,35 @@ class SentinelHubMetadata:
         bands = self._dataset_bands_direct(dataset_name)
         return bands.get(band_name) if bands else None
 
+
+_DEM_COLLECTION_NAME = "dem"
+
+_DEM_COLLECTION = {
+    "id": _DEM_COLLECTION_NAME,
+    "title": "Digital Elevation Model",
+    "description": "Digital elevation model data by Mapzen",
+    "extent": {
+        "spatial": {
+            "bbox": (-180.0, -90.0, 180.0, 90.0),
+        }
+    }
+}
+
+# Mapping from SH endpoints to collection metadata using STAC metadata subset.
+# Only datasets not accessible through Catalog collection are provided here.
+#
+_EXTRA_COLLECTIONS: Dict[str, List[Dict[str, Any]]] = {
+    # EU Central
+    "services.sentinel-hub.com": [_DEM_COLLECTION],
+    # US West
+    "services-uswest2.sentinel-hub.com": [_DEM_COLLECTION],
+    # CreaoDIAS
+    "creodias.sentinel-hub.com": [],
+    # Mundi
+    "shservices.mundiwebservices.com": [],
+    # CODE-DE
+    "code-de.sentinel-hub.com": [],
+}
 
 S2_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12']
 S2A_WAVELENGTHS = [442.7, 492.4, 559.8, 664.6, 704.1, 740.5, 782.8, 832.8, 864.7, 945.1, 1373.5, 1613.7, 2202.4]
@@ -210,6 +245,7 @@ _SH_METADATA = dict(
             bands={
                 # TODO (forman): add static DEM bands metadata here...
             },
+            collection_name=_DEM_COLLECTION_NAME,
         ),
         'MODIS': dict(
             title='MODIS MCD43A4',
