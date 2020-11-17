@@ -172,11 +172,7 @@ class SentinelHubDataOpener(DataOpener):
     # Implementation helpers
 
     def _get_open_data_params_schema(self, dsd: DatasetDescriptor = None) -> JsonObjectSchema:
-        min_date = max_date = None
-        if dsd.time_range is not None:
-            min_date, max_date = dsd.time_range
-            min_date = min_date.split('T')[0] if min_date is not None else None
-            max_date = max_date.split('T')[0] if max_date is not None else None
+        min_date, max_date = dsd.time_range if dsd.time_range is not None else (None, None)
 
         cube_params = dict(
             dataset_name=JsonStringSchema(min_length=1),
@@ -257,7 +253,13 @@ class SentinelHubDataOpener(DataOpener):
             extent = collection_metadata.get('extent')
             if extent is not None:
                 bbox = extent.get("spatial", {}).get('bbox')
-                time_range = extent.get("temporal", {}).get('interval')
+                interval = extent.get("temporal", {}).get('interval')
+                if isinstance(interval, list) and len(interval) == 2:
+                    min_datetime, max_datetime = interval
+                    # Get rid of time part
+                    time_range = (min_datetime.split('T')[0] if min_datetime is not None else None,
+                                  max_datetime.split('T')[0] if max_datetime is not None else None)
+
             if 'title' in collection_metadata:
                 dataset_attrs['title'] = collection_metadata['title']
             if 'description' in collection_metadata:
@@ -352,7 +354,7 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
                             yield dataset_name, collection_title
             else:
                 datasets = SentinelHubMetadata().datasets
-                for dataset_name, dataset_metadata  in datasets.items():
+                for dataset_name, dataset_metadata in datasets.items():
                     yield dataset_name, dataset_metadata.get('title') if include_titles else None
 
     def has_data(self, data_id: str, type_specifier: str = None) -> bool:

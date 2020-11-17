@@ -147,5 +147,5 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         self.assertEqual(None, dsd.crs)
         self.assertEqual(None, dsd.spatial_res)
         self.assertEqual((-180.0, -56.0, 180.0, 83.0), dsd.bbox)
-        self.assertEqual(('2015-11-01T00:00:00Z', None), dsd.time_range)
+        self.assertEqual(('2015-11-01', None), dsd.time_range)
         self.assertEqual('1D', dsd.time_period)
