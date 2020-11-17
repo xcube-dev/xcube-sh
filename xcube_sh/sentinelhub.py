@@ -107,7 +107,7 @@ class SentinelHub:
             self.token = self.session.fetch_token(token_url=self.oauth2_url + '/token',
                                                   client_id=client_id,
                                                   client_secret=client_secret)
-            print(self.token)
+            # print(self.token)
             self.client_id = client_id
         else:
             self.session: Any = session
