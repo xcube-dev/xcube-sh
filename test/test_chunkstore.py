@@ -83,7 +83,7 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
                           band_names=['B01', 'B08', 'B12'],
-                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          bbox=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period='1D',
@@ -156,7 +156,7 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
 class SentinelHubStore3DTestWithAllBands(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L2A',
-                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          bbox=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period=None,
@@ -173,7 +173,7 @@ class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
                           band_names=['B01', 'B08', 'B12'],
-                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          bbox=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period=None,
@@ -256,7 +256,7 @@ class SentinelHubStore4DTest(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
                           band_names=['B01', 'B08', 'B12'],
-                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          bbox=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period='1D',

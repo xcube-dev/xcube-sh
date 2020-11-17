@@ -37,7 +37,7 @@ class CubeConfigTest(unittest.TestCase):
                              time_range=('2019-01-01', '2019-01-02'))
 
         # size will be smaller than chunk sizes
-        config = CubeConfig(geometry=(10.11, 54.17, 10.14, 54.19), **common_kwargs)
+        config = CubeConfig(bbox=(10.11, 54.17, 10.14, 54.19), **common_kwargs)
         w, h = config.size
         x1, y1, x2, y2 = config.bbox
         self.assertEqual((167, 111), (w, h))
@@ -51,7 +51,7 @@ class CubeConfigTest(unittest.TestCase):
         self.assertEqual(h, round((y2 - y1) / spatial_res))
 
         # size will be smaller than 2x chunk sizes
-        config = CubeConfig(geometry=(10.11, 54.17, 10.2025, 54.3), **common_kwargs)
+        config = CubeConfig(bbox=(10.11, 54.17, 10.2025, 54.3), **common_kwargs)
         w, h = config.size
         x1, y1, x2, y2 = config.bbox
         self.assertEqual((514, 722), (w, h))
@@ -65,7 +65,7 @@ class CubeConfigTest(unittest.TestCase):
         self.assertEqual(h, round((y2 - y1) / spatial_res))
 
         # size will be larger than or equal 2x chunk sizes
-        config = CubeConfig(geometry=(10.11, 54.17, 10.5, 54.5), **common_kwargs)
+        config = CubeConfig(bbox=(10.11, 54.17, 10.5, 54.5), **common_kwargs)
         w, h = config.size
         x1, y1, x2, y2 = config.bbox
         self.assertEqual((2560, 2048), (w, h))
