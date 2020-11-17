@@ -99,8 +99,20 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         store = new_data_store(SH_DATA_STORE_ID)
         schema = store.get_open_data_params_schema('S2L2A')
         self.assertIsInstance(schema, JsonObjectSchema)
+        self.assertEqual('object', schema.type)
+        self.assertEqual({'time_range', 'spatial_res', 'bbox'}, schema.required)
         self.assertIn('bbox', schema.properties)
         self.assertIn('time_range', schema.properties)
+        self.assertEqual(
+            {
+                'type': 'array',
+                'items': [{'type': 'string', 'format': 'date', 'minDate': '2016-11-01'},
+                          {'type': 'string', 'format': 'date', 'minDate': '2016-11-01'}],
+            },
+            schema.properties['time_range'].to_dict())
+        self.assertIn('time_period', schema.properties)
+        self.assertIn('spatial_res', schema.properties)
+        self.assertIn('crs', schema.properties)
 
     def test_describe_data(self):
         store = new_data_store(SH_DATA_STORE_ID)

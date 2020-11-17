@@ -172,6 +172,12 @@ class SentinelHubDataOpener(DataOpener):
     # Implementation helpers
 
     def _get_open_data_params_schema(self, dsd: DatasetDescriptor = None) -> JsonObjectSchema:
+        min_date = max_date = None
+        if dsd.time_range is not None:
+            min_date, max_date = dsd.time_range
+            min_date = min_date.split('T')[0] if min_date is not None else None
+            max_date = max_date.split('T')[0] if max_date is not None else None
+
         cube_params = dict(
             dataset_name=JsonStringSchema(min_length=1),
             variable_names=JsonArraySchema(
@@ -188,7 +194,7 @@ class SentinelHubDataOpener(DataOpener):
                                         JsonNumberSchema(),
                                         JsonNumberSchema())),
             spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
-            time_range=JsonDateSchema.new_range(),
+            time_range=JsonDateSchema.new_range(min_date=min_date, max_date=max_date),
             # TODO: add pattern
             time_period=JsonStringSchema(default='1D', nullable=True,
                                          enum=[None,
