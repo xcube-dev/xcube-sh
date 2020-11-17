@@ -36,6 +36,12 @@ class SentinelHubMetadata:
         return dict(self._metadata['datasets'])
 
     @property
+    def collections(self) -> Dict:
+        return {v['collection_name']: dict(**v, dataset_name=k)
+                for k, v in self.datasets.items()
+                if 'collection_name' in v}
+
+    @property
     def dataset_names(self) -> List[str]:
         return [ds_id for ds_id in self._metadata['datasets']]
 

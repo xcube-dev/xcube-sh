@@ -211,6 +211,7 @@ class SentinelHubDataOpener(DataOpener):
         ]
         sh_params = {}
         if self._sentinel_hub is None:
+            # If we are NOT connected to the API (yet), we also include store parameters
             sh_schema = SentinelHubDataStore.get_data_store_params_schema()
             sh_params = sh_schema.properties
             required.extend(sh_schema.required or [])
@@ -224,42 +225,57 @@ class SentinelHubDataOpener(DataOpener):
         )
 
     def _describe_data(self, data_id: str) -> DatasetDescriptor:
-        dataset_attrs = self.ensure_dataset_metadata(data_id)
+        dataset_metadata, collection_metadata = self._get_dataset_and_collection_metadata(data_id)
+        band_metadatas = dataset_metadata.get('bands', {})
 
-        band_names = None
         if self._sentinel_hub is not None:
-            dataset_item = next((item for item in self._sentinel_hub.datasets
-                                 if item.get('id') == data_id), None)
-            if dataset_item is None:
-                raise DataStoreError(f'Unknown dataset identifier "{data_id}"')
+            # If we are connected to the API, we return band names by API
             band_names = self._sentinel_hub.band_names(data_id)
-            dataset_attrs = dict(**(dataset_attrs or {}))
-            dataset_attrs['title'] = dataset_item.get('name')
         else:
-            if dataset_attrs is None:
-                raise DataStoreError(f'Unknown dataset identifier "{data_id}"')
-            dataset_attrs = dict(**dataset_attrs)
-            dataset_attrs.pop('bands', None)
+            # Otherwise all we know about
+            band_names = band_metadatas.keys()
 
-        metadata = SentinelHubMetadata()
-        if not band_names:
-            band_names = metadata.dataset_band_names(data_id) or []
+        data_vars = []
+        for band_name in band_names:
+            band_metadata = band_metadatas.get(band_name, dict(sample_type='FLOAT32'))
+            data_vars.append(VariableDescriptor(name=band_name,
+                                                dtype=band_metadata.get('sample_type', 'FLOAT32'),
+                                                dims=('time', 'lat', 'lon'),
+                                                attrs=band_metadatas.copy()))
 
-        data_vars = [VariableDescriptor(name=band_name,
-                                        dtype=metadata.dataset_band_sample_type(data_id, band_name),
-                                        dims=('time', 'lat', 'lon'),
-                                        attrs=metadata.dataset_band(data_id, band_name))
-                     for band_name in band_names]
+        dataset_attrs = dataset_metadata.copy()
+
+        bbox = None
+        time_range = None
+        if collection_metadata is not None:
+            extent = collection_metadata.get('extent')
+            if extent is not None:
+                bbox = extent.get("spatial", {}).get('bbox')
+                time_range = extent.get("temporal", {}).get('interval')
+            if 'title' in collection_metadata:
+                dataset_attrs['title'] = collection_metadata['title']
+            if 'description' in collection_metadata:
+                dataset_attrs['description'] = collection_metadata['description']
 
         return DatasetDescriptor(data_id=data_id,
                                  data_vars=data_vars,
-                                 attrs=dataset_attrs)
+                                 bbox=bbox,
+                                 time_range=time_range,
+                                 time_period=dataset_metadata.get('request_period'),
+                                 attrs=dataset_metadata)
 
-    def ensure_dataset_metadata(self, data_id: str) -> Dict[str, Any]:
-        dataset_attrs = SentinelHubMetadata().dataset(data_id)
-        if dataset_attrs is None:
+    def _get_dataset_and_collection_metadata(self, data_id: str) -> Tuple[Dict[str, Any], Optional[Dict[str, Any]]]:
+        dataset_metadata = SentinelHubMetadata().datasets.get(data_id)
+        if dataset_metadata is None:
             raise DataStoreError(f'Dataset "{data_id}" not found.')
-        return dataset_attrs
+        if self._sentinel_hub is not None:
+            # If we are connected to the API, we may also have collection metadata
+            collection_name = dataset_metadata.get('collection_name')
+            if collection_name is not None:
+                for collection_metadata in self._sentinel_hub.collections():
+                    if collection_name == collection_metadata.get('id'):
+                        return dataset_metadata, collection_metadata
+        return dataset_metadata, None
 
 
 class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
@@ -311,14 +327,27 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
         return str(TYPE_SPECIFIER_CUBE),
 
     def get_type_specifiers_for_data(self, data_id: str) -> Tuple[str, ...]:
-        self.ensure_dataset_metadata(data_id)
+        self._get_dataset_and_collection_metadata(data_id)
         return self.get_type_specifiers()
 
     def get_data_ids(self, type_specifier: str = None, include_titles=True) -> Iterator[Tuple[str, Optional[str]]]:
         if self._is_supported_type_specifier(type_specifier):
-            metadata = SentinelHubMetadata()
-            for data_id, dataset in metadata.datasets.items():
-                yield data_id, (dataset.get('title') if include_titles else None)
+            if self._sentinel_hub is not None:
+                # If we are connected to the API, we will return only datasets that are also collections
+                collections = self._sentinel_hub.collections()
+                collection_descriptors = SentinelHubMetadata().collections
+                for collection in collections:
+                    collection_id = collection.get('id')
+                    collection_title = collection.get('title') if include_titles else None
+                    collection_descriptor = collection_descriptors.get(collection_id)
+                    if collection_descriptor is not None:
+                        dataset_name = collection_descriptor.get('dataset_name')
+                        if dataset_name is not None:
+                            yield dataset_name, collection_title
+            else:
+                datasets = SentinelHubMetadata().datasets
+                for dataset_name, dataset_metadata  in datasets.items():
+                    yield dataset_name, dataset_metadata.get('title') if include_titles else None
 
     def has_data(self, data_id: str, type_specifier: str = None) -> bool:
         if self._is_supported_type_specifier(type_specifier):

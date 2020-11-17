@@ -107,6 +107,7 @@ class SentinelHub:
             self.token = self.session.fetch_token(token_url=self.oauth2_url + '/token',
                                                   client_id=client_id,
                                                   client_secret=client_secret)
+            print(self.token)
             self.client_id = client_id
         else:
             self.session: Any = session
@@ -120,16 +121,11 @@ class SentinelHub:
 
     @property
     def token_info(self) -> Dict[str, Any]:
-        resp = self.session.get(self.oauth2_url + '/tokeninfo')
-        return json.loads(resp.content)
-
-    def collections(self) -> List[Dict[str, Any]]:
-        # TODO alicja: Ask Anja, if we should use this instead of datasets of Process API
-        response = self.session.get(f'{self.api_url}/api/v1/catalog/collections')
+        response = self.session.get(self.oauth2_url + '/tokeninfo')
         if not response.ok:
             response.raise_for_status()
             raise SentinelHubError(response)
-        return response.json()["collections"]
+        return response.json()
 
     # noinspection PyMethodMayBeStatic
     @property
@@ -139,21 +135,37 @@ class SentinelHub:
     # noinspection PyMethodMayBeStatic
     @property
     def datasets(self) -> List[Dict[str, str]]:
-        # TODO alicja: Ask Anja, if this is still valid, or should we use Catalog also here
-        # TODO alicja: make sure, that this list is the one used by SentinelHubStore
-        resp = self.session.get(self.api_url + '/configuration/v1/datasets')
-        return json.loads(resp.content)
+        """
+        See https://docs.sentinel-hub.com/api/latest/reference/#tag/configuration_dataset
+        """
+        response = self.session.get(self.api_url + '/configuration/v1/datasets')
+        if not response.ok:
+            response.raise_for_status()
+            raise SentinelHubError(response)
+        return response.json()
 
-    def band_names(self, dataset_name: str) -> Dict[str, Any]:
-        resp = self.session.get(self.api_url + f'/api/v1/process/dataset/{dataset_name}/bands')
-        obj = json.loads(resp.content)
-        return obj.get('data')
+    def band_names(self, dataset_name: str) -> List[str]:
+        response = self.session.get(self.api_url + f'/api/v1/process/dataset/{dataset_name}/bands')
+        if not response.ok:
+            response.raise_for_status()
+            raise SentinelHubError(response)
+        return response.json().get('data', {})
+
+    def collections(self) -> List[Dict[str, Any]]:
+        """
+        See https://docs.sentinel-hub.com/api/latest/reference/#operation/getCollections
+        """
+        response = self.session.get(f'{self.api_url}/api/v1/catalog/collections')
+        if not response.ok:
+            response.raise_for_status()
+            raise SentinelHubError(response)
+        return response.json().get('collections', [])
 
     def get_features(self,
                      collection_name: str,
                      bbox: Tuple[float, float, float, float] = None,
-                     # TODO alicja: add Process API CRS name
-                     # crs: str = None,
+                     # TODO (alicja): add Process API CRS name
+                     # bbox_crs: str = None,
                      time_range: Tuple[str, str] = None) -> List[Dict[str, Any]]:
         """
         Get geometric intersections of dataset given by *collection_name*
@@ -174,8 +186,7 @@ class SentinelHub:
                                    include=['properties.datetime']))
         if bbox:
             request.update(bbox=bbox)
-            # TODO alicja: Find out how the Process API CRS names relate to Catalog CRS names
-            #    'bbox-crs' uses another convention, see
+            # TODO (alicja): Implement, once Sentinel Hub does supports CRSes other than WGS84 for 'bbox-crs'.
             # query_params.update({'bbox-crs': ''})
         if time_range:
             t1, t2 = time_range

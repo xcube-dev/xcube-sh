@@ -278,6 +278,21 @@ class SentinelHubCatalogueTest(unittest.TestCase):
         self.assertEqual(expected_band_names, sentinel_hub.band_names('S2L2A'))
         sentinel_hub.close()
 
+    def test_get_features(self):
+        properties = [{'datetime': '2019-10-02T10:35:47Z'}, {'datetime': '2019-10-04T10:25:47Z'},
+                      {'datetime': '2019-10-05T10:45:36Z'}, {'datetime': '2019-10-05T10:45:44Z'}]
+        expected_features = [dict(properties=p) for p in properties]
+        sentinel_hub = SentinelHub(session=SessionMock({
+            'post': {
+                'https://services.sentinel-hub.com/api/v1/catalog/search':
+                    dict(type='FeatureCollection', features=expected_features)
+            }
+        }))
+        self.assertEqual(expected_features, sentinel_hub.get_features(collection_name='sentinel-2-l2a',
+                                                                      bbox=(12, 53, 13, 54),
+                                                                      time_range=('2019-10-02', '2019-10-05')))
+        sentinel_hub.close()
+
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
 class SentinelHubTokenInfoTest(unittest.TestCase):
@@ -471,10 +486,21 @@ class SessionMock:
         pass
 
     @classmethod
-    def _response(cls, obj):
-        return SessionResponseMock(content=json.dumps(obj))
+    def _response(cls, content_obj):
+        return SessionResponseMock(content_obj)
 
 
 class SessionResponseMock:
-    def __init__(self, content=None):
-        self.content = content
+    def __init__(self, content_obj):
+        self.content_obj = content_obj
+
+    @property
+    def ok(self) -> bool:
+        return True
+
+    @property
+    def content(self):
+        return json.dumps(self.content_obj)
+
+    def json(self):
+        return self.content_obj
