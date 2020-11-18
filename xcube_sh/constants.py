@@ -1,5 +1,5 @@
 # The MIT License (MIT)
-# Copyright (c) 2019 by the xcube development team and contributors
+# Copyright (c) 2020 by the xcube development team and contributors
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -21,12 +21,15 @@
 
 import os
 
-DEFAULT_INSTANCE_ID = os.environ.get('SH_INSTANCE_ID')
+from urllib.parse import urlsplit
+
 DEFAULT_CLIENT_ID = os.environ.get('SH_CLIENT_ID')
 DEFAULT_CLIENT_SECRET = os.environ.get('SH_CLIENT_SECRET')
 
 DEFAULT_SH_API_URL = 'https://services.sentinel-hub.com'
-DEFAULT_SH_OAUTH2_URL = 'https://services.sentinel-hub.com/oauth'
+DEFAULT_SH_OAUTH2_URL = f'{DEFAULT_SH_API_URL}/oauth'
+
+SH_CATALOG_FEATURE_LIMIT = 100  # SH Catalog only allows this number of features to requested.
 
 DEFAULT_RETRY_BACKOFF_MAX = 40  # milliseconds
 DEFAULT_RETRY_BACKOFF_BASE = 1.001

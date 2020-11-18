@@ -24,7 +24,7 @@ import json
 import time
 from abc import abstractmethod, ABCMeta
 from collections import MutableMapping
-from typing import Iterator, Any, List, Dict, Tuple, Callable, Iterable, KeysView, Union
+from typing import Iterator, Any, List, Dict, Tuple, Callable, Iterable, KeysView
 
 import numpy as np
 import pandas as pd
@@ -70,8 +70,26 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         x_array = np.linspace(x1 + spatial_res / 2, x2 - spatial_res / 2, width, dtype=np.float64)
         y_array = np.linspace(y2 - spatial_res / 2, y1 + spatial_res / 2, height, dtype=np.float64)
 
-        t_array = np.array([s + 0.5 * (e - s) for s, e in self._time_ranges]).astype('datetime64[s]').astype(np.int64)
-        t_bnds_array = np.array(self._time_ranges).astype('datetime64[s]').astype(np.int64)
+        def time_stamp_to_str(ts: pd.Timestamp) -> str:
+            """
+            Convert to ISO string and strip timezone.
+            Used to create numpy datetime64 arrays.
+            We cannot create directly from pd.Timestamp because Numpy doesn't
+            like parsing timezones anymore.
+            """
+            ts_str: str = ts.isoformat()
+            if ts_str[-1] == 'Z':
+                return ts_str[0:-1]
+            try:
+                i = ts_str.rindex('+')
+                return ts_str[0: i]
+            except ValueError:
+                return ts_str
+
+        t_array = np.array([time_stamp_to_str(s + 0.5 * (e - s)) for s, e in self._time_ranges],
+                           dtype='datetime64[s]').astype(np.int64)
+        t_bnds_array = np.array([[time_stamp_to_str(s), time_stamp_to_str(e)] for s, e in self._time_ranges],
+                                dtype='datetime64[s]').astype(np.int64)
 
         time_coverage_start = self._time_ranges[0][0]
         time_coverage_end = self._time_ranges[-1][1]
@@ -186,16 +204,16 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                        band_encoding,
                                        band_attrs)
 
-    def get_time_ranges(self):
+    def get_time_ranges(self) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
         time_start, time_end = self._cube_config.time_range
         time_period = self._cube_config.time_period
-        request_time_ranges = []
+        time_ranges = []
         time_now = time_start
         while time_now <= time_end:
             time_next = time_now + time_period
-            request_time_ranges.append((time_now, time_next))
+            time_ranges.append((time_now, time_next))
             time_now = time_next
-        return request_time_ranges
+        return time_ranges
 
     def add_observer(self, observer: Callable):
         """
@@ -449,46 +467,16 @@ class SentinelHubChunkStore(RemoteStore):
         if time_period is not None:
             return super().get_time_ranges()
 
-        feature_type_name = self._METADATA.dataset_feature_type_name(self._cube_config.dataset_name)
-        if not feature_type_name:
-            raise ValueError(f"cannot find feature type name for dataset name {self._cube_config.dataset_name!r}")
-        tile_features = self._sentinel_hub.get_tile_features(feature_type_name=feature_type_name,
-                                                             bbox=self._cube_config.bbox,
-                                                             time_range=(time_start.strftime("%Y-%m-%d"),
-                                                                         time_end.strftime("%Y-%m-%d")))
+        collection_name = self._METADATA.dataset_collection_name(self._cube_config.dataset_name)
+        if not collection_name:
+            raise ValueError(f"cannot find collection name for dataset name {self._cube_config.dataset_name!r}")
+        datetime_format = "%Y-%m-%dT%H:%M:%SZ"
+        features = self._sentinel_hub.get_features(collection_name=collection_name,
+                                                   bbox=self._cube_config.bbox,
+                                                   time_range=(time_start.strftime(datetime_format),
+                                                               time_end.strftime(datetime_format)))
 
-        return self.tile_features_to_time_ranges(tile_features)
-
-    @classmethod
-    def tile_features_to_time_ranges(cls, tile_features, max_timedelta: Union[str, pd.Timedelta] = '1H') \
-            -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
-        """
-        Convert list of tiles as returned by SH WFS into list of time ranges whose time deltas are
-        not greater than *max_timedelta*.
-
-        :param tile_features: Tile dictionaries as returned by SH WFS
-        :param max_timedelta: Maximum time delta for each generated time range
-        :return: List time range tuples.
-        """
-        max_timedelta = pd.to_timedelta(max_timedelta) if isinstance(max_timedelta, str) else max_timedelta
-        feature_properties = [feature["properties"] for feature in tile_features]
-        timestamps = [pd.to_datetime(f'{properties["date"]}T{properties["time"]}', utc=True)
-                      for properties in feature_properties]
-        timestamps.sort()
-        num_timestamps = len(timestamps)
-        # noinspection PyTypeChecker
-        time_ranges: List[Tuple[pd.Timestamp, pd.Timestamp]] = []
-        i = 0
-        while i < num_timestamps:
-            timestamp1 = timestamp2 = timestamps[i]
-            while i < num_timestamps:
-                timestamp = timestamps[i]
-                if timestamp - timestamp1 >= max_timedelta:
-                    break
-                timestamp2 = timestamp
-                i += 1
-            time_ranges.append((timestamp1, timestamp2))
-        return time_ranges
+        return SentinelHub.features_to_time_ranges(features)
 
     def get_band_encoding(self, band_name: str) -> Dict[str, Any]:
         fill_value = self._METADATA.dataset_band_fill_value(self.cube_config.dataset_name,

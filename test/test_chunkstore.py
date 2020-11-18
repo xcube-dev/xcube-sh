@@ -26,6 +26,7 @@ from abc import abstractmethod
 from collections import namedtuple
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 import zarr
 
@@ -82,7 +83,7 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
                           band_names=['B01', 'B08', 'B12'],
-                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          bbox=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period='1D',
@@ -151,51 +152,11 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
              'B01-(9, 1, 3)'],
             sorted(list(self.observed_kwargs.keys())))
 
-    def test_tiles_to_time_ranges(self):
-        properties = [{'date': '2019-09-17', 'time': '10:35:42'}, {'date': '2019-09-17', 'time': '10:35:46'},
-                      {'date': '2019-10-09', 'time': '10:25:46'}, {'date': '2019-10-10', 'time': '10:45:38'},
-                      {'date': '2019-09-19', 'time': '10:25:44'}, {'date': '2019-09-20', 'time': '10:45:35'},
-                      {'date': '2019-09-20', 'time': '10:45:43'}, {'date': '2019-09-22', 'time': '10:35:42'},
-                      {'date': '2019-09-27', 'time': '10:35:44'}, {'date': '2019-09-27', 'time': '10:35:48'},
-                      {'date': '2019-10-02', 'time': '10:35:47'}, {'date': '2019-10-04', 'time': '10:25:47'},
-                      {'date': '2019-10-05', 'time': '10:45:36'}, {'date': '2019-10-05', 'time': '10:45:44'},
-                      {'date': '2019-10-07', 'time': '10:35:45'}, {'date': '2019-10-07', 'time': '10:35:49'},
-                      {'date': '2019-09-29', 'time': '10:25:46'}, {'date': '2019-09-30', 'time': '10:45:37'},
-                      {'date': '2019-09-25', 'time': '10:45:35'}, {'date': '2019-09-25', 'time': '10:45:43'},
-                      {'date': '2019-09-30', 'time': '10:45:45'}, {'date': '2019-10-02', 'time': '10:35:43'},
-                      {'date': '2019-10-10', 'time': '10:45:46'}, {'date': '2019-10-12', 'time': '10:35:44'},
-                      {'date': '2019-09-22', 'time': '10:35:46'}, {'date': '2019-09-24', 'time': '10:25:46'},
-                      {'date': '2019-10-12', 'time': '10:35:48'}, {'date': '2019-10-14', 'time': '10:25:48'},
-                      {'date': '2019-10-15', 'time': '10:45:36'}, {'date': '2019-10-15', 'time': '10:45:44'},
-                      {'date': '2019-10-17', 'time': '10:35:46'}, {'date': '2019-10-17', 'time': '10:35:50'}]
-        tile_features = [dict(type='Feature', geometry=dict(type='MULTIPOLYGON'), properties=p) for p in properties]
-        time_ranges = SentinelHubChunkStore.tile_features_to_time_ranges(tile_features)
-        self.assertEqual([('2019-09-17T10:35:42+00:00', '2019-09-17T10:35:46+00:00'),
-                          ('2019-09-19T10:25:44+00:00', '2019-09-19T10:25:44+00:00'),
-                          ('2019-09-20T10:45:35+00:00', '2019-09-20T10:45:43+00:00'),
-                          ('2019-09-22T10:35:42+00:00', '2019-09-22T10:35:46+00:00'),
-                          ('2019-09-24T10:25:46+00:00', '2019-09-24T10:25:46+00:00'),
-                          ('2019-09-25T10:45:35+00:00', '2019-09-25T10:45:43+00:00'),
-                          ('2019-09-27T10:35:44+00:00', '2019-09-27T10:35:48+00:00'),
-                          ('2019-09-29T10:25:46+00:00', '2019-09-29T10:25:46+00:00'),
-                          ('2019-09-30T10:45:37+00:00', '2019-09-30T10:45:45+00:00'),
-                          ('2019-10-02T10:35:43+00:00', '2019-10-02T10:35:47+00:00'),
-                          ('2019-10-04T10:25:47+00:00', '2019-10-04T10:25:47+00:00'),
-                          ('2019-10-05T10:45:36+00:00', '2019-10-05T10:45:44+00:00'),
-                          ('2019-10-07T10:35:45+00:00', '2019-10-07T10:35:49+00:00'),
-                          ('2019-10-09T10:25:46+00:00', '2019-10-09T10:25:46+00:00'),
-                          ('2019-10-10T10:45:38+00:00', '2019-10-10T10:45:46+00:00'),
-                          ('2019-10-12T10:35:44+00:00', '2019-10-12T10:35:48+00:00'),
-                          ('2019-10-14T10:25:48+00:00', '2019-10-14T10:25:48+00:00'),
-                          ('2019-10-15T10:45:36+00:00', '2019-10-15T10:45:44+00:00'),
-                          ('2019-10-17T10:35:46+00:00', '2019-10-17T10:35:50+00:00')],
-                         [(tr[0].isoformat(), tr[1].isoformat()) for tr in time_ranges])
-
 
 class SentinelHubStore3DTestWithAllBands(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L2A',
-                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          bbox=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period=None,
@@ -212,7 +173,7 @@ class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
                           band_names=['B01', 'B08', 'B12'],
-                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          bbox=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period=None,
@@ -295,7 +256,7 @@ class SentinelHubStore4DTest(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',
                           band_names=['B01', 'B08', 'B12'],
-                          geometry=(10.2, 53.5, 10.3, 53.6),
+                          bbox=(10.2, 53.5, 10.3, 53.6),
                           spatial_res=0.1 / 4000,
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period='1D',
@@ -303,14 +264,14 @@ class SentinelHubStore4DTest(SentinelHubStoreTest):
 
     def test_plain(self):
         cube = xr.open_zarr(self.store)
-        self.assert_4d_cube_is_valid(cube, self.cube_config)
+        self.assert_4d_cube_is_valid(cube)
 
     def test_cached(self):
         store_cache = zarr.LRUStoreCache(self.store, max_size=2 * 24)
         cube = xr.open_zarr(store_cache)
-        self.assert_4d_cube_is_valid(cube, self.cube_config)
+        self.assert_4d_cube_is_valid(cube)
 
-    def assert_4d_cube_is_valid(self, cube, cube_config):
+    def assert_4d_cube_is_valid(self, cube):
         cube_config = self.cube_config
 
         self.assertEqual({'lon', 'lat', 'time', 'time_bnds', 'band', 'band_data'},
@@ -415,9 +376,9 @@ class SentinelHubMock:
     def band_names(self, dataset_name: str):
         return S2_BAND_NAMES
 
-    def get_tile_features(self, feature_type_name, bbox, time_range):
-        import pandas as pd
-        x1, y1, x2, y2 = bbox
+    # noinspection PyUnusedLocal
+    def get_features(self, collection_name, bbox, time_range):
+        """Return dummy catalog features"""
         start_time, end_time = map(pd.to_datetime, time_range)
         datetime = start_time + pd.to_timedelta('8H')
         index = 0
@@ -426,19 +387,8 @@ class SentinelHubMock:
             index += 1
             datetime_str = datetime.isoformat()
             if datetime_str.endswith('+00:00'):
-                datetime_str = datetime_str[:-len('+00:00')]
-            date, time = datetime_str.split('T')
-            feature = dict(type='Feature',
-                           geometry=dict(type='POLYGON',
-                                         coordinates=[[[x1, y1],
-                                                       [x2, y1],
-                                                       [x2, y2],
-                                                       [x1, y2],
-                                                       [x1, y1]]]),
-                           properties=dict(id=f'{feature_type_name}-{index}',
-                                           path=f'{feature_type_name}/{index}',
-                                           date=date,
-                                           time=time))
+                datetime_str = datetime_str[:-len('+00:00')] + 'Z'
+            feature = dict(properties=dict(datetime=datetime_str))
             features.append(feature)
             datetime += pd.to_timedelta('48H')
         return features

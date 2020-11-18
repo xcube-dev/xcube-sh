@@ -25,7 +25,6 @@ Once `xcube` will be available from conda-forge:
 
 You cannot use the `xcube_sh` plugin without specifying your SENTINEL Hub credentials:
 
-    $ export SH_INSTANCE_ID=<your instance ID>    
     $ export SH_CLIENT_ID=<your client ID>    
     $ export SH_CLIENT_SECRET=<your client secret>    
 

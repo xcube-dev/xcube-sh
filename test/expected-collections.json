@@ -1,0 +1,179 @@
+{
+  "links": [
+    {
+      "href": "https://services.sentinel-hub.com/api/v1/catalog/collections",
+      "rel": "self",
+      "type": "application/json"
+    }
+  ],
+  "collections": [
+    {
+      "stac_version": "0.9.0",
+      "id": "sentinel-2-l1c",
+      "title": "Sentinel 2 L1C",
+      "description": "Sentinel 2 imagery processed to level 1C",
+      "license": "license",
+      "extent": {
+        "spatial": {
+          "bbox": [
+            -180.0,
+            -56.0,
+            180.0,
+            83.0
+          ]
+        },
+        "temporal": {
+          "interval": [
+            "2015-11-01T00:00:00Z",
+            null
+          ]
+        }
+      },
+      "links": [
+        {
+          "href": "https://services.sentinel-hub.com/api/v1/catalog/collections/sentinel-2-l1c",
+          "rel": "self"
+        },
+        {
+          "href": "https://services.sentinel-hub.com/api/v1/catalog/collections/sentinel-2-l1c/items",
+          "rel": "items"
+        }
+      ],
+      "providers": [
+        {
+          "name": "ESA",
+          "roles": [
+            "producer"
+          ],
+          "url": "https://esa.int/"
+        },
+        {
+          "name": "AWS",
+          "roles": [
+            "host"
+          ],
+          "url": "https://aws.amazon.com/"
+        },
+        {
+          "name": "Sinergise",
+          "roles": [
+            "processor"
+          ],
+          "url": "https://www.sinergise.com/"
+        }
+      ]
+    },
+    {
+      "stac_version": "0.9.0",
+      "id": "sentinel-1-grd",
+      "title": "Sentinel 1 GRD",
+      "description": "Sentinel 1 Ground Range Detected Imagery",
+      "license": "license",
+      "extent": {
+        "spatial": {
+          "bbox": [
+            -180.0,
+            -85.0,
+            180.0,
+            85.0
+          ]
+        },
+        "temporal": {
+          "interval": [
+            "2017-01-01T00:00:00Z",
+            null
+          ]
+        }
+      },
+      "links": [
+        {
+          "href": "https://services.sentinel-hub.com/api/v1/catalog/collections/sentinel-1-grd",
+          "rel": "self"
+        },
+        {
+          "href": "https://services.sentinel-hub.com/api/v1/catalog/collections/sentinel-1-grd/items",
+          "rel": "items"
+        }
+      ],
+      "providers": [
+        {
+          "name": "ESA",
+          "roles": [
+            "producer"
+          ],
+          "url": "https://esa.int/"
+        },
+        {
+          "name": "AWS",
+          "roles": [
+            "host"
+          ],
+          "url": "https://aws.amazon.com/"
+        },
+        {
+          "name": "Sinergise",
+          "roles": [
+            "processor"
+          ],
+          "url": "https://www.sinergise.com/"
+        }
+      ]
+    },
+    {
+      "stac_version": "0.9.0",
+      "id": "sentinel-2-l2a",
+      "title": "Sentinel 2 L2A",
+      "description": "Sentinel 2 imagery processed to level 2A",
+      "license": "license",
+      "extent": {
+        "spatial": {
+          "bbox": [
+            -180.0,
+            -56.0,
+            180.0,
+            83.0
+          ]
+        },
+        "temporal": {
+          "interval": [
+            "2016-11-01T00:00:00Z",
+            null
+          ]
+        }
+      },
+      "links": [
+        {
+          "href": "https://services.sentinel-hub.com/api/v1/catalog/collections/sentinel-2-l2a",
+          "rel": "self"
+        },
+        {
+          "href": "https://services.sentinel-hub.com/api/v1/catalog/collections/sentinel-2-l2a/items",
+          "rel": "items"
+        }
+      ],
+      "providers": [
+        {
+          "name": "ESA",
+          "roles": [
+            "producer"
+          ],
+          "url": "https://esa.int/"
+        },
+        {
+          "name": "AWS",
+          "roles": [
+            "host"
+          ],
+          "url": "https://aws.amazon.com/"
+        },
+        {
+          "name": "Sinergise",
+          "roles": [
+            "processor"
+          ],
+          "url": "https://www.sinergise.com/"
+        }
+      ]
+    }
+  ]
+}

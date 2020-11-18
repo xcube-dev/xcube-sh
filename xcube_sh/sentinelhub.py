@@ -35,12 +35,12 @@ import requests_oauthlib
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
-from xcube_sh.constants import DEFAULT_INSTANCE_ID
 from xcube_sh.constants import DEFAULT_NUM_RETRIES
 from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_BASE
 from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_MAX
 from xcube_sh.constants import DEFAULT_SH_API_URL
 from xcube_sh.constants import DEFAULT_SH_OAUTH2_URL
+from xcube_sh.constants import SH_CATALOG_FEATURE_LIMIT
 from xcube_sh.metadata import SentinelHubMetadata
 from xcube_sh.version import version
 
@@ -51,7 +51,7 @@ class SentinelHub:
 
     :param client_id: SENTINEL Hub client ID
     :param client_secret: SENTINEL Hub client secret
-    :param instance_id:  SENTINEL Hub instance ID
+    :param instance_id:  SENTINEL Hub instance ID (deprecated, no longer used)
     :param api_url: Alternative SENTINEL Hub API URL.
     :param oauth2_url: Alternative SENTINEL Hub OAuth2 API URL.
     :param error_policy: "raise" or "warn". If "raise" an exception is raised on failed API requests.
@@ -78,7 +78,8 @@ class SentinelHub:
                  retry_backoff_max: int = DEFAULT_RETRY_BACKOFF_MAX,
                  retry_backoff_base: float = DEFAULT_RETRY_BACKOFF_BASE,
                  session: Any = None):
-        self.instance_id = instance_id or DEFAULT_INSTANCE_ID
+        if instance_id:
+            warnings.warn('instance_id has been deprecated, it is no longer used')
         self.api_url = api_url or os.environ.get('SH_API_URL', DEFAULT_SH_API_URL)
         self.oauth2_url = oauth2_url or os.environ.get('SH_OAUTH2_URL', DEFAULT_SH_OAUTH2_URL)
         self.error_policy = error_policy or 'fail'
@@ -100,15 +101,16 @@ class SentinelHub:
 
             # Create a OAuth2 session
             client = oauthlib.oauth2.BackendApplicationClient(client_id=client_id)
-            self.session = SerializableOAuth2Session(client=client)
+            self.session: SerializableOAuth2Session = SerializableOAuth2Session(client=client)
 
             # Get OAuth2 token for the session
             self.token = self.session.fetch_token(token_url=self.oauth2_url + '/token',
                                                   client_id=client_id,
                                                   client_secret=client_secret)
+            # print(self.token)
             self.client_id = client_id
         else:
-            self.session = session
+            self.session: Any = session
             self.token = None
 
     def __del__(self):
@@ -119,8 +121,11 @@ class SentinelHub:
 
     @property
     def token_info(self) -> Dict[str, Any]:
-        resp = self.session.get(self.oauth2_url + '/tokeninfo')
-        return json.loads(resp.content)
+        response = self.session.get(self.oauth2_url + '/tokeninfo')
+        if not response.ok:
+            response.raise_for_status()
+            raise SentinelHubError(response)
+        return response.json()
 
     # noinspection PyMethodMayBeStatic
     @property
@@ -130,60 +135,70 @@ class SentinelHub:
     # noinspection PyMethodMayBeStatic
     @property
     def datasets(self) -> List[Dict[str, str]]:
-        resp = self.session.get(self.api_url + '/configuration/v1/datasets')
-        return json.loads(resp.content)
+        """
+        See https://docs.sentinel-hub.com/api/latest/reference/#tag/configuration_dataset
+        """
+        response = self.session.get(self.api_url + '/configuration/v1/datasets')
+        if not response.ok:
+            response.raise_for_status()
+            raise SentinelHubError(response)
+        return response.json()
 
-    def band_names(self, dataset_name: str) -> Dict[str, Any]:
-        resp = self.session.get(self.api_url + f'/api/v1/process/dataset/{dataset_name}/bands')
-        obj = json.loads(resp.content)
-        return obj.get('data')
+    def band_names(self, dataset_name: str) -> List[str]:
+        response = self.session.get(self.api_url + f'/api/v1/process/dataset/{dataset_name}/bands')
+        if not response.ok:
+            response.raise_for_status()
+            raise SentinelHubError(response)
+        return response.json().get('data', {})
 
-    def get_tile_features(self,
-                          feature_type_name: str = None,
-                          bbox: Tuple[float, float, float, float] = None,
-                          time_range: Tuple[str, str] = None) -> List[Dict[str, Any]]:
-        if not self.instance_id:
-            raise ValueError('instance_id must be provided. Consider setting environment variable SH_INSTANCE_ID.')
-        return self.fetch_tile_features(instance_id=self.instance_id,
-                                        feature_type_name=feature_type_name,
-                                        bbox=bbox,
-                                        time_range=time_range)
+    def collections(self) -> List[Dict[str, Any]]:
+        """
+        See https://docs.sentinel-hub.com/api/latest/reference/#operation/getCollections
+        """
+        response = self.session.get(f'{self.api_url}/api/v1/catalog/collections')
+        if not response.ok:
+            response.raise_for_status()
+            raise SentinelHubError(response)
+        return response.json().get('collections', [])
 
-    def fetch_tile_features(self,
-                            instance_id: str = None,
-                            feature_type_name: str = None,
-                            bbox: Tuple[float, float, float, float] = None,
-                            time_range: Tuple[str, str] = None) -> List[Dict[str, Any]]:
-        if not instance_id:
-            raise ValueError('instance_id is required')
-        if not feature_type_name:
-            raise ValueError('feature_type_name is required')
+    def get_features(self,
+                     collection_name: str,
+                     bbox: Tuple[float, float, float, float] = None,
+                     # TODO (alicja): add Process API CRS name
+                     # bbox_crs: str = None,
+                     time_range: Tuple[str, str] = None) -> List[Dict[str, Any]]:
+        """
+        Get geometric intersections of dataset given by *collection_name*
+        with optional *bbox* and *time_range*. The result is returned as a list of
+        features, whose properties include a "datetime" field.
 
-        max_features = 100
-        feature_offset = 0
+        :param collection_name: dataset collection name
+        :param bbox: bounding box
+        :param time_range: time range
+        :return: list of features that include a "datetime" field for all intersections.
+        """
+        max_feature_count = SH_CATALOG_FEATURE_LIMIT
 
-        query_params = dict(SERVICE='WFS',
-                            REQUEST='GetFeature',
-                            SRSNAME='CRS:84',
-                            MAXFEATURES=str(max_features),
-                            FEATURE_OFFSET=str(feature_offset),
-                            OUTPUTFORMAT='application/json',
-                            TYPENAMES=feature_type_name)
-
+        request = dict(collections=[collection_name],
+                       limit=max_feature_count,
+                       # Exclude most of the response data, as this is not required (yet)
+                       fields=dict(exclude=['geometry', 'bbox', 'assets', 'links'],
+                                   include=['properties.datetime']))
         if bbox:
-            x1, y1, x2, y2 = bbox
-            query_params.update(BBOX=f'{x1},{y1},{x2},{y2}')
-
+            request.update(bbox=bbox)
+            # TODO (alicja): Implement, once Sentinel Hub does supports CRSes other than WGS84 for 'bbox-crs'.
+            # query_params.update({'bbox-crs': ''})
         if time_range:
             t1, t2 = time_range
-            query_params.update(TIME=f'{t1}/{t2}')
+            request.update(datetime=f'{t1}/{t2}')
 
         all_features = []
-
-        num_features = max_features
-        while num_features == max_features:
-            query_params.update(FEATURE_OFFSET=str(feature_offset))
-            response = requests.get(self.api_url + f'/ogc/wfs/{instance_id}', params=query_params)
+        features_count = max_feature_count
+        feature_offset = 0
+        while features_count == max_feature_count:
+            response = self.session.post(f'{self.api_url}/api/v1/catalog/search',
+                                         json=request,
+                                         headers=self._get_request_headers('application/json'))
 
             if not response.ok:
                 response.raise_for_status()
@@ -196,10 +211,43 @@ class SentinelHub:
 
             features = feature_collection['features']
             all_features.extend(features)
-            num_features = len(features)
-            feature_offset += num_features
+            features_count = len(features)
+            feature_offset += features_count
+            request.update(next=feature_offset)
 
         return all_features
+
+    @classmethod
+    def features_to_time_ranges(cls,
+                                features: List[Dict[str, Any]],
+                                max_timedelta: Union[str, pd.Timedelta] = '1H') \
+            -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
+        """
+        Convert list of features from SH Catalog into list of time ranges whose time deltas are
+        not greater than *max_timedelta*.
+
+        :param features: Tile dictionaries as returned by SH WFS
+        :param max_timedelta: Maximum time delta for each generated time range
+        :return: List time range tuples.
+        """
+        max_timedelta = pd.to_timedelta(max_timedelta) if isinstance(max_timedelta, str) else max_timedelta
+        feature_properties = [feature["properties"] for feature in features]
+        timestamps = sorted(set(pd.to_datetime(properties["datetime"], utc=True)
+                                for properties in feature_properties))
+        num_timestamps = len(timestamps)
+        # noinspection PyTypeChecker
+        time_ranges: List[Tuple[pd.Timestamp, pd.Timestamp]] = []
+        i = 0
+        while i < num_timestamps:
+            timestamp1 = timestamp2 = timestamps[i]
+            while i < num_timestamps:
+                timestamp = timestamps[i]
+                if timestamp - timestamp1 >= max_timedelta:
+                    break
+                timestamp2 = timestamp
+                i += 1
+            time_ranges.append((timestamp1, timestamp2))
+        return time_ranges
 
     def get_data(self, request: Dict, mime_type=None) -> requests.Response:
         outputs = request['output']['responses']
@@ -217,12 +265,7 @@ class SentinelHub:
         for i in range(num_retries):
             response = self.session.post(self.api_url + f'/api/v1/process',
                                          json=request,
-                                         headers={
-                                             'Accept': mime_type,
-                                             'User-Agent': f'xcube_sh/{version} '
-                                                           f'{platform.python_implementation()}/{platform.python_version()} '
-                                                           f'{platform.system()}/{platform.version()}'
-                                         })
+                                         headers=self._get_request_headers(mime_type))
             if response.ok:
                 # TODO (forman): verify response headers: response_num_components, response_width, ...
                 # response_components = int(response.headers.get('SH-Components', '-1'))
@@ -256,6 +299,14 @@ class SentinelHub:
         else:
             # TODO (forman): return NaN/Zero chunk
             raise NotImplementedError('return NaN/Zero chunk')
+
+    def _get_request_headers(self, mime_type: str):
+        return {
+            'Accept': mime_type,
+            'User-Agent': f'xcube_sh/{version} '
+                          f'{platform.python_implementation()}/{platform.python_version()} '
+                          f'{platform.system()}/{platform.version()}'
+        }
 
     @classmethod
     def new_data_request(cls,
