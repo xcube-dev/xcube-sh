@@ -132,6 +132,14 @@ _EXTRA_COLLECTIONS: Dict[str, List[Dict[str, Any]]] = {
     "code-de.sentinel-hub.com": [],
 }
 
+S1GRD_BAND_NAMES = ['VV', 'VH', 'HV', 'HH']
+
+S1GRD_BAND_METADATA = {S1GRD_BAND_NAMES[i]: dict(sample_type='FLOAT32',
+                                                 units='Linear power in the chosen backscattering coefficient',
+                                                 # fill_value=0
+                                                 )
+                       for i in range(len(S1GRD_BAND_NAMES))}
+
 S2_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B10', 'B11', 'B12']
 S2A_WAVELENGTHS = [442.7, 492.4, 559.8, 664.6, 704.1, 740.5, 782.8, 832.8, 864.7, 945.1, 1373.5, 1613.7, 2202.4]
 S2A_BANDWIDTHS = [21, 66, 36, 31, 15, 15, 20, 106, 21, 20, 31, 91, 175]
@@ -141,8 +149,8 @@ S2_RESOLUTIONS = [60, 10, 10, 10, 20, 20, 20, 10, 20, 60, 60, 20, 20]
 
 S2_BAND_METADATA = {S2_BAND_NAMES[i]: dict(sample_type='FLOAT32',
                                            units='reflectance',
-                                           wavelength=S2A_WAVELENGTHS[i],
-                                           bandwith=S2A_BANDWIDTHS[i],
+                                           wavelength=f'A={S2A_WAVELENGTHS[i]}, B={S2B_WAVELENGTHS[i]}',
+                                           bandwith=f'A={S2A_BANDWIDTHS[i]}, B={S2B_BANDWIDTHS[i]}',
                                            resolution=S2_RESOLUTIONS[i],
                                            fill_value=0.0)
                     for i in range(len(S2_BAND_NAMES))}
@@ -181,13 +189,116 @@ S2L2A_BAND_METADATA.update({
     "CLD": dict(sample_type='UINT8'),
 })
 
+S3OLCI_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11',
+                     'B12', 'B13', 'B14', 'B15', 'B16', 'B17', 'B18', 'B19', 'B20', 'B21']
+S3OLCI_WAVELENGTHS = [400, 412.5, 442.5, 490, 510, 560, 620, 665, 673.75, 681.25, 708.75, 753.75, 761.25, 764.375,
+                      767.5, 778.75, 865, 885, 900, 940, 1020]
+# bandwidths info https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-3-olci/resolutions/radiometric
+S3OLCI_BANDWIDTHS = [15, 10, 10, 10, 10, 10, 10, 10, 10, 7.5, 7.5, 10, 7.5, 2.5, 3.75, 2.5, 15, 20, 10, 10, 20, 40]
+
+S3OLCI_BAND_METADATA = {S3OLCI_BAND_NAMES[i]: dict(sample_type='FLOAT32',
+                                                   units='reflectance',
+                                                   wavelength=S3OLCI_WAVELENGTHS[i],
+                                                   bandwith=S3OLCI_BANDWIDTHS[i],
+                                                   resolution=300,
+                                                   fill_value=65535.0
+                                                   )
+                        for i in range(len(S3OLCI_BAND_NAMES))}
+
+S3OLCI_QUALITY_FLAG_NAMES = ['land', 'coastline', 'fresh_inland_water', 'tidal_region', 'bright', 'straylight_risk',
+                             'invalid', 'cosmetic', 'duplicated', 'sun_glint_risk', 'dubious', 'saturated_Oa01',
+                             'saturated_Oa02', 'saturated_Oa03', 'saturated_Oa04', 'saturated_Oa05', 'saturated_Oa06',
+                             'saturated_Oa07', 'saturated_Oa08', 'saturated_Oa09', 'saturated_Oa10', 'saturated_Oa11',
+                             'saturated_Oa12', 'saturated_Oa13', 'saturated_Oa14', 'saturated_Oa15', 'saturated_Oa16',
+                             'saturated_Oa17', 'saturated_Oa18', 'saturated_Oa19', 'saturated_Oa20', 'saturated_Oa21'
+                             ]
+S3OLCI_QUALITY_FLAG_VALUES = [-2147483648, 1073741824, 536870912, 268435456, 134217728, 67108864, 33554432, 16777216,
+                              8388608, 4194304, 2097152, 1048576, 524288, 262144, 131072, 65536, 32768, 16384, 8192,
+                              4096, 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]
+
+# S3OLCI_BAND_METADATA.update({
+#     "AOT": dict(sample_type='FLOAT32'),
+#     "SCL": dict(sample_type='UINT8',
+#                 flag_values=','.join(f'{i}' for i in range(len(S2L2A_SLC_MEANINGS))),
+#                 flag_meanings=' '.join(S2L2A_SLC_MEANINGS)),
+#     "SNW": dict(sample_type='UINT8'),
+#     "CLD": dict(sample_type='UINT8'),
+# })
+
+
+S3SLSTR_BAND_NAMES = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'F1', 'F2']
+S3SLSTR_WAVELENGTHS = [554.27, 659.47, 868, 1374.80, 1613.40, 2255.70, 3742, 10854, 12022.50, 3742, 10854]
+S3SLSTR_RESOLUTIONS = [500, 500, 500, 500, 500, 500, 1000, 1000, 1000, 1000, 1000]
+S3SLSTR_UNITS = ['reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance',
+                 'kelvin', 'kelvin', 'kelvin', 'kelvin', 'kelvin']
+# bandwidths info https://sentinel.esa.int/web/sentinel/user-guides/sentinel-3-slstr/resolutions/radiometric
+S3SLSTR_BANDWIDTHS = [19.26, 19.25, 20.60, 20.80, 60.68, 50.15, 398.00, 776.00, 905.00, 398.00, 776.00]
+
+S3SLSTR_BAND_METADATA = {S3SLSTR_BAND_NAMES[i]: dict(sample_type='UINT16',
+                                                     units=S3SLSTR_UNITS[i],
+                                                     wavelength=S3SLSTR_WAVELENGTHS[i],
+                                                     bandwith=S3SLSTR_BANDWIDTHS[i],
+                                                     resolution=S3SLSTR_RESOLUTIONS[i],
+                                                     fill_value=-32768
+                                                     )
+                         for i in range(len(S3SLSTR_BAND_NAMES))}
+# TODO: Write down available flags - Have fun, there are 60 of them each one of them containing a number of different
+#  codings.
+# S3SLSTR_QUALITY_FLAG_NAMES =[]
+# S3SLSTR_QUALITY_FLAG_VALUES=[]
+
+
+S5PL2_BAND_NAMES = ['CO', 'HCHO', 'NO2', 'O3', 'SO2', 'CH4', 'AER_AI_340_380', 'AER_AI_354_388', 'CLOUD_BASE_PRESSURE',
+                    'CLOUD_TOP_PRESSURE', 'CLOUD_BASE_HEIGHT', 'CLOUD_TOP_HEIGHT', 'CLOUD_OPTICAL_THICKNESS',
+                    'CLOUD_FRACTION']
+S5PL2_UNITS = ['mol/m^2', 'mol/m^2', 'mol/m^2', 'mol/m^2', 'mol/m^2', 'parts per billion', 'Unitless', 'Unitless',
+               'Pascals',
+               'Pascals', 'Meters', 'Meters', 'Unitless', 'Unitless']
+
+S5PL2_BAND_METADATA = {S5PL2_BAND_NAMES[i]: dict(sample_type='FLOAT32',
+                                                 units=S5PL2_UNITS[i],
+                                                 # fill_value=0.0
+                                                 )
+                       for i in range(len(S5PL2_BAND_NAMES))}
+
+L8L1C_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'BQA']
+L8L1C_WAVELENGTHS = [443, 482, 561.5, 654.5, 865, 1608.5, 2200.5, 589.5, 1373.5, 10895, 12005, 'QA']
+L8L1C_RESOLUTIONS = [30, 30, 30, 30, 30, 30, 30, 15, 30, '100m * (30m)', '100m * (30m)', 30]
+L8L1C_UNITS = ['reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance',
+               'reflectance', 'reflectance', 'kelvin', 'kelvin', 'Unitless']
+
+L8L1C_BAND_METADATA = {L8L1C_BAND_NAMES[i]: dict(sample_type='UINT16',
+                                                 units=L8L1C_UNITS[i],
+                                                 wavelength=L8L1C_WAVELENGTHS[i],
+                                                 resolution=L8L1C_RESOLUTIONS[i],
+                                                 # fill_value=0.0
+                                                 )
+                       for i in range(len(L8L1C_BAND_NAMES))}
+
+DEM_BAND_METADATA = {'DEM': dict(sample_type='FLOAT32',
+                                 units='Meters',
+                                 # fill_value=0.0
+                                 )
+                     }
+
+MODIS_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07']
+MODIS_WAVELENGTHS = [645, 858.5, 469, 555, 1240, 1640, 2130]
+MODIS_BANDWIDTHS = [50, 35, 20, 20, 20, 24, 50]
+MODIS_RESOLUTIONS = [500, 500, 500, 500, 500, 500, 500]
+MODIS_BAND_METADATA = {MODIS_BAND_NAMES[i]: dict(sample_type='UINT16',
+                                                 units='reflectance',
+                                                 wavelength=MODIS_WAVELENGTHS[i],
+                                                 bandwith=MODIS_BANDWIDTHS[i],
+                                                 resolution=MODIS_RESOLUTIONS[i],
+                                                 # fill_value=0.0
+                                                 )
+                       for i in range(len(MODIS_BAND_NAMES))}
+
 _SH_METADATA = dict(
     datasets={
         'S1GRD': dict(
             title='Sentinel-1 GRD',
-            bands={
-                # TODO (forman): add static S1GRD bands metadata here...
-            },
+            bands=S1GRD_BAND_METADATA,
             processing_level='L1B',
             request_period='1D',
             collection_name='sentinel-1-grd',
@@ -208,56 +319,44 @@ _SH_METADATA = dict(
         ),
         'S3OLCI': dict(
             title='Sentinel-3 OCLI L1B',
-            bands={
-                # TODO (forman): add static S3OCLI bands metadata here...
-            },
+            bands=S3OLCI_BAND_METADATA,
             processing_level='L1B',
             request_period='1D',
             collection_name='sentinel-3-olci',
         ),
         'S3SLSTR': dict(
             title='Sentinel-3 SLSTR L1B',
-            bands={
-                # TODO (forman): add static S3SLSTR bands metadata here...
-            },
+            bands=S3SLSTR_BAND_METADATA,
             processing_level='L1B',
             request_period='1D',
             collection_name='sentinel-3-slstr',
         ),
         'S5PL2': dict(
             title='Sentinel-5P - L2',
-            bands={
-                # TODO (forman): add static DEM bands metadata here...
-            },
+            bands=S5PL2_BAND_METADATA,
             collection_name='sentinel-5p-l2',
         ),
         'L8L1C': dict(
             title='Landsat 8 - L1C',
-            bands={
-                # TODO (forman): add static L8L1C bands metadata here...
-            },
+            bands=L8L1C_BAND_METADATA,
             processing_level='L1C',
             request_period='1D',
             collection_name='landsat-8-l1c',
         ),
         'DEM': dict(
             title='Mapzen DEM',
-            bands={
-                # TODO (forman): add static DEM bands metadata here...
-            },
+            bands=DEM_BAND_METADATA,
             collection_name=_DEM_COLLECTION_NAME,
         ),
         'MODIS': dict(
             title='MODIS MCD43A4',
-            bands={
-                # TODO (forman): add static DEM bands metadata here...
-            },
+            bands=MODIS_BAND_METADATA,
             collection_name='modis',
         ),
         'CUSTOM': dict(
             title='Bring Your Own COG',
             bands={
-                # TODO (forman): add static DEM bands metadata here...
+                # This is custom.
             },
         ),
     }
