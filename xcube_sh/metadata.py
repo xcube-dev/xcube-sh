@@ -212,19 +212,16 @@ S3OLCI_QUALITY_FLAG_NAMES = ['land', 'coastline', 'fresh_inland_water', 'tidal_r
                              'saturated_Oa12', 'saturated_Oa13', 'saturated_Oa14', 'saturated_Oa15', 'saturated_Oa16',
                              'saturated_Oa17', 'saturated_Oa18', 'saturated_Oa19', 'saturated_Oa20', 'saturated_Oa21'
                              ]
-S3OLCI_QUALITY_FLAG_VALUES = [-2147483648, 1073741824, 536870912, 268435456, 134217728, 67108864, 33554432, 16777216,
-                              8388608, 4194304, 2097152, 1048576, 524288, 262144, 131072, 65536, 32768, 16384, 8192,
-                              4096, 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]
 
-# S3OLCI_BAND_METADATA.update({
-#     "AOT": dict(sample_type='FLOAT32'),
-#     "SCL": dict(sample_type='UINT8',
-#                 flag_values=','.join(f'{i}' for i in range(len(S2L2A_SLC_MEANINGS))),
-#                 flag_meanings=' '.join(S2L2A_SLC_MEANINGS)),
-#     "SNW": dict(sample_type='UINT8'),
-#     "CLD": dict(sample_type='UINT8'),
-# })
+S3OLCI_QUALITY_FLAG_COUNT = len(S3OLCI_QUALITY_FLAG_NAMES)
 
+S3OLCI_BAND_METADATA.update({
+    "quality_flags": dict(sample_type='UINT32',
+                          flag_values=','.join(
+                              f'{(1 << (S3OLCI_QUALITY_FLAG_COUNT - 1 - i))}' for i in
+                              range(S3OLCI_QUALITY_FLAG_COUNT)),
+                          flag_meanings=' '.join(S3OLCI_QUALITY_FLAG_NAMES))
+})
 
 S3SLSTR_BAND_NAMES = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'F1', 'F2']
 S3SLSTR_WAVELENGTHS = [554.27, 659.47, 868, 1374.80, 1613.40, 2255.70, 3742, 10854, 12022.50, 3742, 10854]
