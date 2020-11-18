@@ -1,5 +1,6 @@
 ## Changes in 0.6.0 (in development)
-
+* Enhanced band metadata and added flag encodings for Sentinel-3 OCLI L1B datasets. 
+  Additional band metadata and flag encodings for Sentinel-3 SLSTR L1B datasets will follow soon.  
 * Now using SENTINEL Hub's Catalogue API instead of the WFS (#14)
   - to determine actual observations within given bounding box and time range;
   - to determine time range of available data collections.  
