@@ -31,6 +31,7 @@ from xcube.core.store import DataStoreError
 from xcube.core.store import DatasetDescriptor
 from xcube.core.store import TYPE_SPECIFIER_CUBE
 from xcube.core.store import VariableDescriptor
+from xcube.core.store import DefaultSearchMixin
 from xcube.util.assertions import assert_not_none
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
@@ -286,7 +287,7 @@ class SentinelHubDataOpener(DataOpener):
         return dataset_metadata, None
 
 
-class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
+class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore):
     """
     Sentinel HUB implementation of the ``xcube.core.store.DataStore`` interface.
     """
@@ -367,11 +368,6 @@ class SentinelHubDataStore(SentinelHubDataOpener, DataStore):
 
     def describe_data(self, data_id: str) -> DataDescriptor:
         return super().describe_data(data_id)
-
-    # noinspection PyTypeChecker
-    def search_data(self, type_specifier: str = None, **search_params) -> Iterator[DataDescriptor]:
-        # TODO: implement using new SENTINEL Hub catalogue API
-        raise NotImplementedError()
 
     def get_data_opener_ids(self, data_id: str = None, type_specifier: str = None) -> Tuple[str, ...]:
         if self._is_supported_type_specifier(type_specifier):
