@@ -1,3 +1,5 @@
+## Changes in 0.6.1 (in development)
+
 ## Changes in 0.6.0
 
 * Enhanced band metadata and added flag encodings for Sentinel-3 OCLI L1B datasets. 

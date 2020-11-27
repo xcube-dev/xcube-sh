@@ -9,5 +9,5 @@ dependencies:
   - oauthlib >=3.0
   - requests-oauthlib >=1.3
   # For GeoDB notebook only
-  - psycopg2 >=2.8.4
+  #- psycopg2 >=2.8.4
 

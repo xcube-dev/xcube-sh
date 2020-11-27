@@ -1,6 +1,6 @@
 FROM continuumio/miniconda3
 
-LABEL version=0.6.0
+LABEL version=0.6.1.dev0
 ARG XCUBE_VERSION=0.6.0
 LABEL name=xcube
 LABEL maintainer=helge.dzierzon@brockmann-consult.de
