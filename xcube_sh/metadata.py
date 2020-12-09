@@ -149,8 +149,12 @@ S2_RESOLUTIONS = [60, 10, 10, 10, 20, 20, 20, 10, 20, 60, 60, 20, 20]
 
 S2_BAND_METADATA = {S2_BAND_NAMES[i]: dict(sample_type='FLOAT32',
                                            units='reflectance',
-                                           wavelength=f'A={S2A_WAVELENGTHS[i]}, B={S2B_WAVELENGTHS[i]}',
-                                           bandwith=f'A={S2A_BANDWIDTHS[i]}, B={S2B_BANDWIDTHS[i]}',
+                                           wavelength=round(0.5 * (S2A_WAVELENGTHS[i] + S2B_WAVELENGTHS[i]), 2),
+                                           wavelength_a=S2A_WAVELENGTHS[i],
+                                           wavelength_b=S2B_WAVELENGTHS[i],
+                                           bandwidth=round(0.5 * (S2A_BANDWIDTHS[i] + S2B_BANDWIDTHS[i]), 2),
+                                           bandwidth_a=S2A_BANDWIDTHS[i],
+                                           bandwidth_b=S2B_BANDWIDTHS[i],
                                            resolution=S2_RESOLUTIONS[i],
                                            fill_value=0.0)
                     for i in range(len(S2_BAND_NAMES))}
@@ -199,7 +203,7 @@ S3OLCI_BANDWIDTHS = [15, 10, 10, 10, 10, 10, 10, 10, 10, 7.5, 7.5, 10, 7.5, 2.5,
 S3OLCI_BAND_METADATA = {S3OLCI_BAND_NAMES[i]: dict(sample_type='FLOAT32',
                                                    units='reflectance',
                                                    wavelength=S3OLCI_WAVELENGTHS[i],
-                                                   bandwith=S3OLCI_BANDWIDTHS[i],
+                                                   bandwidth=S3OLCI_BANDWIDTHS[i],
                                                    resolution=300,
                                                    fill_value=65535.0
                                                    )
@@ -234,7 +238,7 @@ S3SLSTR_BANDWIDTHS = [19.26, 19.25, 20.60, 20.80, 60.68, 50.15, 398.00, 776.00, 
 S3SLSTR_BAND_METADATA = {S3SLSTR_BAND_NAMES[i]: dict(sample_type='UINT16',
                                                      units=S3SLSTR_UNITS[i],
                                                      wavelength=S3SLSTR_WAVELENGTHS[i],
-                                                     bandwith=S3SLSTR_BANDWIDTHS[i],
+                                                     bandwidth=S3SLSTR_BANDWIDTHS[i],
                                                      resolution=S3SLSTR_RESOLUTIONS[i],
                                                      fill_value=-32768
                                                      )
@@ -259,8 +263,8 @@ S5PL2_BAND_METADATA = {S5PL2_BAND_NAMES[i]: dict(sample_type='FLOAT32',
                        for i in range(len(S5PL2_BAND_NAMES))}
 
 L8L1C_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'BQA']
-L8L1C_WAVELENGTHS = [443, 482, 561.5, 654.5, 865, 1608.5, 2200.5, 589.5, 1373.5, 10895, 12005, 'QA']
-L8L1C_RESOLUTIONS = [30, 30, 30, 30, 30, 30, 30, 15, 30, '100m * (30m)', '100m * (30m)', 30]
+L8L1C_WAVELENGTHS = [443, 482, 561.5, 654.5, 865, 1608.5, 2200.5, 589.5, 1373.5, 10895, 12005, float('nan')]
+L8L1C_RESOLUTIONS = [30, 30, 30, 30, 30, 30, 30, 15, 30, 100, 100, 30]
 L8L1C_UNITS = ['reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance',
                'reflectance', 'reflectance', 'kelvin', 'kelvin', 'Unitless']
 
@@ -285,7 +289,7 @@ MODIS_RESOLUTIONS = [500, 500, 500, 500, 500, 500, 500]
 MODIS_BAND_METADATA = {MODIS_BAND_NAMES[i]: dict(sample_type='UINT16',
                                                  units='reflectance',
                                                  wavelength=MODIS_WAVELENGTHS[i],
-                                                 bandwith=MODIS_BANDWIDTHS[i],
+                                                 bandwidth=MODIS_BANDWIDTHS[i],
                                                  resolution=MODIS_RESOLUTIONS[i],
                                                  # fill_value=0.0
                                                  )

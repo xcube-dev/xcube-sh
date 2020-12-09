@@ -1,13 +1,10 @@
 name: xcube-sh
+
 channels:
   - conda-forge
   - defaults
-dependencies:
 
-  # Required
+dependencies:
   - xcube >= 0.6
   - oauthlib >=3.0
   - requests-oauthlib >=1.3
-  # For GeoDB notebook only
-  #- psycopg2 >=2.8.4
-
