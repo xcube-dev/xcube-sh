@@ -1,5 +1,9 @@
 ## Changes in 0.6.2 (in development)
 
+* Fixed issue with `crs` parameter in cube configuration. 
+  If `crs='http://www.opengis.net/def/crs/OGC/1.3/CRS84'` was used, 
+  `x`, `y` coordinate variables where produced instead of expected `lon`, `lat`.  (#26)
+
 ## Changes in 0.6.1
 
 * Fixed following issues regarding datasets' band metadata:

@@ -173,3 +173,31 @@ class CubeConfigTest(unittest.TestCase):
                             spatial_res=0.00001,
                             time_range=('2019-01-01', '2019-01-02'))
         self.assertEqual(config.geometry, config.bbox)
+
+    def test_is_wgs84_crs(self):
+        config = CubeConfig(dataset_name='S2L2A',
+                            geometry=(10.11, 54.17, 10.14, 54.19),
+                            spatial_res=0.00001,
+                            time_range=('2019-01-01', '2019-01-02'))
+        self.assertEqual(True, config.is_wgs84_crs)
+
+        config = CubeConfig(dataset_name='S2L2A',
+                            geometry=(10.11, 54.17, 10.14, 54.19),
+                            spatial_res=0.00001,
+                            crs='http://www.opengis.net/def/crs/OGC/1.3/CRS84',
+                            time_range=('2019-01-01', '2019-01-02'))
+        self.assertEqual(True, config.is_wgs84_crs)
+
+        config = CubeConfig(dataset_name='S2L2A',
+                            geometry=(10.11, 54.17, 10.14, 54.19),
+                            spatial_res=0.00001,
+                            crs='http://www.opengis.net/def/crs/EPSG/0/4326',
+                            time_range=('2019-01-01', '2019-01-02'))
+        self.assertEqual(True, config.is_wgs84_crs)
+
+        config = CubeConfig(dataset_name='S2L2A',
+                            geometry=(10.11, 54.17, 10.14, 54.19),
+                            spatial_res=0.00001,
+                            crs='http://www.opengis.net/def/crs/EPSG/0/3035',
+                            time_range=('2019-01-01', '2019-01-02'))
+        self.assertEqual(False, config.is_wgs84_crs)
