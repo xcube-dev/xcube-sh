@@ -29,7 +29,7 @@ requirements = [
     # Sync with ./environment.yml.
     #
     #'oauthlib',
-    #'requests_oauthlib',
+    #'requests-oauthlib',
     #'xcube',
 ]
 

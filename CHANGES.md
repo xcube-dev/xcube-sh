@@ -1,4 +1,4 @@
-## Changes in 0.6.1 (in development)
+## Changes in 0.6.1
 
 * Fixed following issues regarding datasets' band metadata:
   - Renamed misspelled band attribute `bandwith` into `bandwidth`.
