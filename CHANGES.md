@@ -8,6 +8,9 @@
     Individual wavelengths and bandwidths for Sentinel A and B, if any, are available 
     in attributes `wavelength_a`, `wavelength_b` and `bandwidth_a`, `bandwidth_b`.    
 
+* Removed outdated module `xcube_sh.geodb`, unused data `geodb` folder, and added a 
+  deprecation notice in Notebook `Ex4-DCFS-GeoDB.ipynb`. 
+
 ## Changes in 0.6.0
 
 * Enhanced band metadata and added flag encodings for Sentinel-3 OCLI L1B datasets. 
