@@ -1,3 +1,5 @@
+## Changes in 0.6.2 (in development)
+
 ## Changes in 0.6.1
 
 * Fixed following issues regarding datasets' band metadata:
