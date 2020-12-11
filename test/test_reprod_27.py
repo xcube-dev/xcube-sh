@@ -29,6 +29,10 @@ import xarray
 
 
 class ReproduceIssue27Test(unittest.TestCase):
+    """
+    This test reproduces issue #27.
+    Unfortunately I could not boil it down to just Zarr, so I use xarray here.
+    """
 
     def test_reproduce_issue_27(self):
         values = [12, 13, 14]
@@ -56,6 +60,7 @@ class ReproduceIssue27Test(unittest.TestCase):
         }
 
         lon_zattrs = {
+            # For xarray
             "_ARRAY_DIMENSIONS": ["lon"]
         }
 
@@ -80,6 +85,8 @@ class ReproduceIssue27Test(unittest.TestCase):
 
         self.assertIsInstance(src_store['lon/0'], bytes)
         with self.assertRaises(AssertionError) as cm:
+            # This is the actual issue: dst_store['lon/0'] is still a numpy.ndarray instance,
+            # instead of an encoded version of it.
             self.assertIsInstance(dst_store['lon/0'], bytes)
         self.assertEqual("array([12, 13, 14]) is not an instance of <class 'bytes'>",
                          f'{cm.exception}')
