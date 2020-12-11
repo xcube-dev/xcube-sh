@@ -1,5 +1,8 @@
 ## Changes in 0.6.2 (in development)
 
+* Fixed problem with the encoding of a dataset's coordinate variables that occurs 
+  when using `xcube_xh` with xcube 0.6.1. (#27)
+
 ## Changes in 0.6.1
 
 * Fixed following issues regarding datasets' band metadata:

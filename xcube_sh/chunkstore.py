@@ -28,10 +28,15 @@ from typing import Iterator, Any, List, Dict, Tuple, Callable, Iterable, KeysVie
 
 import numpy as np
 import pandas as pd
+from numcodecs import Blosc
 
 from .config import CubeConfig
 from .constants import BAND_DATA_ARRAY_NAME
 from .sentinelhub import SentinelHub
+
+_STATIC_ARRAY_COMPRESSOR_PARAMS = dict(cname='zstd', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0)
+_STATIC_ARRAY_COMPRESSOR_CONFIG = dict(id='blosc', **_STATIC_ARRAY_COMPRESSOR_PARAMS)
+_STATIC_ARRAY_COMPRESSOR = Blosc(**_STATIC_ARRAY_COMPRESSOR_PARAMS)
 
 
 def _dict_to_bytes(d: Dict):
@@ -264,20 +269,22 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
     def _add_static_array(self, name: str, array: np.ndarray, attrs: Dict):
         shape = list(map(int, array.shape))
         dtype = str(array.dtype.str)
+        order = "C"
         array_metadata = {
             "zarr_format": 2,
             "chunks": shape,
             "shape": shape,
             "dtype": dtype,
             "fill_value": None,
-            "compressor": None,
+            "compressor": _STATIC_ARRAY_COMPRESSOR_CONFIG,
             "filters": None,
-            "order": "C",
+            "order": order,
         }
+        chunk_key = '.'.join(['0'] * array.ndim)
         self._vfs[name] = _str_to_bytes('')
         self._vfs[name + '/.zarray'] = _dict_to_bytes(array_metadata)
         self._vfs[name + '/.zattrs'] = _dict_to_bytes(attrs)
-        self._vfs[name + '/' + ('.'.join(['0'] * array.ndim))] = bytes(array)
+        self._vfs[name + '/' + chunk_key] = _STATIC_ARRAY_COMPRESSOR.encode(array.tobytes(order=order))
 
     def _add_remote_array(self,
                           name: str,
