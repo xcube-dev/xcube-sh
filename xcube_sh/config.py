@@ -306,7 +306,7 @@ class CubeConfig:
 
     @property
     def is_wgs84_crs(self) -> bool:
-        return self._crs.endswith('/4326') or self._crs.endswith('/WGS84')
+        return self._crs.endswith('/4326') or self._crs.endswith('/CRS84') or self._crs.endswith('/WGS84')
 
     @classmethod
     def _adjust_size(cls, size: int, tile_size: int) -> int:
