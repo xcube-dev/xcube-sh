@@ -140,7 +140,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                 }, {
                                     "_ARRAY_DIMENSIONS": ['lat'],
                                     "units": "decimal_degrees",
-                                    "long_name": "longitude",
+                                    "long_name": "latitude",
                                     "standard_name": "latitude",
                                 })
         else:
