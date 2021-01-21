@@ -1,3 +1,7 @@
+## Changes in 0.6.3 (in development)
+
+* Fixed bug in metadata: Latitude long_name should be "latitude" (thanks to Matthew Fung / @mattfung).
+
 ## Changes in 0.6.2
 
 * Fixed problem with the encoding of a dataset's coordinate variables that occurs 
