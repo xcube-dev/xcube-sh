@@ -32,6 +32,7 @@ import pandas as pd
 import requests
 import requests_oauthlib
 
+from xcube_sh.constants import CRS_ID_TO_URI
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
@@ -313,7 +314,7 @@ class SentinelHub:
                          dataset_name: str,
                          band_names: Sequence[str],
                          size: Tuple[int, int],
-                         crs: str = DEFAULT_CRS,
+                         crs: str = None,
                          bbox: Tuple[float, float, float, float] = None,
                          time_range: Tuple[Union[str, pd.Timestamp], Union[str, pd.Timestamp]] = None,
                          upsampling: str = 'BILINEAR',
@@ -365,7 +366,7 @@ class SentinelHub:
             "bounds": {
                 "bbox": bbox,
                 "properties": {
-                    "crs": crs
+                    "crs": crs or CRS_ID_TO_URI[DEFAULT_CRS]
                 }
             },
             "data": [data_element]

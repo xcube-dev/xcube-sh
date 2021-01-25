@@ -55,7 +55,8 @@ DEFAULT_GEN_OUTPUT_PATH = 'out.zarr'
               help="Spatial resolution in degrees.",
               type=float)
 @click.option('--crs',
-              help=f'Coordinate reference system (CRS) URL. Defaults to "{DEFAULT_CRS}".')
+              help=f'Coordinate reference system (CRS) URL. Defaults to "{DEFAULT_CRS}". '
+                   f'Other CRSes may be passed by their EPSG codes, e.g. "EPSG:32612" for UTM zone 12 North.')
 @click.option('--time', '-t', 'time_range',
               help='Time or time range using format "date" or "<first-date>,<last-date>".')
 @click.option('--period', '-p', 'time_period',

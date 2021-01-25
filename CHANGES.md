@@ -1,6 +1,13 @@
 ## Changes in 0.6.3 (in development)
 
-* Fixed bug in metadata: Latitude long_name should be "latitude" (thanks to Matthew Fung / @mattfung).
+* Changed the cube configuration parameter `crs` (spatial coordinate reference system)
+  so users can pass `"WGS84"`, `"CRS84"` or `"EPSG:{code}"`, where `{code}` is an EPSG 
+  code e.g. `"EPSG:4326"`. The old URI notation is still supported, e.g.
+  `"http://www.opengis.net/def/crs/EPSG/0/4326"`.
+* Fixed a bug that caused all band attributes to be included in each band's attributes.
+  This resulted in three times larger JSON metadata exports.  
+* Fixed a bug in coordinate metadata: value of latitude `long_name` attribute should be 
+  `"latitude"` (thanks to Matthew Fung / @mattfung).
 
 ## Changes in 0.6.2
 

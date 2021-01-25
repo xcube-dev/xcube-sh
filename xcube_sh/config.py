@@ -26,11 +26,12 @@ from typing import Tuple, Union, Optional, Sequence, Dict, Any
 import pandas as pd
 
 from xcube.util.assertions import assert_given, assert_condition
+from .constants import CRS_ID_TO_URI
+from .constants import CRS_URI_TO_ID
 from .constants import DEFAULT_CRS
 from .constants import DEFAULT_TILE_SIZE
 from .constants import DEFAULT_TIME_TOLERANCE
 from .constants import SH_MAX_IMAGE_SIZE
-from .constants import WGS84_CRS
 
 
 def _safe_int_div(x: int, y: int) -> int:
@@ -80,7 +81,9 @@ class CubeConfig:
                  exception_type=ValueError):
 
         crs = crs or DEFAULT_CRS
-        crs = WGS84_CRS if crs in ('WGS84', 'EPSG:4326') else crs
+        if crs in CRS_URI_TO_ID:
+            crs = CRS_URI_TO_ID[crs]
+        assert_condition(crs in CRS_ID_TO_URI, 'invalid crs')
 
         assert_given(dataset_name, 'dataset_name')
 
@@ -305,8 +308,13 @@ class CubeConfig:
         return self._num_tiles
 
     @property
+    def is_geographic_crs(self) -> bool:
+        return self._crs in ('CRS84', 'WGS84', 'EPSG:4326')
+
+    @property
     def is_wgs84_crs(self) -> bool:
-        return self._crs.endswith('/4326') or self._crs.endswith('/CRS84') or self._crs.endswith('/WGS84')
+        """Deprecated."""
+        return self.is_geographic_crs
 
     @classmethod
     def _adjust_size(cls, size: int, tile_size: int) -> int:

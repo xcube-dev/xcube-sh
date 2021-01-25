@@ -32,6 +32,7 @@ from numcodecs import Blosc
 
 from .config import CubeConfig
 from .constants import BAND_DATA_ARRAY_NAME
+from .constants import CRS_URI_TO_ID
 from .sentinelhub import SentinelHub
 
 _STATIC_ARRAY_COMPRESSOR_PARAMS = dict(cname='zstd', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0)
@@ -117,7 +118,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         if self._cube_config.time_period:
             global_attrs.update(time_coverage_resolution=self._cube_config.time_period.isoformat())
 
-        if self._cube_config.is_wgs84_crs:
+        if self._cube_config.is_geographic_crs:
             x1, y2, x2, y2 = self._cube_config.bbox
             global_attrs.update(geospatial_lon_min=x1,
                                 geospatial_lat_min=y1,
@@ -130,7 +131,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             '.zattrs': _dict_to_bytes(global_attrs)
         }
 
-        if self._cube_config.is_wgs84_crs:
+        if self._cube_config.is_geographic_crs:
             x_name, y_name = 'lon', 'lat'
             x_attrs, y_attrs = ({
                                     "_ARRAY_DIMENSIONS": ['lon'],
@@ -175,7 +176,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         self._add_static_array('time_bnds', t_bnds_array, time_bnds_attrs)
 
         if self._cube_config.four_d:
-            if self._cube_config.is_wgs84_crs:
+            if self._cube_config.is_geographic_crs:
                 band_array_dimensions = ['time', 'lat', 'lon', 'band']
             else:
                 band_array_dimensions = ['time', 'y', 'x', 'band']
@@ -194,7 +195,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                    band_encoding,
                                    band_attrs)
         else:
-            if self._cube_config.is_wgs84_crs:
+            if self._cube_config.is_geographic_crs:
                 band_array_dimensions = ['time', 'lat', 'lon']
             else:
                 band_array_dimensions = ['time', 'y', 'x']
@@ -529,7 +530,8 @@ class SentinelHubChunkStore(RemoteStore):
             if band_name == 'band_data':
                 band_sample_types = [
                     SentinelHub.METADATA.dataset_band_sample_type(self.cube_config.dataset_name, band_name)
-                    for band_name in band_names]
+                    for band_name in band_names
+                ]
             else:
                 band_sample_types = SentinelHub.METADATA.dataset_band_sample_type(self.cube_config.dataset_name,
                                                                                   band_name)
@@ -544,7 +546,7 @@ class SentinelHubChunkStore(RemoteStore):
             time_range=time_range,
             bbox=bbox,
             band_sample_types=band_sample_types,
-            crs=self.cube_config.crs,
+            crs=CRS_URI_TO_ID[self.cube_config.crs],
             collection_id=self.cube_config.collection_id,
             band_units=self.cube_config.band_units
         )

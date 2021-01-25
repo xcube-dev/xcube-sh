@@ -31,7 +31,9 @@ from typing import Any, Sequence, Dict
 import numpy as np
 import zarr
 
-from xcube_sh.sentinelhub import SentinelHub, SerializableOAuth2Session
+from xcube_sh.constants import CRS_ID_TO_URI
+from xcube_sh.sentinelhub import SentinelHub
+from xcube_sh.sentinelhub import SerializableOAuth2Session
 
 HAS_SH_CREDENTIALS = 'SH_CLIENT_ID' in os.environ and 'SH_CLIENT_SECRET' in os.environ
 REQUIRE_SH_CREDENTIALS = 'requires SH credentials'
@@ -399,7 +401,7 @@ class SentinelHubNewRequestTest(unittest.TestCase):
                 1705367,
                 5857046
             ),
-            crs='http://www.opengis.net/def/crs/EPSG/0/3857',
+            crs=CRS_ID_TO_URI['EPSG:3857'],
             band_sample_types='UINT8',
             collection_id='1a3ab057-3c51-447c-9f85-27d4b633b3f5'
         )

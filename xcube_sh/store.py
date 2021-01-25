@@ -29,9 +29,9 @@ from xcube.core.store import DataOpener
 from xcube.core.store import DataStore
 from xcube.core.store import DataStoreError
 from xcube.core.store import DatasetDescriptor
+from xcube.core.store import DefaultSearchMixin
 from xcube.core.store import TYPE_SPECIFIER_CUBE
 from xcube.core.store import VariableDescriptor
-from xcube.core.store import DefaultSearchMixin
 from xcube.util.assertions import assert_not_none
 from xcube.util.jsonschema import JsonArraySchema
 from xcube.util.jsonschema import JsonBooleanSchema
@@ -42,7 +42,7 @@ from xcube.util.jsonschema import JsonObjectSchema
 from xcube.util.jsonschema import JsonStringSchema
 from xcube_sh.chunkstore import SentinelHubChunkStore
 from xcube_sh.config import CubeConfig
-from xcube_sh.constants import AVAILABLE_CRS_IDS
+from xcube_sh.constants import CRS_ID_TO_URI
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
@@ -185,7 +185,7 @@ class SentinelHubDataOpener(DataOpener):
                                              JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE)),
                                       default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
             crs=JsonStringSchema(default=DEFAULT_CRS,
-                                 enum=AVAILABLE_CRS_IDS),
+                                 enum=CRS_ID_TO_URI),
             bbox=JsonArraySchema(items=(JsonNumberSchema(),
                                         JsonNumberSchema(),
                                         JsonNumberSchema(),
@@ -244,7 +244,7 @@ class SentinelHubDataOpener(DataOpener):
             data_vars.append(VariableDescriptor(name=band_name,
                                                 dtype=band_metadata.get('sample_type', 'FLOAT32'),
                                                 dims=('time', 'lat', 'lon'),
-                                                attrs=band_metadatas.copy()))
+                                                attrs=band_metadata.copy()))
 
         dataset_attrs = dataset_metadata.copy()
 
