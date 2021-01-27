@@ -32,7 +32,7 @@ from numcodecs import Blosc
 
 from .config import CubeConfig
 from .constants import BAND_DATA_ARRAY_NAME
-from .constants import CRS_URI_TO_ID
+from .constants import CRS_ID_TO_URI
 from .sentinelhub import SentinelHub
 
 _STATIC_ARRAY_COMPRESSOR_PARAMS = dict(cname='zstd', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0)
@@ -546,7 +546,7 @@ class SentinelHubChunkStore(RemoteStore):
             time_range=time_range,
             bbox=bbox,
             band_sample_types=band_sample_types,
-            crs=CRS_URI_TO_ID[self.cube_config.crs],
+            crs=CRS_ID_TO_URI[self.cube_config.crs],
             collection_id=self.cube_config.collection_id,
             band_units=self.cube_config.band_units
         )
