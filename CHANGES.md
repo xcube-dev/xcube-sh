@@ -8,6 +8,8 @@
   This resulted in three times larger JSON metadata exports.  
 * Fixed a bug in coordinate metadata: value of latitude `long_name` attribute should be 
   `"latitude"` (thanks to Matthew Fung / @mattfung).
+* Fixed error reporting when SentinelHub returns an HTTP error status between 400 and 429. 
+  get_data now raises a SentinelHubError with complete error information.
 
 ## Changes in 0.6.2
 

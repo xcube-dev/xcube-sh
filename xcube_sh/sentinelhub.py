@@ -295,7 +295,6 @@ class SentinelHub:
         if self.error_handler:
             self.error_handler(response)
         if self.error_policy == 'fail':
-            response.raise_for_status()
             raise SentinelHubError(response)
         else:
             # TODO (forman): return NaN/Zero chunk
