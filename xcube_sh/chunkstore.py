@@ -34,6 +34,7 @@ from .config import CubeConfig
 from .constants import BAND_DATA_ARRAY_NAME
 from .constants import CRS_ID_TO_URI
 from .sentinelhub import SentinelHub
+from .sentinelhub import SentinelHubError
 
 _STATIC_ARRAY_COMPRESSOR_PARAMS = dict(cname='zstd', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0)
 _STATIC_ARRAY_COMPRESSOR_CONFIG = dict(id='blosc', **_STATIC_ARRAY_COMPRESSOR_PARAMS)
@@ -315,7 +316,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
     def cube_config(self) -> CubeConfig:
         return self._cube_config
 
-    def _fetch_chunk(self, band_name: str, chunk_index: Tuple[int, ...]) -> bytes:
+    def _fetch_chunk(self, key: str, band_name: str, chunk_index: Tuple[int, ...]) -> bytes:
         if len(chunk_index) == 4:
             time_index, y_chunk_index, x_chunk_index, band_index = chunk_index
         else:
@@ -327,7 +328,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         t0 = time.perf_counter()
         try:
             exception = None
-            chunk_data = self.fetch_chunk(band_name,
+            chunk_data = self.fetch_chunk(key,
+                                          band_name,
                                           chunk_index,
                                           bbox=request_bbox,
                                           time_range=request_time_range)
@@ -351,6 +353,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
 
     @abstractmethod
     def fetch_chunk(self,
+                    key: str,
                     band_name: str,
                     chunk_index: Tuple[int, ...],
                     bbox: Tuple[float, float, float, float],
@@ -358,11 +361,12 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         """
         Fetch chunk data from remote.
 
-        :param band_name: Band name
-        :param chunk_index: 3D chunk index (time, y, x)
-        :param bbox: Requested bounding box in coordinate units of the CRS
-        :param time_range: Requested time range
-        :return: chunk data as raw bytes
+        :param key: The original chunk key being retrieved.
+        :param band_name: Band name.
+        :param chunk_index: 3D chunk index (time, y, x).
+        :param bbox: Requested bounding box in coordinate units of the CRS.
+        :param time_range: Requested time range.
+        :return: chunk data as raw bytes.
         """
         pass
 
@@ -414,7 +418,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             print(f'{self._class_name}.__getitem__(key={key!r})')
         value = self._vfs[key]
         if isinstance(value, tuple):
-            return self._fetch_chunk(*value)
+            return self._fetch_chunk(key, *value)
         return value
 
     def __setitem__(self, key: str, value: bytes) -> None:
@@ -512,6 +516,7 @@ class SentinelHubChunkStore(RemoteStore):
         return band_metadata
 
     def fetch_chunk(self,
+                    key: str,
                     band_name: str,
                     chunk_index: Tuple[int, ...],
                     bbox: Tuple[float, float, float, float],
@@ -552,5 +557,9 @@ class SentinelHubChunkStore(RemoteStore):
         )
 
         response = self._sentinel_hub.get_data(request, mime_type='application/octet-stream')
+        if not response.ok:
+            raise KeyError(f'{key}: cannot fetch chunk for variable {band_name!r}, '
+                           f'bbox {bbox!r}, and time_range {time_range!r}: '
+                           f'{SentinelHubError(response)}')
 
         return response.content
