@@ -274,33 +274,32 @@ class SentinelHub:
                 # response_height = int(response.headers.get('SH-Height', '-1'))
                 # response_sample_type = response.headers.get('SH-SampleType')
                 return response
-            elif 500 <= response.status_code < 600:
-                # Retry (immediately) on 5xx errors
-                continue
-            elif response.status_code == 429:
+            else:
                 # Retry after 'Retry-After' with exponential backoff
                 retry_min = int(response.headers.get('Retry-After', '100'))
                 retry_backoff = random.random() * retry_backoff_max
                 retry_total = retry_min + retry_backoff
                 if self.enable_warnings:
-                    retry_message = f'Error 429: Too Many Requests. ' \
+                    retry_message = f'Error {response.status_code}: {response.reason}. ' \
                                     f'Attempt {i + 1} of {num_retries} to retry after ' \
                                     f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff} = {"%.2f" % retry_total} ms...'
                     warnings.warn(retry_message)
                 time.sleep(retry_total / 1000.0)
                 retry_backoff_max *= retry_backoff_base
-            else:
-                break
 
         if self.error_handler:
             self.error_handler(response)
+
         if self.error_policy == 'fail':
             raise SentinelHubError(response)
-        else:
-            # TODO (forman): return NaN/Zero chunk
-            raise NotImplementedError('return NaN/Zero chunk')
+        elif self.error_policy == 'warn' and self.enable_warnings:
+            warnings.warn(f'Failed to fetch data: {SentinelHubError(response)}')
 
-    def _get_request_headers(self, mime_type: str):
+        # Return failed response (response.ok == False)
+        return response
+
+    @classmethod
+    def _get_request_headers(cls, mime_type: str):
         return {
             'Accept': mime_type,
             'User-Agent': f'xcube_sh/{version} '
@@ -448,23 +447,27 @@ class SentinelHub:
 class SentinelHubError(Exception):
     def __init__(self, response):
         super().__init__(response.reason)
-        self.response = response
+        self._response = response
+
+    @property
+    def response(self):
+        return self._response
 
     @property
     def reason(self):
-        return self.response.reason
+        return self._response.reason
 
     @property
     def status_code(self):
-        return self.response.status_code
+        return self._response.status_code
 
     @property
     def headers(self):
-        return self.response.headers
+        return self._response.headers
 
     @property
     def content(self):
-        return self.response.content
+        return self._response.content
 
     def __repr__(self) -> str:
         return f'SentinelHubError({self.reason}, {self.status_code}, {self.headers!r}, details={self.content!r})'
