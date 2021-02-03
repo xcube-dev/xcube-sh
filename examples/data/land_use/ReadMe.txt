@@ -1,0 +1,1 @@
+Slovenian land use/land cover sample is a 10x10km subset of the dataset from 2019-06-30. 
