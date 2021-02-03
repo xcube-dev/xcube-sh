@@ -14,6 +14,9 @@
   - for value `"fail"`, a `SentinelHubError` is raised with complete error information;
   - for value `"warn"`, a warning is issued with complete error information, and a 
     fill-value chunk is generated.
+* Removed module `xcube_sh.geodb` entirely. Also delete example notebook 
+  `Demo1-xcube-sh.ipynb` as it referred to the removed package. Its other content 
+  is covered by remaining notebooks.
 
 ## Changes in 0.6.2
 
