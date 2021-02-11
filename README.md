@@ -59,7 +59,7 @@ Check available xcube CLI extensions added by `xcube_sh` plugin:
 
 ### Generate a Cube: `xcube sh gen` 
 
-Generate an XCube-compatible ZARR data cube from Sentinel-2 L1C data:
+Generate an xcube-compatible ZARR data cube from Sentinel-2 L1C data:
 
     $ xcube sh info
     $ xcube sh info S2L1C
