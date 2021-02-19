@@ -1,5 +1,7 @@
 ## Changes in 0.6.3 (in development)
-
+* Cube configuration parameter `time_range` accepts `None` as start and end date values. For example,
+  if `time_range=[None,'2021-02-01']` is provided, then the start date is '1970-01-01'; 
+  if `time_range=['2021-02-01', None]` is provided, then the end date is the current date (today). 
 * Changed the cube configuration parameter `crs` (spatial coordinate reference system)
   so users can pass `"WGS84"`, `"CRS84"` or `"EPSG:{code}"`, where `{code}` is an EPSG 
   code e.g. `"EPSG:4326"`. The old URI notation is still supported, e.g.

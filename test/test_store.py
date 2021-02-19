@@ -106,9 +106,9 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         self.assertIn('time_range', schema.properties)
         self.assertEqual(
             {
-                'type': 'array',
-                'items': [{'type': 'string', 'format': 'date', 'minDate': '2016-11-01'},
-                          {'type': 'string', 'format': 'date', 'minDate': '2016-11-01'}],
+                'type':  ['array', 'null'],
+                'items': [{'type': ['string', 'null'], 'format': 'date', 'minDate': '2016-11-01'},
+                          {'type': ['string', 'null'], 'format': 'date', 'minDate': '2016-11-01'}],
             },
             schema.properties['time_range'].to_dict())
         self.assertIn('time_period', schema.properties)

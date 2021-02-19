@@ -20,6 +20,7 @@
 # SOFTWARE.
 
 import unittest
+import numpy as np
 
 import pandas as pd
 
@@ -77,6 +78,22 @@ class CubeConfigTest(unittest.TestCase):
         self.assertAlmostEqual(54.53864, y2, places=4)
         self.assertEqual(w, round((x2 - x1) / spatial_res))
         self.assertEqual(h, round((y2 - y1) / spatial_res))
+
+    def test_time_none(self):
+        config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                           band_names=('B01', 'B02', 'B03'),
+                                           bbox=(10.11, 54.17, 10.14, 54.19),
+                                           spatial_res=0.00001,
+                                           time_range=('2019-01-01', None)))
+        self.assertEqual(np.datetime64('today', 's'), np.datetime64(config.time_range[1], 's'))
+
+        config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
+                                           band_names=('B01', 'B02', 'B03'),
+                                           bbox=(10.11, 54.17, 10.14, 54.19),
+                                           spatial_res=0.00001,
+                                           time_range=(None, None)))
+        self.assertEqual(np.datetime64('today', 's'), np.datetime64(config.time_range[1], 's'))
+        self.assertEqual(np.datetime64('1970-01-01', 's'), np.datetime64(config.time_range[0], 's'))
 
     def test_time_deltas(self):
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',

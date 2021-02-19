@@ -191,7 +191,7 @@ class SentinelHubDataOpener(DataOpener):
                                         JsonNumberSchema(),
                                         JsonNumberSchema())),
             spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
-            time_range=JsonDateSchema.new_range(min_date=min_date, max_date=max_date),
+            time_range=JsonDateSchema.new_range(min_date=min_date, max_date=max_date, nullable=True),
             # TODO: add pattern
             time_period=JsonStringSchema(default='1D', nullable=True,
                                          enum=[None,

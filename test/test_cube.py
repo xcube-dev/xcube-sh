@@ -21,6 +21,7 @@
 
 import unittest
 
+import numpy as np
 import xarray as xr
 
 from test.test_sentinelhub import HAS_SH_CREDENTIALS
@@ -36,6 +37,20 @@ cube_config = CubeConfig(dataset_name='S2L1C',
                          time_range=('2018-05-14', '2018-07-31'),
                          time_tolerance='30M')
 
+cube_config_t1_none = CubeConfig(dataset_name='S2L1C',
+                         band_names=['B04'],
+                         bbox=(10.00, 54.27, 11.00, 54.60),
+                         spatial_res=0.00018,
+                         time_range=('2021-01-01', None),
+                         time_period='1D')
+
+cube_config_t_none = CubeConfig(dataset_name='S2L1C',
+                         band_names=['B04'],
+                         bbox=(10.00, 54.27, 11.00, 54.60),
+                         spatial_res=0.00018,
+                         time_range=(None,'2021-02-18'),
+                         time_tolerance='30M')
+
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
 class CubeTest(unittest.TestCase):
@@ -43,6 +58,16 @@ class CubeTest(unittest.TestCase):
         cube = open_cube(cube_config=cube_config)
         self.assertIsInstance(cube, xr.Dataset)
 
+    def test_time_max_none(self):
+        cube = open_cube(cube_config=cube_config_t1_none)
+        self.assertIsInstance(cube, xr.Dataset)
+        self.assertEqual(np.datetime64('today', 'D'), np.datetime64(cube.time.values[-1], 'D'))        # self.assertEqual()
+
+    def test_time_none(self):
+        cube = open_cube(cube_config=cube_config_t_none)
+        self.assertIsInstance(cube, xr.Dataset)
+        self.assertEqual(np.datetime64('2021-02-16'), np.datetime64(cube.time.values[-1], 'D'))        # self.assertEqual()
+        self.assertEqual(np.datetime64('2015-06-27'), np.datetime64(cube.time.values[0], 'D'))        # self.assertEqual()
 
 class CubeTest2(unittest.TestCase):
     def test_open_cube_with_illegal_kwargs(self):

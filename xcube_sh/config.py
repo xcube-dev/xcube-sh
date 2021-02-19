@@ -21,11 +21,12 @@
 
 import math
 import warnings
+from datetime import datetime
 from typing import Tuple, Union, Optional, Sequence, Dict, Any
 
 import pandas as pd
-
 from xcube.util.assertions import assert_given, assert_condition
+
 from .constants import CRS_ID_TO_URI
 from .constants import CRS_URI_TO_ID
 from .constants import DEFAULT_CRS
@@ -100,6 +101,10 @@ class CubeConfig:
 
         assert_given(time_range, 'time_range')
 
+        start_date, end_date = time_range if time_range is not None else (None, None)
+        start_date = start_date if start_date is not None else '1970-01-01' 
+        end_date = end_date if end_date is not None else datetime.now().strftime("%Y-%m-%d")
+        time_range = start_date, end_date
         time_period = time_period or None
         time_tolerance = time_tolerance or None
 
