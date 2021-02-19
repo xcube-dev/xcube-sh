@@ -101,16 +101,10 @@ class CubeConfig:
 
         assert_given(time_range, 'time_range')
 
-        if time_range[1] is None:
-            time_list = list(time_range)
-            time_list[1] = datetime.now().strftime("%Y-%m-%d")
-            time_range = tuple(time_list)
-
-        if time_range[0] is None:
-            time_list = list(time_range)
-            time_list[0] = '1970-01-01'
-            time_range = tuple(time_list)
-
+        start_date, end_date = time_range if time_range is not None else (None, None)
+        start_date = start_date if start_date is not None else '1970-01-01' 
+        end_date = end_date if end_date is not None else datetime.now().strftime("%Y-%m-%d")
+        time_range = start_date, end_date
         time_period = time_period or None
         time_tolerance = time_tolerance or None
 
