@@ -120,8 +120,8 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         dsd = store.describe_data('S2L1C')
         self.assertIsInstance(dsd, DatasetDescriptor)
         self.assertEqual('S2L1C', dsd.data_id)
-        self.assertIsInstance(dsd.data_vars, list)
-        for vd in dsd.data_vars:
+        self.assertIsInstance(dsd.data_vars, dict)
+        for vd in dsd.data_vars.values():
             self.assertIsInstance(vd, VariableDescriptor)
         self.assertEqual(
             {
