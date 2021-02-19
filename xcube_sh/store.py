@@ -178,7 +178,7 @@ class SentinelHubDataOpener(DataOpener):
         cube_params = dict(
             dataset_name=JsonStringSchema(min_length=1),
             variable_names=JsonArraySchema(
-                items=JsonStringSchema(enum=[v.name for v in dsd.data_vars] if dsd and dsd.data_vars else None)),
+                items=JsonStringSchema(enum=dsd.data_vars.keys() if dsd and dsd.data_vars else None)),
             variable_units=JsonArraySchema(),
             variable_sample_types=JsonArraySchema(),
             tile_size=JsonArraySchema(items=(JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE),
@@ -238,13 +238,14 @@ class SentinelHubDataOpener(DataOpener):
             # Otherwise all we know about
             band_names = band_metadatas.keys()
 
-        data_vars = []
+        data_vars = {}
         for band_name in band_names:
             band_metadata = band_metadatas.get(band_name, dict(sample_type='FLOAT32'))
-            data_vars.append(VariableDescriptor(name=band_name,
-                                                dtype=band_metadata.get('sample_type', 'FLOAT32'),
-                                                dims=('time', 'lat', 'lon'),
-                                                attrs=band_metadata.copy()))
+            data_vars[band_name] = \
+                VariableDescriptor(name=band_name,
+                                   dtype=band_metadata.get('sample_type', 'FLOAT32'),
+                                   dims=('time', 'lat', 'lon'),
+                                   attrs=band_metadata.copy())
 
         dataset_attrs = dataset_metadata.copy()
 

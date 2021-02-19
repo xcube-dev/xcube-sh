@@ -144,7 +144,7 @@ class SentinelHubDataStoreTest(unittest.TestCase):
                 'sunAzimuthAngles',
                 'viewZenithMean',
                 'viewAzimuthMean',
-            }, set(vd.name for vd in dsd.data_vars))
+            }, set(dsd.data_vars.keys()))
         self.assertEqual(None, dsd.crs)
         self.assertEqual(None, dsd.spatial_res)
         self.assertEqual((-180.0, -56.0, 180.0, 83.0), dsd.bbox)
