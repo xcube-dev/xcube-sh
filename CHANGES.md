@@ -1,4 +1,9 @@
 ## Changes in 0.6.3 (in development)
+
+* Fixed a bug that occurred when writing datasets obtained from Sentinel Hub to NetCDF file.
+  In this case an error 
+  `TypeError: Invalid value for attr 'processing_level': None must be a number, a string, an ndarray or a list/tuple of numbers/strings for serialization to netCDF files`
+  was raised. (#44)
 * Cube configuration parameter `time_range` accepts `None` as start and end date values. For example,
   if `time_range=[None,'2021-02-01']` is provided, then the start date is '1970-01-01'; 
   if `time_range=['2021-02-01', None]` is provided, then the end date is the current date (today). 

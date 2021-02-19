@@ -111,11 +111,11 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                 )
             ],
             date_created=pd.Timestamp.now().isoformat(),
-            processing_level=SentinelHub.METADATA.dataset_processing_level(self._cube_config.dataset_name),
             time_coverage_start=time_coverage_start.isoformat(),
             time_coverage_end=time_coverage_end.isoformat(),
             time_coverage_duration=(time_coverage_end - time_coverage_start).isoformat(),
         )
+
         if self._cube_config.time_period:
             global_attrs.update(time_coverage_resolution=self._cube_config.time_period.isoformat())
 
@@ -125,6 +125,10 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                 geospatial_lat_min=y1,
                                 geospatial_lon_max=x2,
                                 geospatial_lat_max=y2)
+
+        processing_level = SentinelHub.METADATA.dataset_processing_level(self._cube_config.dataset_name)
+        if processing_level:
+            global_attrs.update(processing_level=processing_level)
 
         # setup Virtual File System (vfs)
         self._vfs = {
