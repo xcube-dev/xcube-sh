@@ -506,3 +506,6 @@ class SessionResponseMock:
 
     def json(self):
         return self.content_obj
+
+    def raise_for_status(self):
+        pass

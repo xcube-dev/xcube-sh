@@ -123,9 +123,7 @@ class SentinelHub:
     @property
     def token_info(self) -> Dict[str, Any]:
         response = self.session.get(self.oauth2_url + '/tokeninfo')
-        if not response.ok:
-            response.raise_for_status()
-            raise SentinelHubError(response)
+        SentinelHubError.maybe_raise_for_response(response)
         return response.json()
 
     # noinspection PyMethodMayBeStatic
@@ -140,16 +138,12 @@ class SentinelHub:
         See https://docs.sentinel-hub.com/api/latest/reference/#tag/configuration_dataset
         """
         response = self.session.get(self.api_url + '/configuration/v1/datasets')
-        if not response.ok:
-            response.raise_for_status()
-            raise SentinelHubError(response)
+        SentinelHubError.maybe_raise_for_response(response)
         return response.json()
 
     def band_names(self, dataset_name: str) -> List[str]:
         response = self.session.get(self.api_url + f'/api/v1/process/dataset/{dataset_name}/bands')
-        if not response.ok:
-            response.raise_for_status()
-            raise SentinelHubError(response)
+        SentinelHubError.maybe_raise_for_response(response)
         return response.json().get('data', {})
 
     def collections(self) -> List[Dict[str, Any]]:
@@ -157,9 +151,7 @@ class SentinelHub:
         See https://docs.sentinel-hub.com/api/latest/reference/#operation/getCollections
         """
         response = self.session.get(f'{self.api_url}/api/v1/catalog/collections')
-        if not response.ok:
-            response.raise_for_status()
-            raise SentinelHubError(response)
+        SentinelHubError.maybe_raise_for_response(response)
         return response.json().get('collections', [])
 
     def get_features(self,
@@ -201,14 +193,12 @@ class SentinelHub:
                                          json=request,
                                          headers=self._get_request_headers('application/json'))
 
-            if not response.ok:
-                response.raise_for_status()
-                raise SentinelHubError(response)
+            SentinelHubError.maybe_raise_for_response(response)
 
             feature_collection = json.loads(response.content)
             if feature_collection.get('type') != 'FeatureCollection' \
                     or not isinstance(feature_collection.get('features'), list):
-                raise SentinelHubError(response)
+                raise SentinelHubError(f'Got unexpected result from {response.url}', response=response)
 
             features = feature_collection['features']
             all_features.extend(features)
@@ -291,9 +281,12 @@ class SentinelHub:
             self.error_handler(response)
 
         if self.error_policy == 'fail':
-            raise SentinelHubError(response)
+            SentinelHubError.maybe_raise_for_response(response)
         elif self.error_policy == 'warn' and self.enable_warnings:
-            warnings.warn(f'Failed to fetch data: {SentinelHubError(response)}')
+            try:
+                SentinelHubError.maybe_raise_for_response(response)
+            except SentinelHubError as e:
+                warnings.warn(f'Failed to fetch data: {e}')
 
         # Return failed response (response.ok == False)
         return response
@@ -444,39 +437,29 @@ class SentinelHub:
         }))
 
 
-class SentinelHubError(Exception):
-    def __init__(self, response):
-        super().__init__(response.reason)
+class SentinelHubError(ValueError):
+    def __init__(self, *args, response=None, **kwargs):
+        super().__init__(*args, **kwargs)
         self._response = response
 
     @property
     def response(self):
         return self._response
 
-    @property
-    def reason(self):
-        return self._response.reason
-
-    @property
-    def status_code(self):
-        return self._response.status_code
-
-    @property
-    def headers(self):
-        return self._response.headers
-
-    @property
-    def content(self):
-        return self._response.content
-
-    def __repr__(self) -> str:
-        return f'SentinelHubError({self.reason}, {self.status_code}, {self.headers!r}, details={self.content!r})'
-
-    def __str__(self) -> str:
-        text = f'{self.reason}, status code {self.status_code}'
-        if self.content:
-            text += f':\n{self.content}\n'
-        return text
+    @classmethod
+    def maybe_raise_for_response(cls, response: requests.Response):
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            detail = None
+            # noinspection PyBroadException
+            try:
+                data = response.json()
+                if isinstance(data, dict):
+                    detail = data.get('detail')
+            except Exception:
+                pass
+            raise SentinelHubError(f'{e}: {detail}' if detail else f'{e}', response=response) from e
 
 
 class SerializableOAuth2Session(requests_oauthlib.OAuth2Session):
