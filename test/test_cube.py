@@ -69,7 +69,10 @@ class CubeTest(unittest.TestCase):
         self.assertEqual(np.datetime64('2021-02-16'), np.datetime64(cube.time.values[-1], 'D'))        # self.assertEqual()
         self.assertEqual(np.datetime64('2015-06-27'), np.datetime64(cube.time.values[0], 'D'))        # self.assertEqual()
 
+
 class CubeTest2(unittest.TestCase):
+
+    @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_open_cube_with_illegal_kwargs(self):
         with self.assertRaises(ValueError) as cm:
             open_cube(cube_config=cube_config,
