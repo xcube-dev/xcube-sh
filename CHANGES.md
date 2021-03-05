@@ -1,4 +1,4 @@
-## Changes in 0.6.3 (in development)
+## Changes in 0.7.0
 
 * Fixed a bug that occurred when writing datasets obtained from Sentinel Hub to NetCDF file.
   In this case an error 
