@@ -1,3 +1,8 @@
+## Changes in 0.7.1 (in development)
+
+* Provided xcube data store framework interface compatibility with 
+  minor changes in xcube 0.7.1 (see https://github.com/dcs4cop/xcube/issues/420).
+
 ## Changes in 0.7.0
 
 * Fixed a bug that occurred when writing datasets obtained from Sentinel Hub to NetCDF file.

@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Iterator, Tuple, Optional, Dict, Any
+from typing import Iterator, Tuple, Optional, Dict, Any, Sequence
 
 import xarray as xr
 import zarr
@@ -340,7 +340,11 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
         self._get_dataset_and_collection_metadata(data_id)
         return self.get_type_specifiers()
 
-    def get_data_ids(self, type_specifier: str = None, include_titles=True) -> Iterator[Tuple[str, Optional[str]]]:
+    def get_data_ids(self,
+                     type_specifier: str = None,
+                     include_titles: bool = True,
+                     include_attrs: Sequence[str] = None) -> Iterator[Tuple[str, Optional[str]]]:
+        # TODO: do not ignore include_attrs
         if self._is_supported_type_specifier(type_specifier):
             if self._sentinel_hub is not None:
                 metadata = SentinelHubMetadata()
