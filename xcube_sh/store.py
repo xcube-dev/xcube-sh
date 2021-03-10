@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Iterator, Tuple, Optional, Dict, Any, Sequence
+from typing import Iterator, Tuple, Optional, Dict, Any, Sequence, Union
 
 import xarray as xr
 import zarr
@@ -342,9 +342,11 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
 
     def get_data_ids(self,
                      type_specifier: str = None,
-                     include_titles: bool = True,
-                     include_attrs: Sequence[str] = None) -> Iterator[Tuple[str, Optional[str]]]:
-        # TODO: do not ignore include_attrs
+                     include_attrs: Sequence[str] = None) -> \
+            Union[Iterator[str], Iterator[Tuple[str, Dict[str, Any]]]]:
+        return_tuples = include_attrs is not None
+        # TODO: respect names other than "title" in include_attrs
+        include_titles = return_tuples and 'title' in include_attrs
         if self._is_supported_type_specifier(type_specifier):
             if self._sentinel_hub is not None:
                 metadata = SentinelHubMetadata()
@@ -360,11 +362,23 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
                     if collection_dataset is not None:
                         dataset_name = collection_dataset.get('dataset_name')
                         if dataset_name is not None:
-                            yield dataset_name, collection_title
+                            if return_tuples:
+                                if include_titles:
+                                    yield dataset_name, {'title': collection_title}
+                                else:
+                                    yield dataset_name, {}
+                            else:
+                                yield dataset_name
             else:
                 datasets = SentinelHubMetadata().datasets
                 for dataset_name, dataset_metadata in datasets.items():
-                    yield dataset_name, dataset_metadata.get('title') if include_titles else None
+                    if return_tuples:
+                        if include_titles:
+                            yield dataset_name, {'title': dataset_metadata.get('title')}
+                        else:
+                            yield dataset_name, {}
+                    else:
+                        yield dataset_name
 
     def has_data(self, data_id: str, type_specifier: str = None) -> bool:
         if self._is_supported_type_specifier(type_specifier):

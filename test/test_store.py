@@ -87,14 +87,28 @@ class SentinelHubDataStoreTest(unittest.TestCase):
 
     def test_get_data_ids(self):
         store = new_data_store(SH_DATA_STORE_ID)
-        expected_set = {('S1GRD', 'Sentinel 1 GRD'),
-                        ('S2L1C', 'Sentinel 2 L1C'),
-                        ('S2L2A', 'Sentinel 2 L2A'),
-                        ('DEM', 'Digital Elevation Model'),}
+        expected_set = {'S1GRD',
+                        'S2L1C',
+                        'S2L2A',
+                        'DEM'}
         self.assertEqual(expected_set, set(store.get_data_ids()))
         self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset')))
         self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset[cube]')))
         self.assertEqual(set(), set(store.get_data_ids(type_specifier='geodataframe')))
+
+    def test_get_data_ids_with_titles(self):
+        store = new_data_store(SH_DATA_STORE_ID)
+        expected_set = {('S1GRD', {'title': 'Sentinel 1 GRD'}),
+                        ('S2L1C', {'title': 'Sentinel 2 L1C'}),
+                        ('S2L2A', {'title': 'Sentinel 2 L2A'}),
+                        ('DEM', {'title': 'Digital Elevation Model'})}
+        self.assertEqual(expected_set, set(store.get_data_ids()))
+        self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset',
+                                                              include_attrs=['title'])))
+        self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset[cube]',
+                                                              include_attrs=['title'])))
+        self.assertEqual(set(), set(store.get_data_ids(type_specifier='geodataframe',
+                                                       include_attrs=['title'])))
 
     def test_get_open_data_params_schema(self):
         store = new_data_store(SH_DATA_STORE_ID)
