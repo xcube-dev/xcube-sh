@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Iterator, Tuple, Optional, Dict, Any, Sequence, Union
+from typing import Iterator, Tuple, Optional, Dict, Any, Union, Container
 
 import xarray as xr
 import zarr
@@ -342,7 +342,7 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
 
     def get_data_ids(self,
                      type_specifier: str = None,
-                     include_attrs: Sequence[str] = None) -> \
+                     include_attrs: Container[str] = None) -> \
             Union[Iterator[str], Iterator[Tuple[str, Dict[str, Any]]]]:
         return_tuples = include_attrs is not None
         # TODO: respect names other than "title" in include_attrs
