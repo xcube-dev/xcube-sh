@@ -42,7 +42,7 @@ We'll need to update the `xcube` environment first, then install `xcube_sh`:
 Once `xcube_sh` will be available from conda-forge:
 
     $ conda activate xcube
-    $ conda install -c conda-forge xcube_sh
+    $ conda install -c conda-forge xcube-sh
 
 ### Test:
 
