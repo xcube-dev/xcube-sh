@@ -104,17 +104,22 @@ class SentinelHubDataStoreTest(unittest.TestCase):
 
     def test_get_data_ids_with_titles(self):
         store = new_data_store(SH_DATA_STORE_ID)
-        expected_set = {('S1GRD', {'title': 'Sentinel 1 GRD'}),
+        expected_set = [('DEM', {'title': 'Digital Elevation Model'}),
+                        ('S1GRD', {'title': 'Sentinel 1 GRD'}),
                         ('S2L1C', {'title': 'Sentinel 2 L1C'}),
-                        ('S2L2A', {'title': 'Sentinel 2 L2A'}),
-                        ('DEM', {'title': 'Digital Elevation Model'})}
-        self.assertEqual(expected_set, set(store.get_data_ids()))
-        self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset',
-                                                              include_attrs=['title'])))
-        self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset[cube]',
-                                                              include_attrs=['title'])))
-        self.assertEqual(set(), set(store.get_data_ids(type_specifier='geodataframe',
-                                                       include_attrs=['title'])))
+                        ('S2L2A', {'title': 'Sentinel 2 L2A'})]
+        self.assertEqual([x[0] for x in expected_set],
+                         sorted(list(store.get_data_ids())))
+        self.assertEqual(expected_set,
+                         sorted(list(store.get_data_ids(type_specifier='dataset',
+                                                        include_attrs=['title'])),
+                                key=lambda x: x[0]))
+        self.assertEqual(expected_set,
+                         sorted(list(store.get_data_ids(type_specifier='dataset[cube]',
+                                                        include_attrs=['title'])),
+                                key=lambda x: x[0]))
+        self.assertEqual([], list(store.get_data_ids(type_specifier='geodataframe',
+                                                     include_attrs=['title'])))
 
     def test_get_open_data_params_schema(self):
         store = new_data_store(SH_DATA_STORE_ID)
