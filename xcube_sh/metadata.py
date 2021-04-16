@@ -23,7 +23,7 @@
 Static SH metadata.
 """
 
-from typing import Dict, List, Optional, Union, Any
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 
@@ -276,6 +276,23 @@ L8L1C_BAND_METADATA = {L8L1C_BAND_NAMES[i]: dict(sample_type='UINT16',
                                                  )
                        for i in range(len(L8L1C_BAND_NAMES))}
 
+LOTL1_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'BQA', 'QA_RADSAT',
+                    'VAA', 'VZA', 'SAA', 'SZA']
+LOTL1_WAVELENGTHS = [443, 482, 561.5, 654.5, 865, 1608.5, 2200.5, 589.5, 1373.5, 10895, 12005, float('nan'),
+                     float('nan'), float('nan'), float('nan'), float('nan'), float('nan')]
+LOTL1_RESOLUTIONS = [30, 30, 30, 30, 30, 30, 30, 15, 30, 100, 100, 30, 30, 30, 30, 30, 30]
+LOTL1_UNITS = ['reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance',
+               'reflectance', 'reflectance', 'kelvin', 'kelvin', 'Unitless', 'Unitless', 'degrees', 'degrees',
+               'degrees', 'degrees']
+
+LOTL1_BAND_METADATA = {LOTL1_BAND_NAMES[i]: dict(sample_type='UINT16',
+                                                 units=LOTL1_UNITS[i],
+                                                 wavelength=LOTL1_WAVELENGTHS[i],
+                                                 resolution=LOTL1_RESOLUTIONS[i],
+                                                 # fill_value=0.0
+                                                 )
+                       for i in range(len(LOTL1_BAND_NAMES))}
+
 DEM_BAND_METADATA = {'DEM': dict(sample_type='FLOAT32',
                                  units='Meters',
                                  # fill_value=0.0
@@ -343,6 +360,13 @@ _SH_METADATA = dict(
             processing_level='L1C',
             request_period='1D',
             collection_name='landsat-8-l1c',
+        ),
+        'LOTL1': dict(
+            title='Landsat 8 - L1C',
+            bands=LOTL1_BAND_METADATA,
+            processing_level='L1C',
+            request_period='1D',
+            collection_name='landsat-lotl1',  # TODO check collection name
         ),
         'DEM': dict(
             title='Mapzen DEM',
