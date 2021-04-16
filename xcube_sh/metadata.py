@@ -293,6 +293,25 @@ LOTL1_BAND_METADATA = {LOTL1_BAND_NAMES[i]: dict(sample_type='UINT16',
                                                  )
                        for i in range(len(LOTL1_BAND_NAMES))}
 
+LOTL2_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B10', 'BQA', 'QA_RADSAT', 'SR_QA_AEROSOL',
+                    'ST_QA', 'ST_TRAD', 'ST_URAD', 'ST_DRAD', 'ST_ATRAN', 'ST_EMIS', 'ST_EMSD', 'ST_CDIST']
+LOTL2_WAVELENGTHS = [443, 482, 561.5, 654.5, 865, 1608.5, 2200.5, 10895, float('nan'), float('nan'), float('nan'),
+                     float('nan'), float('nan'), float('nan'), float('nan'), float('nan'), float('nan'), float('nan'),
+                     float('nan')]
+LOTL2_RESOLUTIONS = [30, 30, 30, 30, 30, 30, 30, 100, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+LOTL2_UNITS = ['reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance',
+               'kelvin', 'Unitless', 'Unitless', 'Unitless', 'kelvin', 'radiance', 'radiance', 'radiance', 'Unitless',
+               'emissivity coefficient', 'emissivity coefficient', 'kilometers']
+
+
+LOTL2_BAND_METADATA = {LOTL2_BAND_NAMES[i]: dict(sample_type='UINT16',
+                                                 units=LOTL2_UNITS[i],
+                                                 wavelength=LOTL2_WAVELENGTHS[i],
+                                                 resolution=LOTL2_RESOLUTIONS[i],
+                                                 # fill_value=0.0
+                                                 )
+                       for i in range(len(LOTL2_BAND_NAMES))}
+
 DEM_BAND_METADATA = {'DEM': dict(sample_type='FLOAT32',
                                  units='Meters',
                                  # fill_value=0.0
@@ -367,6 +386,13 @@ _SH_METADATA = dict(
             processing_level='L1C',
             request_period='1D',
             collection_name='landsat-lotl1',  # TODO check collection name
+        ),
+        'LOTL2': dict(
+            title='Landsat 8 - L2A',
+            bands=LOTL2_BAND_METADATA,
+            processing_level='L2A',
+            request_period='1D',
+            collection_name='landsat-lotl2',  # TODO check collection name
         ),
         'DEM': dict(
             title='Mapzen DEM',
