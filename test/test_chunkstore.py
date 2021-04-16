@@ -377,7 +377,7 @@ class SentinelHubMock:
         return S2_BAND_NAMES
 
     # noinspection PyUnusedLocal
-    def get_features(self, collection_name, bbox, time_range):
+    def get_features(self, collection_name, bbox, crs, time_range):
         """Return dummy catalog features"""
         start_time, end_time = map(pd.to_datetime, time_range)
         datetime = start_time + pd.to_timedelta('8H')

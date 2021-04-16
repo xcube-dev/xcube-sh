@@ -29,6 +29,7 @@ from typing import List, Any, Dict, Tuple, Union, Sequence, Callable
 
 import oauthlib.oauth2
 import pandas as pd
+import pyproj
 import requests
 import requests_oauthlib
 
@@ -157,8 +158,7 @@ class SentinelHub:
     def get_features(self,
                      collection_name: str,
                      bbox: Tuple[float, float, float, float] = None,
-                     # TODO (alicja): add Process API CRS name
-                     # bbox_crs: str = None,
+                     crs: str = None,
                      time_range: Tuple[str, str] = None) -> List[Dict[str, Any]]:
         """
         Get geometric intersections of dataset given by *collection_name*
@@ -167,6 +167,8 @@ class SentinelHub:
 
         :param collection_name: dataset collection name
         :param bbox: bounding box
+        :param crs: Name of a coordinate reference system of the coordinates
+            given by *bbox*. Ignored if *bbox* is not given.
         :param time_range: time range
         :return: list of features that include a "datetime" field for all intersections.
         """
@@ -178,9 +180,15 @@ class SentinelHub:
                        fields=dict(exclude=['geometry', 'bbox', 'assets', 'links'],
                                    include=['properties.datetime']))
         if bbox:
+            source_crs = pyproj.crs.CRS.from_string(crs or DEFAULT_CRS)
+            if not source_crs.is_geographic:
+                x1, y1, x2, y2 = bbox
+                transformer = pyproj.Transformer.from_crs(source_crs, 'WGS84')
+                (x1, x2), (y1, y2) = transformer.transform((x1, x2), (y1, y2))
+                bbox = x1, y1, x2, y2
+
             request.update(bbox=bbox)
-            # TODO (alicja): Implement, once Sentinel Hub does supports CRSes other than WGS84 for 'bbox-crs'.
-            # query_params.update({'bbox-crs': ''})
+
         if time_range:
             t1, t2 = time_range
             request.update(datetime=f'{t1}/{t2}')

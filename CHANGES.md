@@ -1,5 +1,6 @@
 ## Changes in 0.8.0 (in development)
 
+* Now works for `bbox` coordinates using a CRS other than CRS84, WGS84, EPSG:4326. (#???)
 * Provided xcube data store framework interface compatibility with 
   breaking changes in xcube 0.8.0 (see https://github.com/dcs4cop/xcube/issues/420).
 

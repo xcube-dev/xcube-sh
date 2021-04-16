@@ -489,6 +489,7 @@ class SentinelHubChunkStore(RemoteStore):
         datetime_format = "%Y-%m-%dT%H:%M:%SZ"
         features = self._sentinel_hub.get_features(collection_name=collection_name,
                                                    bbox=self._cube_config.bbox,
+                                                   crs=self._cube_config.crs,
                                                    time_range=(time_start.strftime(datetime_format),
                                                                time_end.strftime(datetime_format)))
 

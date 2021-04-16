@@ -70,12 +70,30 @@ class CubeTest(unittest.TestCase):
         self.assertEqual(np.datetime64('2015-06-27'), np.datetime64(cube.time.values[0], 'D'))        # self.assertEqual()
 
 
-class CubeTest2(unittest.TestCase):
+@unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+class CubeWithCredentialsTest(unittest.TestCase):
 
-    @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_open_cube_with_illegal_kwargs(self):
         with self.assertRaises(ValueError) as cm:
             open_cube(cube_config=cube_config,
                       sentinel_hub=SentinelHub(),
                       api_url="https://creodias.sentinel-hub.com/api/v1/catalog/collections")
         self.assertEqual('unexpected keyword-arguments: api_url', f'{cm.exception}')
+
+    @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+    def test_open_cube_with_other_crs(self):
+        bbox_other = [-1953275.571528, 1648364.470634, -1936149.179188, 1664301.688856]
+
+        projection_code = "http://www.opengis.net/def/crs/EPSG/0/3857"
+
+        cube_config = CubeConfig(dataset_name='S2L1C',
+                                 band_names=['B01'],
+                                 tile_size=[512, 512],
+                                 bbox=bbox_other,
+                                 crs=projection_code,
+                                 spatial_res=10,  # in meters
+                                 time_range=['2018-05-14', '2020-07-31'],
+                                 time_tolerance='30M')
+
+        cube = open_cube(cube_config)
+
