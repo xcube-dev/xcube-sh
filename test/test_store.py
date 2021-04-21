@@ -30,6 +30,8 @@ from xcube.core.store import find_data_store_extensions
 from xcube.core.store import new_data_opener
 from xcube.core.store import new_data_store
 from xcube.util.jsonschema import JsonObjectSchema
+from xcube.util.jsonschema import JsonSchema
+from xcube_sh.constants import CRS_ID_TO_URI
 from xcube_sh.constants import SH_DATA_OPENER_ID
 from xcube_sh.constants import SH_DATA_STORE_ID
 from xcube_sh.store import SentinelHubDataOpener
@@ -65,6 +67,10 @@ class SentinelHubDataOpenerTest(unittest.TestCase):
         self.assertIn('spatial_res', schema.properties)
         self.assertIn('bbox', schema.properties)
         self.assertIn('crs', schema.properties)
+        schema = schema.properties['crs']
+        self.assertIsInstance(schema, JsonSchema)
+        self.assertEqual('string', schema.type)
+        self.assertEqual(list(CRS_ID_TO_URI.keys()), schema.enum)
 
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
@@ -98,17 +104,22 @@ class SentinelHubDataStoreTest(unittest.TestCase):
 
     def test_get_data_ids_with_titles(self):
         store = new_data_store(SH_DATA_STORE_ID)
-        expected_set = {('S1GRD', {'title': 'Sentinel 1 GRD'}),
+        expected_set = [('DEM', {'title': 'Digital Elevation Model'}),
+                        ('S1GRD', {'title': 'Sentinel 1 GRD'}),
                         ('S2L1C', {'title': 'Sentinel 2 L1C'}),
-                        ('S2L2A', {'title': 'Sentinel 2 L2A'}),
-                        ('DEM', {'title': 'Digital Elevation Model'})}
-        self.assertEqual(expected_set, set(store.get_data_ids()))
-        self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset',
-                                                              include_attrs=['title'])))
-        self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset[cube]',
-                                                              include_attrs=['title'])))
-        self.assertEqual(set(), set(store.get_data_ids(type_specifier='geodataframe',
-                                                       include_attrs=['title'])))
+                        ('S2L2A', {'title': 'Sentinel 2 L2A'})]
+        self.assertEqual([x[0] for x in expected_set],
+                         sorted(list(store.get_data_ids())))
+        self.assertEqual(expected_set,
+                         sorted(list(store.get_data_ids(type_specifier='dataset',
+                                                        include_attrs=['title'])),
+                                key=lambda x: x[0]))
+        self.assertEqual(expected_set,
+                         sorted(list(store.get_data_ids(type_specifier='dataset[cube]',
+                                                        include_attrs=['title'])),
+                                key=lambda x: x[0]))
+        self.assertEqual([], list(store.get_data_ids(type_specifier='geodataframe',
+                                                     include_attrs=['title'])))
 
     def test_get_open_data_params_schema(self):
         store = new_data_store(SH_DATA_STORE_ID)
@@ -120,7 +131,7 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         self.assertIn('time_range', schema.properties)
         self.assertEqual(
             {
-                'type':  ['array', 'null'],
+                'type': ['array', 'null'],
                 'items': [{'type': ['string', 'null'], 'format': 'date', 'minDate': '2016-11-01'},
                           {'type': ['string', 'null'], 'format': 'date', 'minDate': '2016-11-01'}],
             },

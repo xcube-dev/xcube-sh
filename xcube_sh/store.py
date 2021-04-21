@@ -186,7 +186,7 @@ class SentinelHubDataOpener(DataOpener):
                                              JsonNumberSchema(minimum=1, maximum=2500, default=DEFAULT_TILE_SIZE)),
                                       default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
             crs=JsonStringSchema(default=DEFAULT_CRS,
-                                 enum=CRS_ID_TO_URI),
+                                 enum=CRS_ID_TO_URI.keys()),
             bbox=JsonArraySchema(items=(JsonNumberSchema(),
                                         JsonNumberSchema(),
                                         JsonNumberSchema(),
