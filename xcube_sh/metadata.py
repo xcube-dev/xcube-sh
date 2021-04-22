@@ -385,14 +385,14 @@ _SH_METADATA = dict(
             bands=LOTL1_BAND_METADATA,
             processing_level='L1C',
             request_period='1D',
-            collection_name='LOTL1',
+            collection_name='landsat-ot-l1',
         ),
         'LOTL2': dict(
             title='Landsat 8 - L2A',
             bands=LOTL2_BAND_METADATA,
             processing_level='L2A',
             request_period='1D',
-            collection_name='LOTL2',
+            collection_name='landsat-ot-l2',
         ),
         'DEM': dict(
             title='Mapzen DEM',

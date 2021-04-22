@@ -30,7 +30,7 @@ class SentinelHubMetadataTest(unittest.TestCase):
         md = SentinelHubMetadata()
 
         self.assertEqual(['S1GRD', 'S2L1C', 'S2L2A', 'S3OLCI', 'S3SLSTR', 'S5PL2',
-                          'L8L1C', 'DEM', 'MODIS', 'CUSTOM'], md.dataset_names)
+                          'L8L1C', 'LOTL1', 'LOTL2', 'DEM', 'MODIS', 'CUSTOM'], md.dataset_names)
 
     def test_dataset_band(self):
         md = SentinelHubMetadata()
@@ -59,6 +59,10 @@ class SentinelHubMetadataTest(unittest.TestCase):
                           'wavelength_b': 492.1},
                          md.dataset_band('S2L2A', 'B02'))
 
+        self.assertEqual(['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'BQA',
+                          'QA_RADSAT', 'VAA', 'VZA', 'SAA', 'SZA'],
+                         md.dataset_band_names('LOTL1'))
+
     def test_wavelengths_numeric(self):
         self.assertEqual((0, 0), self._assert_all_wavelengths_numeric('S1GRD'))
         self.assertEqual((13, 13), self._assert_all_wavelengths_numeric('S2L1C'))
@@ -67,6 +71,8 @@ class SentinelHubMetadataTest(unittest.TestCase):
         self.assertEqual((11, 11), self._assert_all_wavelengths_numeric('S3SLSTR'))
         self.assertEqual((0, 0), self._assert_all_wavelengths_numeric('S5PL2'))
         self.assertEqual((12, 0), self._assert_all_wavelengths_numeric('L8L1C'))
+        self.assertEqual((17, 0), self._assert_all_wavelengths_numeric('LOTL1'))
+        self.assertEqual((19, 0), self._assert_all_wavelengths_numeric('LOTL2'))
         self.assertEqual((7, 7), self._assert_all_wavelengths_numeric('MODIS'))
 
     def _assert_all_wavelengths_numeric(self, ds_name: str) -> Tuple[int, int]:
