@@ -61,11 +61,11 @@ cube_config_with_crs = CubeConfig(dataset_name='S2L1C',
                                   time_tolerance='30M')
 
 cube_config_LOTL2 = CubeConfig(dataset_name='LOTL2',
-                         band_names=['B02', 'B03'],
-                         bbox= (-17.554176,14.640112,-17.387367,14.792487),
-                         spatial_res=0.000089,
-                         time_range=('2018-05-14', '2020-07-31'),
-                         time_tolerance='30M')
+                               band_names=['B02', 'B03'],
+                               bbox= (-17.554176,14.640112,-17.387367,14.792487),
+                               spatial_res=0.000089,
+                               time_range=('2018-05-14', '2020-07-31'),
+                               time_tolerance='30M')
 
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
