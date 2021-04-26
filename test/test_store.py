@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import json
 import unittest
 
 from test.test_sentinelhub import HAS_SH_CREDENTIALS
@@ -175,3 +176,8 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         self.assertEqual((-180.0, -56.0, 180.0, 83.0), dsd.bbox)
         self.assertEqual(('2015-11-01', None), dsd.time_range)
         self.assertEqual('1D', dsd.time_period)
+
+        d = dsd.to_dict()
+        self.assertIsInstance(d, dict)
+        # Assert is JSON-serializable
+        json.dumps(d)
