@@ -1,4 +1,4 @@
-## Changes in 0.8.0 (in development)
+## Changes in 0.8.0
 
 * Now supporting Landsat-8 Level-1 (`"LOTL1"`) and Level-2 (`"LOTL2"`) collections (#53, thanks @maximlamare for PR #54)
 * Now works for `bbox` coordinates using a CRS other than CRS84, WGS84, EPSG:4326. (#55)
