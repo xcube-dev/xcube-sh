@@ -2,7 +2,8 @@
 
 # xcube-sh
 
-An [xcube plugin]() that allows generating data cubes from the SENTINEL Hub Cloud API.
+An [xcube plugin](https://xcube.readthedocs.io/en/latest/plugins.html) that
+allows generating data cubes from the SENTINEL Hub Cloud API.
 
 ## Setup
 
