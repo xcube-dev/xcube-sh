@@ -1,0 +1,62 @@
+version: '{build}'
+
+image:
+  - Ubuntu2004
+  - macos
+
+configuration: Release
+
+platform:
+  - x64
+
+for:
+-
+  matrix:
+    only:
+      - image: macos
+  install:
+    - curl -Ls https://micromamba.snakepit.net/api/micromamba/osx-64/latest | tar -xvj bin/micromamba
+    - mv bin/micromamba ./micromamba
+-
+  matrix:
+    only:
+      - image: Ubuntu2004
+  install:
+    - wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xvj bin/micromamba --strip-components=1
+
+build_script:
+  # Set up micromamba
+  - ./micromamba shell init -s bash -p ~/micromamba
+  - source ~/.bashrc
+  - source ~/.bash_profile
+  - hash -r
+  - mkdir -p ~/micromamba/pkgs/
+  - export MAMBA_ROOT_PREFIX=~/micromamba
+  - export MAMBA_EXE=$(pwd)/micromamba
+  - . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
+
+  # Clone xcube repository, install xcube dependencies with micromamba,
+  # and install the latest version of xcube with setup.py.
+  - git clone https://github.com/dcs4cop/xcube $HOME/xcube
+  - micromamba create --name xc --file $HOME/xcube/environment.yml
+  - micromamba activate xc
+  - cd $HOME/xcube
+  - python setup.py install
+
+  # Use micromamba to install all xcube-sh dependencies *except* xcube
+  # (already manually installed), then install xcube-sh itself with setup.py.
+  - cd $APPVEYOR_BUILD_FOLDER
+  - grep -v "^  - xcube" environment.yml > env_no_xcube.yml
+  - micromamba update --yes --name xc --file env_no_xcube.yml
+  - python setup.py install
+
+  # Make sure pytest is installed
+  - micromamba install --yes --name xc --channel conda-forge pytest attrs
+
+  # Print some diagnostics (useful for debugging)
+  - micromamba list
+  - xcube --version
+  - python -c "from xcube_sh.version import version; print(f'xcube_sh version {version}')"
+
+  # Run the test suite
+  - python -m pytest

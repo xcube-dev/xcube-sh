@@ -1,3 +1,5 @@
+[![Build Status](https://ci.appveyor.com/api/projects/status/0n1boma6tdt4qhta/branch/master?svg=true)]((https://ci.appveyor.com/project/bcdev/xcube-sh))
+
 # xcube-sh
 
 An [xcube plugin]() that allows generating data cubes from the SENTINEL Hub Cloud API.
