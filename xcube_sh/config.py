@@ -25,7 +25,7 @@ from datetime import datetime
 from typing import Tuple, Union, Optional, Sequence, Dict, Any
 
 import pandas as pd
-from xcube.util.assertions import assert_given, assert_condition
+from xcube.util.assertions import assert_given, assert_true
 
 from .constants import CRS_ID_TO_URI
 from .constants import CRS_URI_TO_ID
@@ -39,12 +39,20 @@ def _safe_int_div(x: int, y: int) -> int:
     return (x + y - 1) // y
 
 
+Bbox = Tuple[float, float, float, float]
+TimeRange = Union[str,
+                  pd.Timestamp,
+                  Tuple[Union[None, str, pd.Timestamp],
+                        Union[None, str, pd.Timestamp]]]
+
+
 class CubeConfig:
     """
     Sentinel Hub cube configuration.
 
     :param dataset_name: Dataset name. Mandatory.
-    :param band_names: Optional sequence of band names. If omitted (=None) all bands are included.
+    :param band_names: Optional sequence of band names. If omitted (=None)
+        all bands are included.
     :param band_units: Band units. Optional.
     :param band_sample_types: Band sample types. Optional.
     :param tile_size: Tile size as tuple (width, height). Optional.
@@ -52,15 +60,18 @@ class CubeConfig:
     :param bbox: tuple of 4 numbers: (x1, y1, x2, y2)
     :param geometry: Deprecated. Use *bbox*.
     :param spatial_res: Spatial resolution. Must be > 0.
-    :param crs: Coordinate reference system. If None, original source CRS will be used.
+    :param crs: Coordinate reference system. If None, original source
+        CRS will be used.
     :param time_range: Time range tuple; (start time, end time).
-    :param time_period: A string denoting the temporal aggregation perriod, such as "8D", "1W", "2W".
+    :param time_period: A string denoting the temporal aggregation perriod,
+        such as "8D", "1W", "2W".
         If None, all observations are included.
     :param time_tolerance: The tolerance used to identify whether a dataset
         should still be included within a time period.
     :param collection_id: Extra identifier used to identity a BYOC dataset.
-    :param four_d: If variables should appear as forth dimension rather than separate arrays.
-    :param exception_type:
+    :param four_d: If variables should appear as forth dimension rather
+        than separate arrays.
+    :param exception_type: The type of exception to be raised on error
     """
 
     def __init__(self,
@@ -70,14 +81,11 @@ class CubeConfig:
                  band_sample_types: Union[str, Sequence[str]] = None,
                  tile_size: Union[str, Tuple[int, int]] = None,
                  chunk_size: Union[str, Tuple[int, int]] = None,
-                 bbox: Tuple[float, float, float, float] = None,
+                 bbox: Bbox = None,
                  geometry: Union[str, Tuple[float, float, float, float]] = None,
                  spatial_res: float = None,
                  crs: str = None,
-                 time_range: Union[str,
-                                   pd.Timestamp,
-                                   Tuple[Union[None, str, pd.Timestamp],
-                                         Union[None, str, pd.Timestamp]]] = None,
+                 time_range: TimeRange = None,
                  time_period: Union[str, pd.Timedelta] = None,
                  time_tolerance: Union[str, pd.Timedelta] = None,
                  collection_id: str = None,
@@ -87,16 +95,19 @@ class CubeConfig:
         crs = crs or DEFAULT_CRS
         if crs in CRS_URI_TO_ID:
             crs = CRS_URI_TO_ID[crs]
-        assert_condition(crs in CRS_ID_TO_URI, 'invalid crs')
+        assert_true(crs in CRS_ID_TO_URI, 'invalid crs')
 
         assert_given(dataset_name, 'dataset_name')
 
         assert_given(spatial_res, 'spatial_res')
-        assert_condition(spatial_res > 0.0, 'spatial_res must be a positive number')
+        assert_true(spatial_res > 0.0,
+                    'spatial_res must be a positive number')
 
-        assert_condition(not (geometry and bbox), 'geometry and bbox cannot both be given')
+        assert_true(not (geometry and bbox),
+                    'geometry and bbox cannot both be given')
         if geometry is not None:
-            warnings.warn('the geometry parameter is no longer supported, use bbox instead')
+            warnings.warn('the geometry parameter is no longer '
+                          'supported, use bbox instead')
             if bbox is None:
                 bbox = geometry
                 geometry = None
@@ -104,9 +115,12 @@ class CubeConfig:
 
         assert_given(time_range, 'time_range')
 
-        start_date, end_date = time_range if time_range is not None else (None, None)
-        start_date = start_date if start_date is not None else '1970-01-01' 
-        end_date = end_date if end_date is not None else datetime.now().strftime("%Y-%m-%d")
+        start_date, end_date = time_range \
+            if time_range is not None else (None, None)
+        start_date = start_date \
+            if start_date is not None else '1970-01-01'
+        end_date = end_date \
+            if end_date is not None else datetime.now().strftime("%Y-%m-%d")
         time_range = start_date, end_date
         time_period = time_period or None
         time_tolerance = time_tolerance or None
@@ -123,7 +137,8 @@ class CubeConfig:
             raise ValueError('bbox must be a tuple of 4 numbers')
 
         if chunk_size is not None:
-            warnings.warn('the chunk_size parameter is no longer supported, use tile_size instead')
+            warnings.warn('the chunk_size parameter is no '
+                          'longer supported, use tile_size instead')
             if tile_size is None:
                 tile_size = chunk_size
 
@@ -144,7 +159,8 @@ class CubeConfig:
             tile_width, tile_height = tile_size
         if tile_width is None and tile_height is None:
             num_pixels_per_tile = DEFAULT_TILE_SIZE * DEFAULT_TILE_SIZE
-            tile_width = math.ceil(math.sqrt(width * num_pixels_per_tile / height))
+            tile_width = math.ceil(math.sqrt(width * num_pixels_per_tile
+                                             / height))
             tile_height = (num_pixels_per_tile + tile_width - 1) // tile_width
         elif tile_width is None:
             tile_width = tile_height
@@ -170,7 +186,8 @@ class CubeConfig:
 
         if isinstance(time_range, str):
             time_range = tuple(map(lambda s: s.strip(),
-                                   time_range.split(',', maxsplit=1) if ',' in time_range else (
+                                   time_range.split(',', maxsplit=1)
+                                   if ',' in time_range else (
                                        time_range, time_range)))
             time_range = tuple(time_range)
         if len(time_range) == 1:
@@ -194,7 +211,8 @@ class CubeConfig:
             time_tolerance = pd.to_timedelta(time_tolerance)
 
         self._dataset_name = dataset_name
-        self._band_names = tuple(band_names) if band_names is not None else None
+        self._band_names = tuple(band_names) \
+            if band_names is not None else None
         self._band_units = band_units or None
         self._band_sample_types = band_sample_types or None
         self._bbox = bbox
@@ -210,7 +228,9 @@ class CubeConfig:
         self._num_tiles = width // tile_width, height // tile_height
 
     @classmethod
-    def from_dict(cls, cube_config_dict: Dict[str, Any], exception_type=ValueError) -> 'CubeConfig':
+    def from_dict(cls,
+                  cube_config_dict: Dict[str, Any],
+                  exception_type=ValueError) -> 'CubeConfig':
         code = CubeConfig.__init__.__code__
         valid_keywords = set(code.co_varnames[1: code.co_argcount])
         given_keywords = set(cube_config_dict.keys())
@@ -218,15 +238,23 @@ class CubeConfig:
             if keyword in valid_keywords:
                 given_keywords.remove(keyword)
         if len(given_keywords) == 1:
-            raise exception_type(f'Found invalid parameter {given_keywords.pop()!r} in cube configuration')
+            raise exception_type(f'Found invalid parameter '
+                                 f'{given_keywords.pop()!r} in '
+                                 f'cube configuration')
         elif len(given_keywords) > 1:
-            given_keywords_text = ', '.join(map(lambda s: f'{s!r}', sorted(given_keywords)))
-            raise exception_type(f'Found invalid parameters in cube configuration: {given_keywords_text}')
+            given_keywords_text = ', '.join(map(lambda s: f'{s!r}',
+                                                sorted(given_keywords)))
+            raise exception_type(f'Found invalid parameters in '
+                                 f'cube configuration: {given_keywords_text}')
         return CubeConfig(exception_type=exception_type, **cube_config_dict)
 
     def as_dict(self) -> Dict[str, Any]:
-        """Convert to JSON-serializable dictionary that can be passed to ctor as kwargs"""
-        time_range = (self.time_range[0].isoformat(), self.time_range[1].isoformat()) \
+        """
+        Convert to JSON-serializable dictionary
+        that can be passed to ctor as kwargs.
+        """
+        time_range = (self.time_range[0].isoformat(),
+                      self.time_range[1].isoformat()) \
             if self.time_range else None
         time_period = str(self.time_period) \
             if self.time_period else None
