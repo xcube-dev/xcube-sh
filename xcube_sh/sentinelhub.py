@@ -184,7 +184,14 @@ class SentinelHub:
             if not source_crs.is_geographic:
                 x1, y1, x2, y2 = bbox
                 transformer = pyproj.Transformer.from_crs(source_crs, 'WGS84')
-                (x1, x2), (y1, y2) = transformer.transform((x1, x2), (y1, y2))
+                # True if CRS is in geocentric (x/y) coordinates, whereas WGS84 is geodetic (y/x)
+                # (https://www.w3.org/2015/spatial/wiki/Coordinate_Reference_Systems#EPSG_database)
+                # if source_crs.is_geocentric:
+                # however somehow this does not work, that's why we check whether unit name is degree or not.
+                if not source_crs.axis_info[0].unit_name == 'degree':
+                    (y1, y2), (x1, x2) = transformer.transform((x1, x2), (y1, y2))
+                else:
+                    (x1, x2), (y1, y2) = transformer.transform((x1, x2), (y1, y2))
                 bbox = x1, y1, x2, y2
 
             request.update(bbox=bbox)

@@ -62,10 +62,43 @@ cube_config_with_crs = CubeConfig(dataset_name='S2L1C',
 
 cube_config_LOTL2 = CubeConfig(dataset_name='LOTL2',
                                band_names=['B02', 'B03'],
-                               bbox= (-17.554176,14.640112,-17.387367,14.792487),
+                               bbox=(-17.554176, 14.640112, -17.387367, 14.792487),
                                spatial_res=0.000089,
                                time_range=('2018-05-14', '2020-07-31'),
                                time_tolerance='30M')
+
+cube_config_S2L2A = CubeConfig(dataset_name='S2L2A',
+                               band_names=['B03', 'B08', 'CLM'],
+                               bbox=(2894267.8988124575, 9262943.968658403, 2899443.8488556934, 9268505.554239485),
+                               crs="http://www.opengis.net/def/crs/EPSG/0/3857",
+                               spatial_res=10,
+                               time_range=('2020-06-01', '2020-06-30'),
+                               )
+
+cube_config_S2L2A_1D = CubeConfig(dataset_name='S2L2A',
+                                  band_names=['B03', 'B08', 'CLM'],
+                                  bbox=(2894267.8988124575, 9262943.968658403, 2899443.8488556934, 9268505.554239485),
+                                  crs="http://www.opengis.net/def/crs/EPSG/0/3857",
+                                  spatial_res=10,
+                                  time_range=('2020-06-01', '2020-06-30'),
+                                  time_period='1D'
+                                  )
+
+cube_config_S2L2A_WGS84 = CubeConfig(dataset_name='S2L2A',
+                                     band_names=['B03', 'B08', 'CLM'],
+                                     bbox=(25.99965089839723, 63.65600798545179, 26.046183630114623, 63.67816348259773),
+                                     spatial_res=0.0001,
+                                     time_range=('2020-06-01', '2020-06-30'),
+                                     )
+
+cube_config_S2L2A_WGS84_1D = CubeConfig(dataset_name='S2L2A',
+                                        band_names=['B03', 'B08', 'CLM'],
+                                        bbox=(
+                                        25.99965089839723, 63.65600798545179, 26.046183630114623, 63.67816348259773),
+                                        spatial_res=0.0001,
+                                        time_range=('2020-06-01', '2020-06-30'),
+                                        time_period='1D'
+                                        )
 
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
@@ -100,7 +133,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
     def test_open_cube_with_other_crs(self):
         cube = open_cube(cube_config_with_crs)
         self.assertIsInstance(cube, xr.Dataset)
-        self.assertEqual({'time': 320, 'y': 2048, 'x': 2048, 'bnds': 2}, cube.dims)
+        self.assertEqual({'time': 160, 'y': 2048, 'x': 2048, 'bnds': 2}, cube.dims)
         self.assertEqual({'x', 'y', 'time', 'time_bnds'}, set(cube.coords))
         self.assertEqual({'B01'}, set(cube.data_vars))
 
@@ -111,3 +144,32 @@ class CubeWithCredentialsTest(unittest.TestCase):
         self.assertEqual({'time': 100, 'lat': 1912, 'lon': 2094, 'bnds': 2}, cube.dims)
         self.assertEqual({'lat', 'lon', 'time', 'time_bnds'}, set(cube.coords))
         self.assertEqual({'B02', 'B03'}, set(cube.data_vars))
+
+    # used to debug xcube-sh issue 60
+    @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+    def test_open_cube_S2L2A_vs_S2L2A_WGS84(self):
+        cube_wgs84 = open_cube(cube_config_S2L2A_WGS84)
+        cube = open_cube(cube_config_S2L2A)
+        self.assertTrue(cube.time.equals(cube_wgs84.time))
+        self.assertIsInstance(cube, xr.Dataset)
+        cube = cube.dropna(dim="time")
+        cube_wgs84 = cube_wgs84.dropna(dim="time")
+        self.assertTrue(cube.time.equals(cube_wgs84.time))
+        self.assertEqual(12, len(cube.time))
+        self.assertEqual({'lat', 'lon', 'time', 'time_bnds'}, set(cube_wgs84.coords))
+        self.assertEqual({'x', 'y', 'time', 'time_bnds'}, set(cube.coords))
+        self.assertEqual({'B03', 'B08', 'CLM'}, set(cube.data_vars))
+
+    # used to debug xcube-sh issue 60
+    @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+    def test_open_cube_S2L2A_1D(self):
+        cube = open_cube(cube_config_S2L2A_1D)
+        cube_wgs84 = open_cube(cube_config_S2L2A_WGS84_1D)
+        self.assertIsInstance(cube, xr.Dataset)
+        self.assertIsInstance(cube_wgs84, xr.Dataset)
+        cube = cube.dropna(dim="time")
+        cube_wgs84 = cube_wgs84.dropna(dim="time")
+        self.assertTrue(cube.time.equals(cube_wgs84.time))
+        self.assertEqual({'lat', 'lon', 'time', 'time_bnds'}, set(cube_wgs84.coords))
+        self.assertEqual({'x', 'y', 'time', 'time_bnds'}, set(cube.coords))
+        self.assertEqual({'B03', 'B08', 'CLM'}, set(cube.data_vars))
