@@ -183,8 +183,10 @@ class SentinelHub:
             source_crs = pyproj.crs.CRS.from_string(crs or DEFAULT_CRS)
             if not source_crs.is_geographic:
                 x1, y1, x2, y2 = bbox
-                transformer = pyproj.Transformer.from_crs(source_crs, 'WGS84')
-                (y1, y2), (x1, x2) = transformer.transform((x1, x2), (y1, y2))
+                transformer = pyproj.Transformer.from_crs(source_crs,
+                                                          'WGS84',
+                                                          always_xy=True)
+                (x1, x2), (y1, y2) = transformer.transform((x1, x2), (y1, y2))
                 bbox = x1, y1, x2, y2
 
             request.update(bbox=bbox)
