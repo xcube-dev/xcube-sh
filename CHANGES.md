@@ -1,3 +1,6 @@
+## Changes in 0.8.1.dev0
+* Fixed problem with CRS conversion concerning swapped x/y when transforming to lat/lon (#60)
+ 
 ## Changes in 0.8.0
 
 * Now supporting Landsat-8 Level-1 (`"LOTL1"`) and Level-2 (`"LOTL2"`) collections (#53, thanks @maximlamare for PR #54)
