@@ -1,5 +1,5 @@
 ## Changes in 0.8.1.dev0
-* Fixed problem with CRS conversion concering swapped x/y when transforming to lat/lon (#60)
+* Fixed problem with CRS conversion concerning swapped x/y when transforming to lat/lon (#60)
  
 ## Changes in 0.8.0
 
