@@ -1,5 +1,8 @@
-## Changes in 0.8.1.dev0
-* Fixed problem with CRS conversion concerning swapped x/y when transforming to lat/lon (#60)
+## Changes in 0.8.1
+
+* Fixed coordinate transformation into geographic CRS e.g. EPSG 4326. 
+  In this case (lon, lat) pairs were expected, but (lat, lon) pairs 
+  were received. (#60)
  
 ## Changes in 0.8.0
 
