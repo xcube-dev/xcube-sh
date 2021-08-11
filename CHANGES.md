@@ -1,3 +1,12 @@
+## Changes in 0.8.2 (in development)
+
+* Providing a `collection_id` and omitting `time_priod` in `CubeConfig`
+  raised a confusing exception. We now provide a better problem
+  description. (#35)
+* Added two new constructor parameters to `SentinelHub` class:
+  - `catalog_url`: Overrides default SH process API URL derived from *api_url*.
+  - `process_url`: Overrides default SH catalog API URL derived from *api_url*.
+
 ## Changes in 0.8.1
 
 * Fixed coordinate transformation into geographic CRS e.g. EPSG 4326. 

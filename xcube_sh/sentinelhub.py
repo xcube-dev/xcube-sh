@@ -56,6 +56,8 @@ class SentinelHub:
     :param instance_id:  SENTINEL Hub instance ID (deprecated, no longer used)
     :param api_url: Alternative SENTINEL Hub API URL.
     :param oauth2_url: Alternative SENTINEL Hub OAuth2 API URL.
+    :param process_url: Overrides default SH process API URL derived from *api_url*.
+    :param catalog_url: Overrides default SH catalog API URL derived from *api_url*.
     :param error_policy: "raise" or "warn". If "raise" an exception is raised on failed API requests.
     :param error_handler: An optional function called with the response from a failed API request.
     :param enable_warnings: Allow emitting warnings on failed API requests.
@@ -73,6 +75,8 @@ class SentinelHub:
                  instance_id: str = None,
                  api_url: str = None,
                  oauth2_url: str = None,
+                 process_url: str = None,
+                 catalog_url: str = None,
                  enable_warnings: bool = False,
                  error_policy: str = 'fail',
                  error_handler: Callable[[Any], None] = None,
@@ -84,6 +88,8 @@ class SentinelHub:
             warnings.warn('instance_id has been deprecated, it is no longer used')
         self.api_url = api_url or os.environ.get('SH_API_URL', DEFAULT_SH_API_URL)
         self.oauth2_url = oauth2_url or os.environ.get('SH_OAUTH2_URL', DEFAULT_SH_OAUTH2_URL)
+        self.process_url = process_url
+        self.catalog_url = catalog_url
         self.error_policy = error_policy or 'fail'
         self.error_handler = error_handler
         self.enable_warnings = enable_warnings
@@ -195,20 +201,26 @@ class SentinelHub:
             t1, t2 = time_range
             request.update(datetime=f'{t1}/{t2}')
 
+        catalog_url = self.catalog_url \
+                      or f'{self.api_url}/api/v1/catalog/search'
+        headers = self._get_request_headers('application/json')
+
         all_features = []
         features_count = max_feature_count
         feature_offset = 0
         while features_count == max_feature_count:
-            response = self.session.post(f'{self.api_url}/api/v1/catalog/search',
+            response = self.session.post(catalog_url,
                                          json=request,
-                                         headers=self._get_request_headers('application/json'))
+                                         headers=headers)
 
             SentinelHubError.maybe_raise_for_response(response)
 
             feature_collection = json.loads(response.content)
             if feature_collection.get('type') != 'FeatureCollection' \
                     or not isinstance(feature_collection.get('features'), list):
-                raise SentinelHubError(f'Got unexpected result from {response.url}', response=response)
+                raise SentinelHubError(f'Got unexpected'
+                                       f' result from {response.url}',
+                                       response=response)
 
             features = feature_collection['features']
             all_features.extend(features)
@@ -231,10 +243,13 @@ class SentinelHub:
         :param max_timedelta: Maximum time delta for each generated time range
         :return: List time range tuples.
         """
-        max_timedelta = pd.to_timedelta(max_timedelta) if isinstance(max_timedelta, str) else max_timedelta
+        max_timedelta = pd.to_timedelta(max_timedelta) \
+            if isinstance(max_timedelta, str) else max_timedelta
         feature_properties = [feature["properties"] for feature in features]
-        timestamps = sorted(set(pd.to_datetime(properties["datetime"], utc=True)
-                                for properties in feature_properties))
+        timestamps = sorted(
+            set(pd.to_datetime(properties["datetime"], utc=True)
+                for properties in feature_properties)
+        )
         num_timestamps = len(timestamps)
         # noinspection PyTypeChecker
         time_ranges: List[Tuple[pd.Timestamp, pd.Timestamp]] = []
@@ -262,13 +277,17 @@ class SentinelHub:
         retry_backoff_max = self.retry_backoff_max  # ms
         retry_backoff_base = self.retry_backoff_base
 
+        process_url = self.process_url or f'{self.api_url}/api/v1/process'
+        headers = self._get_request_headers(mime_type)
+
         response = None
         for i in range(num_retries):
-            response = self.session.post(self.api_url + f'/api/v1/process',
+            response = self.session.post(process_url,
                                          json=request,
-                                         headers=self._get_request_headers(mime_type))
+                                         headers=headers)
             if response.ok:
-                # TODO (forman): verify response headers: response_num_components, response_width, ...
+                # TODO (forman): verify response headers:
+                #   response_num_components, response_width, ...
                 # response_components = int(response.headers.get('SH-Components', '-1'))
                 # response_width = int(response.headers.get('SH-Width', '-1'))
                 # response_height = int(response.headers.get('SH-Height', '-1'))
@@ -280,9 +299,10 @@ class SentinelHub:
                 retry_backoff = random.random() * retry_backoff_max
                 retry_total = retry_min + retry_backoff
                 if self.enable_warnings:
-                    retry_message = f'Error {response.status_code}: {response.reason}. ' \
-                                    f'Attempt {i + 1} of {num_retries} to retry after ' \
-                                    f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff} = {"%.2f" % retry_total} ms...'
+                    retry_message = \
+                        f'Error {response.status_code}: {response.reason}. ' \
+                        f'Attempt {i + 1} of {num_retries} to retry after ' \
+                        f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff} = {"%.2f" % retry_total} ms...'
                     warnings.warn(retry_message)
                 time.sleep(retry_total / 1000.0)
                 retry_backoff_max *= retry_backoff_base
