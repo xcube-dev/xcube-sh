@@ -50,7 +50,8 @@ class CubeConfig:
     """
     Sentinel Hub cube configuration.
 
-    :param dataset_name: Dataset name. Mandatory.
+    :param dataset_name: Dataset name. If *collection_id* is given,
+        *dataset_name* must be omitted or set to "CUSTOM".
     :param band_names: Optional sequence of band names. If omitted (=None)
         all bands are included.
     :param band_units: Band units. Optional.
@@ -69,6 +70,7 @@ class CubeConfig:
     :param time_tolerance: The tolerance used to identify whether a dataset
         should still be included within a time period.
     :param collection_id: Extra identifier used to identity a BYOC dataset.
+        If given, *dataset_name* must be omitted or set to "CUSTOM".
     :param four_d: If variables should appear as forth dimension rather
         than separate arrays.
     :param exception_type: The type of exception to be raised on error
@@ -97,7 +99,12 @@ class CubeConfig:
             crs = CRS_URI_TO_ID[crs]
         assert_true(crs in CRS_ID_TO_URI, 'invalid crs')
 
-        assert_given(dataset_name, 'dataset_name')
+        if not dataset_name:
+            assert_given(collection_id, 'collection_id')
+            dataset_name = 'CUSTOM'
+        if collection_id:
+            assert_true(dataset_name == 'CUSTOM',
+                        'dataset_name must be "CUSTOM"')
 
         assert_given(spatial_res, 'spatial_res')
         assert_true(spatial_res > 0.0,

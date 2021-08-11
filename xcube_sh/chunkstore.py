@@ -483,15 +483,26 @@ class SentinelHubChunkStore(RemoteStore):
         if time_period is not None:
             return super().get_time_ranges()
 
-        collection_name = self._METADATA.dataset_collection_name(self._cube_config.dataset_name)
-        if not collection_name:
-            raise ValueError(f"cannot find collection name for dataset name {self._cube_config.dataset_name!r}")
+        if self._cube_config.dataset_name == 'CUSTOM':
+            collection_name = self._cube_config.collection_id
+        else:
+            collection_name = self._METADATA.dataset_collection_name(
+                self._cube_config.dataset_name
+            )
+            if not collection_name:
+                raise ValueError(f"cannot find collection"
+                                 f" name for dataset name"
+                                 f" {self._cube_config.dataset_name!r}")
         datetime_format = "%Y-%m-%dT%H:%M:%SZ"
-        features = self._sentinel_hub.get_features(collection_name=collection_name,
-                                                   bbox=self._cube_config.bbox,
-                                                   crs=self._cube_config.crs,
-                                                   time_range=(time_start.strftime(datetime_format),
-                                                               time_end.strftime(datetime_format)))
+        features = self._sentinel_hub.get_features(
+            collection_name=collection_name,
+            bbox=self._cube_config.bbox,
+            crs=self._cube_config.crs,
+            time_range=(
+                time_start.strftime(datetime_format),
+                time_end.strftime(datetime_format)
+            )
+        )
 
         return SentinelHub.features_to_time_ranges(features)
 
