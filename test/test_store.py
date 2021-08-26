@@ -83,14 +83,14 @@ class SentinelHubDataStoreTest(unittest.TestCase):
 
     def test_get_type_specifiers(self):
         store = new_data_store(SH_DATA_STORE_ID)
-        self.assertEqual(('dataset[cube]',), store.get_type_specifiers())
-        self.assertEqual(('dataset[cube]',), store.get_type_specifiers_for_data('S2L2A'))
+        self.assertEqual(('dataset',), store.get_data_types())
+        self.assertEqual(('dataset',), store.get_data_types_for_data('S2L2A'))
 
     def test_get_data_opener_ids(self):
         store = new_data_store(SH_DATA_STORE_ID)
-        self.assertEqual(('dataset[cube]:zarr:sentinelhub',), store.get_data_opener_ids())
-        self.assertEqual(('dataset[cube]:zarr:sentinelhub',), store.get_data_opener_ids(type_specifier='dataset'))
-        self.assertEqual((), store.get_data_opener_ids(type_specifier='geodataframe'))
+        self.assertEqual(('dataset:zarr:sentinelhub',), store.get_data_opener_ids())
+        self.assertEqual(('dataset:zarr:sentinelhub',), store.get_data_opener_ids(data_type='dataset'))
+        self.assertEqual((), store.get_data_opener_ids(data_type='geodataframe'))
 
     def test_get_data_ids(self):
         store = new_data_store(SH_DATA_STORE_ID)
@@ -99,9 +99,8 @@ class SentinelHubDataStoreTest(unittest.TestCase):
                         'S2L2A',
                         'DEM'}
         self.assertEqual(expected_set, set(store.get_data_ids()))
-        self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset')))
-        self.assertEqual(expected_set, set(store.get_data_ids(type_specifier='dataset[cube]')))
-        self.assertEqual(set(), set(store.get_data_ids(type_specifier='geodataframe')))
+        self.assertEqual(expected_set, set(store.get_data_ids(data_type='dataset')))
+        self.assertEqual(set(), set(store.get_data_ids(data_type='geodataframe')))
 
     def test_get_data_ids_with_titles(self):
         store = new_data_store(SH_DATA_STORE_ID)
@@ -112,14 +111,10 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         self.assertEqual([x[0] for x in expected_set],
                          sorted(list(store.get_data_ids())))
         self.assertEqual(expected_set,
-                         sorted(list(store.get_data_ids(type_specifier='dataset',
+                         sorted(list(store.get_data_ids(data_type='dataset',
                                                         include_attrs=['title'])),
                                 key=lambda x: x[0]))
-        self.assertEqual(expected_set,
-                         sorted(list(store.get_data_ids(type_specifier='dataset[cube]',
-                                                        include_attrs=['title'])),
-                                key=lambda x: x[0]))
-        self.assertEqual([], list(store.get_data_ids(type_specifier='geodataframe',
+        self.assertEqual([], list(store.get_data_ids(data_type='geodataframe',
                                                      include_attrs=['title'])))
 
     def test_get_open_data_params_schema(self):

@@ -24,13 +24,14 @@ from typing import Iterator, Tuple, Optional, Dict, Any, Union, Container
 import xarray as xr
 import zarr
 
+from xcube.core.store import DATASET_TYPE
 from xcube.core.store import DataDescriptor
 from xcube.core.store import DataOpener
 from xcube.core.store import DataStore
 from xcube.core.store import DataStoreError
+from xcube.core.store import DataTypeLike
 from xcube.core.store import DatasetDescriptor
 from xcube.core.store import DefaultSearchMixin
-from xcube.core.store import TYPE_SPECIFIER_CUBE
 from xcube.core.store import VariableDescriptor
 from xcube.util.assertions import assert_not_none
 from xcube.util.jsonschema import JsonArraySchema
@@ -71,8 +72,9 @@ class SentinelHubDataOpener(DataOpener):
     def __init__(self, sentinel_hub: SentinelHub = None):
         self._sentinel_hub = sentinel_hub
 
-    def describe_data(self, data_id: str, type_specifier: str = None) -> DatasetDescriptor:
-        # type_specifier is ignored, xcube-sh only provides "dataset" and "dataset[cube]"
+    def describe_data(self, data_id: str, data_type: DataTypeLike = None) \
+            -> DatasetDescriptor:
+        # data_type is ignored, xcube-sh only provides "dataset" and "dataset[cube]"
         dsd = self._describe_data(data_id)
         dsd.open_params_schema = self._get_open_data_params_schema(dsd)
         return dsd
@@ -80,7 +82,8 @@ class SentinelHubDataOpener(DataOpener):
     #############################################################################
     # DataOpener impl.
 
-    def get_open_data_params_schema(self, data_id: str = None) -> JsonObjectSchema:
+    def get_open_data_params_schema(self, data_id: str = None) \
+            -> JsonObjectSchema:
         assert_not_none(data_id, 'data_id')
         return self._get_open_data_params_schema(self._describe_data(data_id))
 
@@ -334,21 +337,21 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
         )
 
     @classmethod
-    def get_type_specifiers(cls) -> Tuple[str, ...]:
-        return str(TYPE_SPECIFIER_CUBE),
+    def get_data_types(cls) -> Tuple[str, ...]:
+        return DATASET_TYPE.alias,
 
-    def get_type_specifiers_for_data(self, data_id: str) -> Tuple[str, ...]:
+    def get_data_types_for_data(self, data_id: str) -> Tuple[str, ...]:
         self._get_dataset_and_collection_metadata(data_id)
-        return self.get_type_specifiers()
+        return self.get_data_types()
 
     def get_data_ids(self,
-                     type_specifier: str = None,
+                     data_type: str = None,
                      include_attrs: Container[str] = None) -> \
             Union[Iterator[str], Iterator[Tuple[str, Dict[str, Any]]]]:
         return_tuples = include_attrs is not None
         # TODO: respect names other than "title" in include_attrs
         include_titles = return_tuples and 'title' in include_attrs
-        if self._is_supported_type_specifier(type_specifier):
+        if self._is_supported_data_type(data_type):
             if self._sentinel_hub is not None:
                 metadata = SentinelHubMetadata()
                 extra_collections = metadata.extra_collections(self._sentinel_hub.api_url)
@@ -381,17 +384,17 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
                     else:
                         yield dataset_name
 
-    def has_data(self, data_id: str, type_specifier: str = None) -> bool:
-        if self._is_supported_type_specifier(type_specifier):
+    def has_data(self, data_id: str, data_type: str = None) -> bool:
+        if self._is_supported_data_type(data_type):
             return data_id in SentinelHubMetadata().dataset_names
         return False
 
-    def describe_data(self, data_id: str, type_specifier: str = None) -> DataDescriptor:
-        # type_specifier is ignored, xcube-sh only provides "dataset" and "dataset[cube]"
-        return super().describe_data(data_id, type_specifier=type_specifier)
+    def describe_data(self, data_id: str, data_type: str = None) -> DataDescriptor:
+        # data_type_alias is ignored, xcube-sh only provides "dataset" and "dataset[cube]"
+        return super().describe_data(data_id, data_type=data_type)
 
-    def get_data_opener_ids(self, data_id: str = None, type_specifier: str = None) -> Tuple[str, ...]:
-        if self._is_supported_type_specifier(type_specifier):
+    def get_data_opener_ids(self, data_id: str = None, data_type: str = None) -> Tuple[str, ...]:
+        if self._is_supported_data_type(data_type):
             return SH_DATA_OPENER_ID,
         return ()
 
@@ -407,8 +410,8 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
     # Implementation helpers
 
     @classmethod
-    def _is_supported_type_specifier(cls, type_specifier: Optional[str]):
-        return type_specifier is None or TYPE_SPECIFIER_CUBE.satisfies(type_specifier)
+    def _is_supported_data_type(cls, data_type: DataTypeLike):
+        return data_type is None or DATASET_TYPE.is_sub_type_of(data_type)
 
     @classmethod
     def _assert_valid_opener_id(cls, opener_id):
