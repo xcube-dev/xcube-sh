@@ -411,7 +411,7 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
 
     @classmethod
     def _is_supported_data_type(cls, data_type: DataTypeLike):
-        return data_type is None or DATASET_TYPE.is_sub_type_of(data_type)
+        return data_type is None or DATASET_TYPE.is_super_type_of(data_type)
 
     @classmethod
     def _assert_valid_opener_id(cls, opener_id):

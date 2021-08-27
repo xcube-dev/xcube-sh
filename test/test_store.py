@@ -88,8 +88,10 @@ class SentinelHubDataStoreTest(unittest.TestCase):
 
     def test_get_data_opener_ids(self):
         store = new_data_store(SH_DATA_STORE_ID)
-        self.assertEqual(('dataset:zarr:sentinelhub',), store.get_data_opener_ids())
-        self.assertEqual(('dataset:zarr:sentinelhub',), store.get_data_opener_ids(data_type='dataset'))
+        self.assertEqual(('dataset:zarr:sentinelhub',),
+                         store.get_data_opener_ids())
+        self.assertEqual(('dataset:zarr:sentinelhub',),
+                         store.get_data_opener_ids(data_type='dataset'))
         self.assertEqual((), store.get_data_opener_ids(data_type='geodataframe'))
 
     def test_get_data_ids(self):

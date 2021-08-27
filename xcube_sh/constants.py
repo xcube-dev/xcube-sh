@@ -45,7 +45,7 @@ SH_MAX_IMAGE_SIZE = 2500
 BAND_DATA_ARRAY_NAME = 'band_data'
 
 SH_DATA_STORE_ID = 'sentinelhub'
-SH_DATA_OPENER_ID = 'dataset[cube]:zarr:sentinelhub'
+SH_DATA_OPENER_ID = 'dataset:zarr:sentinelhub'
 
 AVAILABLE_CRS_EPSG_CODES = [
     4326,
