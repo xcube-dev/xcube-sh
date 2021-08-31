@@ -1,11 +1,15 @@
-## Changes in 0.8.2 (in development)
+## Changes in 0.9.0 (in development)
 
+* Version 0.9 now requires xcube 0.9 because of incompatible API changes 
+  in the xcube data store framework. However, most user code should not  
+  be affected.
 * Providing a `collection_id` and omitting `time_priod` in `CubeConfig`
   raised a confusing exception. We now provide a better problem
   description. (#35)
-* Added two new constructor parameters to `SentinelHub` class:
-  - `catalog_url`: Overrides default SH process API URL derived from *api_url*.
-  - `process_url`: Overrides default SH catalog API URL derived from *api_url*.
+* Added two new constructor parameters to `SentinelHub` class that override
+  default SH API URLs derived from endpoint URL *api_url*:
+  - `catalog_url`: Overrides default SH process API URL.
+  - `process_url`: Overrides default SH catalog API URL.
 
 ## Changes in 0.8.1
 

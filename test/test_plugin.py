@@ -42,10 +42,10 @@ class XcubePluginTest(unittest.TestCase):
                     'name': 'sentinelhub',
                     'point': 'xcube.core.store'}},
             'xcube.core.store.opener': {
-                'dataset[cube]:zarr:sentinelhub': {
+                'dataset:zarr:sentinelhub': {
                     'component': '<not loaded yet>',
                     'description': 'xarray.Dataset cubes in Zarr format from SENTINEL Hub Cloud API',
-                    'name': 'dataset[cube]:zarr:sentinelhub',
+                    'name': 'dataset:zarr:sentinelhub',
                     'point': 'xcube.core.store.opener'
                 }}},
             registry.to_dict())
