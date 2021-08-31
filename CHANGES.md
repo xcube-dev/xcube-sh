@@ -1,5 +1,8 @@
-## Changes in 0.8.2 (in development)
+## Changes in 0.9.0 (in development)
 
+* Version 0.9 now requires xcube 0.9 because of incompatible API changes 
+  in the xcube data store framework. However, most user code should not  
+  be affected.
 * Providing a `collection_id` and omitting `time_priod` in `CubeConfig`
   raised a confusing exception. We now provide a better problem
   description. (#35)

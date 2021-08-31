@@ -74,7 +74,7 @@ class SentinelHubDataOpener(DataOpener):
 
     def describe_data(self, data_id: str, data_type: DataTypeLike = None) \
             -> DatasetDescriptor:
-        # data_type is ignored, xcube-sh only provides "dataset" and "dataset[cube]"
+        # data_type is ignored, xcube-sh only provides "dataset"
         dsd = self._describe_data(data_id)
         dsd.open_params_schema = self._get_open_data_params_schema(dsd)
         return dsd
@@ -390,7 +390,7 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
         return False
 
     def describe_data(self, data_id: str, data_type: str = None) -> DataDescriptor:
-        # data_type_alias is ignored, xcube-sh only provides "dataset" and "dataset[cube]"
+        # data_type_alias is ignored, xcube-sh only provides "dataset"
         return super().describe_data(data_id, data_type=data_type)
 
     def get_data_opener_ids(self, data_id: str = None, data_type: str = None) -> Tuple[str, ...]:
