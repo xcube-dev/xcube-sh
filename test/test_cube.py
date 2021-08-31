@@ -135,7 +135,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
         self.assertIsInstance(cube, xr.Dataset)
         self.assertEqual({'time': 160, 'y': 2048, 'x': 2048, 'bnds': 2}, cube.dims)
         self.assertEqual({'x', 'y', 'time', 'time_bnds'}, set(cube.coords))
-        self.assertEqual({'B01'}, set(cube.data_vars))
+        self.assertEqual({'B01', 'crs'}, set(cube.data_vars))
 
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_open_cube_LOTL2(self):
@@ -158,7 +158,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
         self.assertEqual(12, len(cube.time))
         self.assertEqual({'lat', 'lon', 'time', 'time_bnds'}, set(cube_wgs84.coords))
         self.assertEqual({'x', 'y', 'time', 'time_bnds'}, set(cube.coords))
-        self.assertEqual({'B03', 'B08', 'CLM'}, set(cube.data_vars))
+        self.assertEqual({'B03', 'B08', 'CLM', 'crs'}, set(cube.data_vars))
 
     # used to debug xcube-sh issue 60
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
@@ -172,4 +172,4 @@ class CubeWithCredentialsTest(unittest.TestCase):
         self.assertTrue(cube.time.equals(cube_wgs84.time))
         self.assertEqual({'lat', 'lon', 'time', 'time_bnds'}, set(cube_wgs84.coords))
         self.assertEqual({'x', 'y', 'time', 'time_bnds'}, set(cube.coords))
-        self.assertEqual({'B03', 'B08', 'CLM'}, set(cube.data_vars))
+        self.assertEqual({'B03', 'B08', 'CLM', 'crs'}, set(cube.data_vars))

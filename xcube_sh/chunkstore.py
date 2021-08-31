@@ -28,6 +28,7 @@ from typing import Iterator, Any, List, Dict, Tuple, Callable, Iterable, KeysVie
 
 import numpy as np
 import pandas as pd
+import pyproj
 from numcodecs import Blosc
 
 from .config import CubeConfig
@@ -77,6 +78,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         x_array = np.linspace(x1 + spatial_res / 2, x2 - spatial_res / 2, width, dtype=np.float64)
         y_array = np.linspace(y2 - spatial_res / 2, y1 + spatial_res / 2, height, dtype=np.float64)
 
+        crs = pyproj.CRS.from_string(cube_config.crs)
+
         def time_stamp_to_str(ts: pd.Timestamp) -> str:
             """
             Convert to ISO string and strip timezone.
@@ -119,7 +122,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         if self._cube_config.time_period:
             global_attrs.update(time_coverage_resolution=self._cube_config.time_period.isoformat())
 
-        if self._cube_config.is_geographic_crs:
+        if crs.is_geographic:
             x1, y2, x2, y2 = self._cube_config.bbox
             global_attrs.update(geospatial_lon_min=x1,
                                 geospatial_lat_min=y1,
@@ -136,7 +139,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             '.zattrs': _dict_to_bytes(global_attrs)
         }
 
-        if self._cube_config.is_geographic_crs:
+        if crs.is_geographic:
             x_name, y_name = 'lon', 'lat'
             x_attrs, y_attrs = ({
                                     "_ARRAY_DIMENSIONS": ['lon'],
@@ -180,8 +183,14 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         self._add_static_array('time', t_array, time_attrs)
         self._add_static_array('time_bnds', t_bnds_array, time_bnds_attrs)
 
+        if not crs.is_geographic:
+            self._add_static_array('crs', np.array(0), dict(
+                _ARRAY_DIMENSIONS=[],
+                **crs.to_cf(),
+            ))
+
         if self._cube_config.four_d:
-            if self._cube_config.is_geographic_crs:
+            if crs.is_geographic:
                 band_array_dimensions = ['time', 'lat', 'lon', 'band']
             else:
                 band_array_dimensions = ['time', 'y', 'x', 'band']
@@ -200,7 +209,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                    band_encoding,
                                    band_attrs)
         else:
-            if self._cube_config.is_geographic_crs:
+            if crs.is_geographic:
                 band_array_dimensions = ['time', 'lat', 'lon']
             else:
                 band_array_dimensions = ['time', 'y', 'x']
