@@ -3,7 +3,10 @@
 * Version 0.9 now requires xcube 0.9 because of incompatible API changes 
   in the xcube data store framework. However, most user code should not  
   be affected.
-* Providing a `collection_id` and omitting `time_priod` in `CubeConfig`
+* If the requested CRS is not geographic, the returned dataset will 
+  now contain a variable named `crs` whose attributes encode the 
+  dataset's spatial CRS in a CF-compliant way. (#64)
+* Providing a `collection_id` and omitting `time_period` in `CubeConfig`
   raised a confusing exception. We now provide a better problem
   description. (#35)
 * Added two new constructor parameters to `SentinelHub` class that override
