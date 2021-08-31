@@ -4,8 +4,8 @@
   in the xcube data store framework. However, most user code should not  
   be affected.
 * If the requested CRS is not geographic, the returned dataset will 
-  now contain a variable named `crs` whose attributes encoding the 
-  dataset's spatial CRS in CF-compliant way. (#64)
+  now contain a variable named `crs` whose attributes encode the 
+  dataset's spatial CRS in a CF-compliant way. (#64)
 * Providing a `collection_id` and omitting `time_period` in `CubeConfig`
   raised a confusing exception. We now provide a better problem
   description. (#35)
