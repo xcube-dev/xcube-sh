@@ -308,15 +308,19 @@ class SentinelHubDataOpener(DataOpener):
             if extent is not None:
                 bbox = extent.get("spatial", {}).get('bbox')
                 interval = extent.get("temporal", {}).get('interval')
-                if isinstance(interval, list) and len(interval) == 2:
-                    min_datetime, max_datetime = interval
-                    # Get rid of time part
-                    time_range = (
-                        min_datetime.split('T')[0] if min_datetime is not None
-                        else None,
-                        max_datetime.split('T')[0] if max_datetime is not None
-                        else None
-                    )
+                if isinstance(interval, list) and len(interval) > 0:
+                    if isinstance(interval[0], list) and len(interval[0]) == 2:
+                        min_datetime, max_datetime = interval[0]
+                    else:
+                        min_datetime, max_datetime = interval
+                    if min_datetime or max_datetime:
+                        # Get rid of time part
+                        time_range = (
+                            min_datetime.split('T')[0]
+                            if min_datetime is not None else None,
+                            max_datetime.split('T')[0]
+                            if max_datetime is not None else None
+                        )
 
             if 'title' in collection_metadata:
                 dataset_attrs['title'] = \

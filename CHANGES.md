@@ -1,5 +1,8 @@
 ## Changes in 0.9.1 (in development)
 
+* The xcube `sentinelhub` data store now correctly retrieves available
+  dataset time ranges from Sentinel Hub catalog (#70)
+
 ## Changes in 0.9.0
 
 * Version 0.9 now requires xcube 0.9 because of incompatible API changes 
