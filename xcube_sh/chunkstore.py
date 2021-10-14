@@ -266,6 +266,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                        band_encoding,
                                        band_attrs)
 
+        self._consolidate_metadata()
+
     def get_time_ranges(self) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
         time_start, time_end = self._cube_config.time_range
         time_period = self._cube_config.time_period
@@ -433,6 +435,23 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         :return: chunk data as raw bytes.
         """
         pass
+
+    def _consolidate_metadata(self):
+        # Consolidate metadata to suppress warning:  (#69)
+        #
+        # RuntimeWarning: Failed to open Zarr store with consolidated
+        # metadata, falling back to try reading non-consolidated
+        # metadata. ...
+        #
+        metadata = dict()
+        for k, v in self._vfs.items():
+            if k == '.zattrs' or k.endswith('/.zattrs') \
+                    or k == '.zarray' or k.endswith('/.zarray') \
+                    or k == '.zgroup' or k.endswith('/.zgroup'):
+                metadata[k] = _bytes_to_dict(v)
+        self._vfs['.zmetadata'] = _dict_to_bytes(
+            dict(zarr_consolidated_format=1, metadata=metadata)
+        )
 
     @property
     def _class_name(self):
