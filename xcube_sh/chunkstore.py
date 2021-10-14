@@ -1,16 +1,16 @@
 # The MIT License (MIT)
-# Copyright (c) 2019 by the xcube development team and contributors
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in
-# the Software without restriction, including without limitation the rights to
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-# of the Software, and to permit persons to whom the Software is furnished to do
-# so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
+# Copyright (c) 2021 by the xcube development team and contributors
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,7 +24,8 @@ import json
 import time
 from abc import abstractmethod, ABCMeta
 from collections import MutableMapping
-from typing import Iterator, Any, List, Dict, Tuple, Callable, Iterable, KeysView
+from typing import Iterator, Any, List, Dict, Tuple, Callable, \
+    Iterable, KeysView
 
 import numpy as np
 import pandas as pd
@@ -37,17 +38,35 @@ from .constants import CRS_ID_TO_URI
 from .sentinelhub import SentinelHub
 from .sentinelhub import SentinelHubError
 
-_STATIC_ARRAY_COMPRESSOR_PARAMS = dict(cname='zstd', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0)
-_STATIC_ARRAY_COMPRESSOR_CONFIG = dict(id='blosc', **_STATIC_ARRAY_COMPRESSOR_PARAMS)
+_STATIC_ARRAY_COMPRESSOR_PARAMS = dict(
+    cname='zstd',
+    clevel=1,
+    shuffle=Blosc.SHUFFLE,
+    blocksize=0
+)
+
+_STATIC_ARRAY_COMPRESSOR_CONFIG = dict(
+    id='blosc',
+    **_STATIC_ARRAY_COMPRESSOR_PARAMS
+)
+
 _STATIC_ARRAY_COMPRESSOR = Blosc(**_STATIC_ARRAY_COMPRESSOR_PARAMS)
 
 
-def _dict_to_bytes(d: Dict):
+def _dict_to_bytes(d: Dict) -> bytes:
     return _str_to_bytes(json.dumps(d, indent=2))
+
+
+def _bytes_to_dict(b: bytes) -> Dict:
+    return json.loads(_bytes_to_str(b))
 
 
 def _str_to_bytes(s: str):
     return bytes(s, encoding='utf-8')
+
+
+def _bytes_to_str(b: bytes) -> str:
+    return b.decode('utf-8')
 
 
 class RemoteStore(MutableMapping, metaclass=ABCMeta):
@@ -55,8 +74,10 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
     A remote Zarr Store.
 
     :param cube_config: Cube configuration.
-    :param observer: An optional callback function called when remote requests are mode: observer(**kwargs).
-    :param trace_store_calls: Whether store calls shall be printed (for debugging).
+    :param observer: An optional callback function called when remote
+        requests are mode: observer(**kwargs).
+    :param trace_store_calls: Whether store calls shall be
+        printed (for debugging).
     """
 
     def __init__(self,
@@ -75,8 +96,14 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         width, height = self._cube_config.size
         spatial_res = self._cube_config.spatial_res
         x1, y1, x2, y2 = self._cube_config.bbox
-        x_array = np.linspace(x1 + spatial_res / 2, x2 - spatial_res / 2, width, dtype=np.float64)
-        y_array = np.linspace(y2 - spatial_res / 2, y1 + spatial_res / 2, height, dtype=np.float64)
+        x_array = np.linspace(x1 + spatial_res / 2,
+                              x2 - spatial_res / 2,
+                              width,
+                              dtype=np.float64)
+        y_array = np.linspace(y2 - spatial_res / 2,
+                              y1 + spatial_res / 2,
+                              height,
+                              dtype=np.float64)
 
         crs = pyproj.CRS.from_string(cube_config.crs)
 
@@ -96,9 +123,11 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             except ValueError:
                 return ts_str
 
-        t_array = np.array([time_stamp_to_str(s + 0.5 * (e - s)) for s, e in self._time_ranges],
+        t_array = np.array([time_stamp_to_str(s + 0.5 * (e - s))
+                            for s, e in self._time_ranges],
                            dtype='datetime64[s]').astype(np.int64)
-        t_bnds_array = np.array([[time_stamp_to_str(s), time_stamp_to_str(e)] for s, e in self._time_ranges],
+        t_bnds_array = np.array([[time_stamp_to_str(s), time_stamp_to_str(e)]
+                                 for s, e in self._time_ranges],
                                 dtype='datetime64[s]').astype(np.int64)
 
         time_coverage_start = self._time_ranges[0][0]
@@ -116,11 +145,16 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             date_created=pd.Timestamp.now().isoformat(),
             time_coverage_start=time_coverage_start.isoformat(),
             time_coverage_end=time_coverage_end.isoformat(),
-            time_coverage_duration=(time_coverage_end - time_coverage_start).isoformat(),
+            time_coverage_duration=(
+                    time_coverage_end - time_coverage_start
+            ).isoformat(),
         )
 
         if self._cube_config.time_period:
-            global_attrs.update(time_coverage_resolution=self._cube_config.time_period.isoformat())
+            time_period = self._cube_config.time_period.isoformat()
+            global_attrs.update(
+                time_coverage_resolution=time_period
+            )
 
         if crs.is_geographic:
             x1, y2, x2, y2 = self._cube_config.bbox
@@ -129,7 +163,9 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                 geospatial_lon_max=x2,
                                 geospatial_lat_max=y2)
 
-        processing_level = SentinelHub.METADATA.dataset_processing_level(self._cube_config.dataset_name)
+        processing_level = SentinelHub.METADATA.dataset_processing_level(
+            self._cube_config.dataset_name
+        )
         if processing_level:
             global_attrs.update(processing_level=processing_level)
 
@@ -141,28 +177,34 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
 
         if crs.is_geographic:
             x_name, y_name = 'lon', 'lat'
-            x_attrs, y_attrs = ({
-                                    "_ARRAY_DIMENSIONS": ['lon'],
-                                    "units": "decimal_degrees",
-                                    "long_name": "longitude",
-                                    "standard_name": "longitude",
-                                }, {
-                                    "_ARRAY_DIMENSIONS": ['lat'],
-                                    "units": "decimal_degrees",
-                                    "long_name": "latitude",
-                                    "standard_name": "latitude",
-                                })
+            x_attrs, y_attrs = (
+                {
+                    "_ARRAY_DIMENSIONS": ['lon'],
+                    "units": "decimal_degrees",
+                    "long_name": "longitude",
+                    "standard_name": "longitude",
+                },
+                {
+                    "_ARRAY_DIMENSIONS": ['lat'],
+                    "units": "decimal_degrees",
+                    "long_name": "latitude",
+                    "standard_name": "latitude",
+                }
+            )
         else:
             x_name, y_name = 'x', 'y'
-            x_attrs, y_attrs = ({
-                                    "_ARRAY_DIMENSIONS": ['x'],
-                                    "long_name": "x coordinate of projection",
-                                    "standard_name": "projection_x_coordinate",
-                                }, {
-                                    "_ARRAY_DIMENSIONS": ['y'],
-                                    "long_name": "y coordinate of projection",
-                                    "standard_name": "projection_y_coordinate",
-                                })
+            x_attrs, y_attrs = (
+                {
+                    "_ARRAY_DIMENSIONS": ['x'],
+                    "long_name": "x coordinate of projection",
+                    "standard_name": "projection_x_coordinate",
+                },
+                {
+                    "_ARRAY_DIMENSIONS": ['y'],
+                    "long_name": "y coordinate of projection",
+                    "standard_name": "projection_y_coordinate",
+                }
+            )
 
         time_attrs = {
             "_ARRAY_DIMENSIONS": ['time'],
@@ -224,6 +266,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                        band_encoding,
                                        band_attrs)
 
+        self._consolidate_metadata()
+
     def get_time_ranges(self) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
         time_start, time_end = self._cube_config.time_range
         time_period = self._cube_config.time_period
@@ -239,7 +283,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         """
         Add a request observer.
 
-        :param observer: A callback function called when remote requests are mode: observer(**kwargs).
+        :param observer: A callback function called when remote
+            requests are mode: observer(**kwargs).
         """
         self._observers.append(observer)
 
@@ -247,8 +292,10 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
     def get_band_encoding(self, band_name: str) -> Dict[str, Any]:
         """
         Get the encoding settings for band (variable) *band_name*.
-        Must at least contain "dtype" whose value is a numpy array-protocol type string.
-        Refer to https://docs.scipy.org/doc/numpy/reference/arrays.interface.html#arrays-interface
+        Must at least contain "dtype" whose value is a numpy
+            array-protocol type string.
+        Refer to
+        https://docs.scipy.org/doc/numpy/reference/arrays.interface.html#arrays-interface
         and zarr format 2 spec.
         """
 
@@ -258,7 +305,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         Get any metadata attributes for band (variable) *band_name*.
         """
 
-    def request_bbox(self, x_tile_index: int, y_tile_index: int) -> Tuple[float, float, float, float]:
+    def request_bbox(self, x_tile_index: int, y_tile_index: int) \
+            -> Tuple[float, float, float, float]:
         x_tile_size, y_tile_size = self.cube_config.tile_size
 
         x_index = x_tile_index * x_tile_size
@@ -274,7 +322,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
 
         return x1, y1, x2, y2
 
-    def request_time_range(self, time_index: int) -> Tuple[pd.Timestamp, pd.Timestamp]:
+    def request_time_range(self, time_index: int) \
+            -> Tuple[pd.Timestamp, pd.Timestamp]:
         start_time, end_time = self._time_ranges[time_index]
         if self.cube_config.time_tolerance:
             start_time -= self.cube_config.time_tolerance
@@ -299,7 +348,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         self._vfs[name] = _str_to_bytes('')
         self._vfs[name + '/.zarray'] = _dict_to_bytes(array_metadata)
         self._vfs[name + '/.zattrs'] = _dict_to_bytes(attrs)
-        self._vfs[name + '/' + chunk_key] = _STATIC_ARRAY_COMPRESSOR.encode(array.tobytes(order=order))
+        self._vfs[name + '/' + chunk_key] = \
+            _STATIC_ARRAY_COMPRESSOR.encode(array.tobytes(order=order))
 
     def _add_remote_array(self,
                           name: str,
@@ -329,7 +379,10 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
     def cube_config(self) -> CubeConfig:
         return self._cube_config
 
-    def _fetch_chunk(self, key: str, band_name: str, chunk_index: Tuple[int, ...]) -> bytes:
+    def _fetch_chunk(self,
+                     key: str,
+                     band_name: str,
+                     chunk_index: Tuple[int, ...]) -> bytes:
         if len(chunk_index) == 4:
             time_index, y_chunk_index, x_chunk_index, band_index = chunk_index
         else:
@@ -383,13 +436,30 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         """
         pass
 
+    def _consolidate_metadata(self):
+        # Consolidate metadata to suppress warning:  (#69)
+        #
+        # RuntimeWarning: Failed to open Zarr store with consolidated
+        # metadata, falling back to try reading non-consolidated
+        # metadata. ...
+        #
+        metadata = dict()
+        for k, v in self._vfs.items():
+            if k == '.zattrs' or k.endswith('/.zattrs') \
+                    or k == '.zarray' or k.endswith('/.zarray') \
+                    or k == '.zgroup' or k.endswith('/.zgroup'):
+                metadata[k] = _bytes_to_dict(v)
+        self._vfs['.zmetadata'] = _dict_to_bytes(
+            dict(zarr_consolidated_format=1, metadata=metadata)
+        )
+
     @property
     def _class_name(self):
         return self.__module__ + '.' + self.__class__.__name__
 
-    ###############################################################################
+    ##########################################################################
     # Zarr Store (MutableMapping) implementation
-    ###############################################################################
+    ##########################################################################
 
     def keys(self) -> KeysView[str]:
         if self._trace_store_calls:
@@ -404,7 +474,8 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         else:
             prefix = key + '/'
             start = len(prefix)
-            return list((k for k in self._vfs.keys() if k.startswith(prefix) and k.find('/', start) == -1))
+            return list((k for k in self._vfs.keys()
+                         if k.startswith(prefix) and k.find('/', start) == -1))
 
     def getsize(self, key: str) -> int:
         if self._trace_store_calls:
@@ -436,7 +507,9 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
 
     def __setitem__(self, key: str, value: bytes) -> None:
         if self._trace_store_calls:
-            print(f'{self._class_name}.__setitem__(key={key!r}, value={value!r})')
+            print(
+                f'{self._class_name}.__setitem__(key={key!r}, value={value!r})'
+            )
         raise TypeError(f'{self._class_name} is read-only')
 
     def __delitem__(self, key: str) -> None:
@@ -451,8 +524,10 @@ class SentinelHubChunkStore(RemoteStore):
 
     :param sentinel_hub: SentinelHub instance.
     :param cube_config: Cube configuration.
-    :param observer: An optional callback function called when remote requests are mode: observer(**kwargs).
-    :param trace_store_calls: Whether store calls shall be printed (for debugging).
+    :param observer: An optional callback function called when
+        remote requests are mode: observer(**kwargs).
+    :param trace_store_calls: Whether store calls shall be
+        printed (for debugging).
     """
 
     _SAMPLE_TYPE_TO_DTYPE = {
@@ -516,12 +591,16 @@ class SentinelHubChunkStore(RemoteStore):
         return SentinelHub.features_to_time_ranges(features)
 
     def get_band_encoding(self, band_name: str) -> Dict[str, Any]:
-        fill_value = self._METADATA.dataset_band_fill_value(self.cube_config.dataset_name,
-                                                            band_name, default=None)
+        fill_value = self._METADATA.dataset_band_fill_value(
+            self.cube_config.dataset_name,
+            band_name, default=None
+        )
         band_sample_types = self.cube_config.band_sample_types
         if not band_sample_types:
-            sample_type = self._METADATA.dataset_band_sample_type(self.cube_config.dataset_name,
-                                                                  band_name, default='FLOAT32')
+            sample_type = self._METADATA.dataset_band_sample_type(
+                self.cube_config.dataset_name,
+                band_name, default='FLOAT32'
+            )
         elif isinstance(band_sample_types, tuple):
             index = self.cube_config.band_names.index(band_name)
             sample_type = band_sample_types[index]
@@ -535,7 +614,11 @@ class SentinelHubChunkStore(RemoteStore):
                     order='C')
 
     def get_band_attrs(self, band_name: str) -> Dict[str, Any]:
-        band_metadata = self._METADATA.dataset_band(self.cube_config.dataset_name, band_name, default={})
+        band_metadata = self._METADATA.dataset_band(
+            self.cube_config.dataset_name,
+            band_name,
+            default={}
+        )
         if 'fill_value' in band_metadata:
             band_metadata.pop('fill_value')
         return band_metadata
@@ -559,12 +642,17 @@ class SentinelHubChunkStore(RemoteStore):
         if not band_sample_types:
             if band_name == 'band_data':
                 band_sample_types = [
-                    SentinelHub.METADATA.dataset_band_sample_type(self.cube_config.dataset_name, band_name)
+                    SentinelHub.METADATA.dataset_band_sample_type(
+                        self.cube_config.dataset_name, band_name
+                    )
                     for band_name in band_names
                 ]
             else:
-                band_sample_types = SentinelHub.METADATA.dataset_band_sample_type(self.cube_config.dataset_name,
-                                                                                  band_name)
+                band_sample_types = \
+                    SentinelHub.METADATA.dataset_band_sample_type(
+                        self.cube_config.dataset_name,
+                        band_name
+                    )
         elif isinstance(band_sample_types, tuple) and band_name != 'band_data':
             index = self.cube_config.band_names.index(band_name)
             band_sample_types = band_sample_types[index]
@@ -584,10 +672,14 @@ class SentinelHubChunkStore(RemoteStore):
             band_units=self.cube_config.band_units
         )
 
-        response = self._sentinel_hub.get_data(request, mime_type='application/octet-stream')
+        response = self._sentinel_hub.get_data(
+            request,
+            mime_type='application/octet-stream'
+        )
         if not response.ok:
-            raise KeyError(f'{key}: cannot fetch chunk for variable {band_name!r}, '
-                           f'bbox {bbox!r}, and time_range {time_range!r}: '
+            raise KeyError(f'{key}: cannot fetch chunk for variable'
+                           f' {band_name!r}, bbox {bbox!r}, and'
+                           f' time_range {time_range!r}: '
                            f'{SentinelHubError(response)}')
 
         return response.content

@@ -1,5 +1,4 @@
 ## Changes in 0.9.1 (in development)
-
 * Added resampling parameters to cube configuration (#66) and
   made `"NEAREST"` the default for `upsampling` and `downsampling` 
   (was `"BILINEAR"`):
@@ -8,7 +7,12 @@
   downsampling: str = "NEAREST"         # or "BILINEAR", "BICUBIC"
   mosaicking_order: str = "mostRecent"  # or "leastRecent", "leastCC"
   ```
-  
+* Warnings saying 
+  `RuntimeWarning: Failed to open Zarr store with consolidated metadata...`
+  are now silenced. (#69)
+* The xcube `sentinelhub` data store now correctly retrieves available
+  dataset time ranges from Sentinel Hub catalog (#70)
+
 ## Changes in 0.9.0
 
 * Version 0.9 now requires xcube 0.9 because of incompatible API changes 
