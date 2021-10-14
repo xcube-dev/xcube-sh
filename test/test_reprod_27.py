@@ -79,7 +79,7 @@ class ReproduceIssue27Test(unittest.TestCase):
         self.assertEqual(values, list(dataset.lon.values))
 
         dst_store = WritableStoreThatIsNotADict()
-        dataset.to_zarr(dst_store)
+        dataset.to_zarr(dst_store, consolidated=False)
 
         self.assertEqual(set(src_store.keys()), set(dst_store.keys()))
 
