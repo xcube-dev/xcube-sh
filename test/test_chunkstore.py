@@ -52,7 +52,8 @@ class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
         # noinspection PyTypeChecker
         self.store = SentinelHubChunkStore(SentinelHubMock(cube_config),
                                            cube_config,
-                                           observer=self.observe_store)
+                                           observer=self.observe_store,
+                                           trace_store_calls=False)
 
     def observe_store(self, **kwargs):
         key = '{band_name}-{chunk_index}'.format(**kwargs)
@@ -88,6 +89,14 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
                           time_range=('2017-08-01', '2017-08-31'),
                           time_period='1D',
                           four_d=False)
+
+    def test_basics(self):
+        self.assertIn('.zmetadata', self.store)
+        self.assertIn('.zgroup', self.store)
+        self.assertIn('.zattrs', self.store)
+        self.assertIn('B01/.zattrs', self.store)
+        self.assertIn('B01/.zarray', self.store)
+        self.assertIn('B01/0.0.0', self.store)
 
     def test_plain(self):
         # noinspection PyTypeChecker
