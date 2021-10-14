@@ -139,7 +139,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
             history=[
                 dict(
                     program=f'{self._class_name}',
-                    cube_config=self._cube_config.as_dict(),
+                    cube_config=self._cube_config.to_dict(),
                 )
             ],
             date_created=pd.Timestamp.now().isoformat(),
@@ -553,7 +553,7 @@ class SentinelHubChunkStore(RemoteStore):
                  trace_store_calls=False):
         self._sentinel_hub = sentinel_hub
         if cube_config.band_names is None:
-            d = cube_config.as_dict()
+            d = cube_config.to_dict()
             d['band_names'] = sentinel_hub.band_names(cube_config.dataset_name)
             cube_config = CubeConfig.from_dict(d)
         super().__init__(cube_config,

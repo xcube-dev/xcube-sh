@@ -158,17 +158,19 @@ class SentinelHubGetDataTest(unittest.TestCase):
         self.assertEqual((1, 512, 512, 1), zarr_array.chunks)
         np_array = np.array(zarr_array).astype(np.float32)
         self.assertEqual(np.float32, np_array.dtype)
-        np.testing.assert_almost_equal(np.array([0.6425, 0.6676,
-                                                 0.5922, 0.5822,
-                                                 0.5735, 0.4921,
-                                                 0.5902, 0.6518,
-                                                 0.5825, 0.5321], dtype=np.float32),
+        np.testing.assert_almost_equal(np.array([0.6459, 0.6647,
+                                                 0.6098, 0.586,
+                                                 0.5826, 0.4947,
+                                                 0.6274, 0.6928,
+                                                 0.6018, 0.5411],
+                                                dtype=np.float32),
                                        np_array[0, 0, 0:10, 0])
-        np.testing.assert_almost_equal(np.array([0.8605, 0.8528,
-                                                 0.8495, 0.8378,
-                                                 0.8143, 0.7959,
-                                                 0.7816, 0.7407,
-                                                 0.7182, 0.7326], dtype=np.float32),
+        np.testing.assert_almost_equal(np.array([0.8611, 0.854,
+                                                 0.8645, 0.8506,
+                                                 0.8252, 0.7982,
+                                                 0.8227, 0.7387,
+                                                 0.727, 0.7165],
+                                                dtype=np.float32),
                                        np_array[0, 511, -10:, 0])
 
     @unittest.skip('Known to fail, see TODO in code')

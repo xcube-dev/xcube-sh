@@ -20,8 +20,8 @@
 # SOFTWARE.
 
 import unittest
-import numpy as np
 
+import numpy as np
 import pandas as pd
 
 from xcube_sh.config import CubeConfig
@@ -139,21 +139,26 @@ class CubeConfigTest(unittest.TestCase):
                                            spatial_res=0.00001,
                                            tile_size=(512, 512),
                                            time_range=('2019-01-01', '2019-01-02')))
-        self.assertEqual({'band_names': ('B01', 'B02', 'B03'),
-                          'band_sample_types': None,
-                          'band_units': None,
-                          'collection_id': None,
-                          'crs': 'WGS84',
-                          'dataset_name': 'S2L2A',
-                          'four_d': False,
-                          'bbox': (10.11, 54.17, 10.14072, 54.19048),
-                          'spatial_res': 1e-05,
-                          'tile_size': (512, 512),
-                          'time_period': None,
-                          'time_range': ('2019-01-01T00:00:00+00:00', '2019-01-02T00:00:00+00:00'),
-                          'time_tolerance': '0 days 00:10:00'
-                          },
-                         config.as_dict())
+        expected = {
+            'band_names': ('B01', 'B02', 'B03'),
+            'band_sample_types': None,
+            'band_units': None,
+            'collection_id': None,
+            'crs': 'WGS84',
+            'dataset_name': 'S2L2A',
+            'four_d': False,
+            'bbox': (10.11, 54.17, 10.14072, 54.19048),
+            'spatial_res': 1e-05,
+            'upsampling': 'NEAREST',
+            'downsampling': 'NEAREST',
+            'mosaicking_order': 'mostRecent',
+            'tile_size': (512, 512),
+            'time_period': None,
+            'time_range': ('2019-01-01T00:00:00+00:00', '2019-01-02T00:00:00+00:00'),
+            'time_tolerance': '0 days 00:10:00'
+        }
+        self.assertEqual(expected, config.to_dict())
+        self.assertEqual(expected, config.as_dict())
 
     def test_from_dict_invalids(self):
         with self.assertRaises(ValueError) as cm:

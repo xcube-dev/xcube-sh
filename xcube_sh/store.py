@@ -41,22 +41,26 @@ from xcube.util.jsonschema import JsonIntegerSchema
 from xcube.util.jsonschema import JsonNumberSchema
 from xcube.util.jsonschema import JsonObjectSchema
 from xcube.util.jsonschema import JsonStringSchema
-from xcube_sh.chunkstore import SentinelHubChunkStore
-from xcube_sh.config import CubeConfig
-from xcube_sh.constants import CRS_ID_TO_URI
-from xcube_sh.constants import DEFAULT_CLIENT_ID
-from xcube_sh.constants import DEFAULT_CLIENT_SECRET
-from xcube_sh.constants import DEFAULT_CRS
-from xcube_sh.constants import DEFAULT_NUM_RETRIES
-from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_BASE
-from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_MAX
-from xcube_sh.constants import DEFAULT_SH_API_URL
-from xcube_sh.constants import DEFAULT_SH_OAUTH2_URL
-from xcube_sh.constants import DEFAULT_TILE_SIZE
-from xcube_sh.constants import DEFAULT_TIME_TOLERANCE
-from xcube_sh.constants import SH_DATA_OPENER_ID
-from xcube_sh.metadata import SentinelHubMetadata
-from xcube_sh.sentinelhub import SentinelHub
+from .chunkstore import SentinelHubChunkStore
+from .config import CubeConfig
+from .constants import CRS_ID_TO_URI
+from .constants import DEFAULT_CLIENT_ID
+from .constants import DEFAULT_CLIENT_SECRET
+from .constants import DEFAULT_CRS
+from .constants import DEFAULT_MOSAICKING_ORDER
+from .constants import DEFAULT_NUM_RETRIES
+from .constants import DEFAULT_RESAMPLING
+from .constants import DEFAULT_RETRY_BACKOFF_BASE
+from .constants import DEFAULT_RETRY_BACKOFF_MAX
+from .constants import DEFAULT_SH_API_URL
+from .constants import DEFAULT_SH_OAUTH2_URL
+from .constants import DEFAULT_TILE_SIZE
+from .constants import DEFAULT_TIME_TOLERANCE
+from .constants import MOSAICKING_ORDERS
+from .constants import RESAMPLINGS
+from .constants import SH_DATA_OPENER_ID
+from .metadata import SentinelHubMetadata
+from .sentinelhub import SentinelHub
 
 
 class SentinelHubDataOpener(DataOpener):
@@ -232,6 +236,18 @@ class SentinelHubDataOpener(DataOpener):
                                         JsonNumberSchema(),
                                         JsonNumberSchema())),
             spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
+            upsampling=JsonStringSchema(
+                default=DEFAULT_RESAMPLING,
+                enum=RESAMPLINGS
+            ),
+            downsampling=JsonStringSchema(
+                default=DEFAULT_RESAMPLING,
+                enum=RESAMPLINGS
+            ),
+            mosaicking_order=JsonStringSchema(
+                default=DEFAULT_MOSAICKING_ORDER,
+                enum=MOSAICKING_ORDERS
+            ),
             time_range=JsonDateSchema.new_range(min_date=min_date,
                                                 max_date=max_date,
                                                 nullable=True),

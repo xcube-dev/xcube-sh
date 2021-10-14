@@ -33,6 +33,10 @@ from .constants import DEFAULT_CRS
 from .constants import DEFAULT_TILE_SIZE
 from .constants import DEFAULT_TIME_TOLERANCE
 from .constants import SH_MAX_IMAGE_SIZE
+from .constants import RESAMPLINGS
+from .constants import DEFAULT_RESAMPLING
+from .constants import DEFAULT_MOSAICKING_ORDER
+from .constants import MOSAICKING_ORDERS
 
 
 def _safe_int_div(x: int, y: int) -> int:
@@ -112,17 +116,14 @@ class CubeConfig:
             crs = CRS_URI_TO_ID[crs]
         assert_true(crs in CRS_ID_TO_URI, 'invalid crs')
 
-        upsampling = upsampling or 'NEAREST'
-        assert_in(upsampling, ('NEAREST', 'BILINEAR', 'BICUBIC'),
-                  name='upsampling')
+        upsampling = upsampling or DEFAULT_RESAMPLING
+        assert_in(upsampling, RESAMPLINGS, 'upsampling')
 
-        downsampling = downsampling or 'NEAREST'
-        assert_in(downsampling, ('NEAREST', 'BILINEAR', 'BICUBIC'),
-                  name='downsampling')
+        downsampling = downsampling or DEFAULT_RESAMPLING
+        assert_in(downsampling, RESAMPLINGS, 'downsampling')
 
-        mosaicking_order = mosaicking_order or 'mostRecent'
-        assert_in(mosaicking_order, ('mostRecent', 'leastRecent', 'leastCC'),
-                  name='mosaicking_order')
+        mosaicking_order = mosaicking_order or DEFAULT_MOSAICKING_ORDER
+        assert_in(mosaicking_order, MOSAICKING_ORDERS, 'mosaicking_order')
 
         if not dataset_name:
             assert_given(collection_id, 'collection_id')

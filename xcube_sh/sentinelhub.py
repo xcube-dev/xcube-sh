@@ -33,18 +33,20 @@ import pyproj
 import requests
 import requests_oauthlib
 
-from xcube_sh.constants import CRS_ID_TO_URI
-from xcube_sh.constants import DEFAULT_CLIENT_ID
-from xcube_sh.constants import DEFAULT_CLIENT_SECRET
-from xcube_sh.constants import DEFAULT_CRS
-from xcube_sh.constants import DEFAULT_NUM_RETRIES
-from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_BASE
-from xcube_sh.constants import DEFAULT_RETRY_BACKOFF_MAX
-from xcube_sh.constants import DEFAULT_SH_API_URL
-from xcube_sh.constants import DEFAULT_SH_OAUTH2_URL
-from xcube_sh.constants import SH_CATALOG_FEATURE_LIMIT
-from xcube_sh.metadata import SentinelHubMetadata
-from xcube_sh.version import version
+from .constants import CRS_ID_TO_URI
+from .constants import DEFAULT_CLIENT_ID
+from .constants import DEFAULT_CLIENT_SECRET
+from .constants import DEFAULT_CRS
+from .constants import DEFAULT_MOSAICKING_ORDER
+from .constants import DEFAULT_NUM_RETRIES
+from .constants import DEFAULT_RESAMPLING
+from .constants import DEFAULT_RETRY_BACKOFF_BASE
+from .constants import DEFAULT_RETRY_BACKOFF_MAX
+from .constants import DEFAULT_SH_API_URL
+from .constants import DEFAULT_SH_OAUTH2_URL
+from .constants import SH_CATALOG_FEATURE_LIMIT
+from .metadata import SentinelHubMetadata
+from .version import version
 
 
 class SentinelHub:
@@ -53,17 +55,25 @@ class SentinelHub:
 
     :param client_id: SENTINEL Hub client ID
     :param client_secret: SENTINEL Hub client secret
-    :param instance_id:  SENTINEL Hub instance ID (deprecated, no longer used)
+    :param instance_id:  SENTINEL Hub instance
+        ID (deprecated, no longer used)
     :param api_url: Alternative SENTINEL Hub API URL.
     :param oauth2_url: Alternative SENTINEL Hub OAuth2 API URL.
-    :param process_url: Overrides default SH process API URL derived from *api_url*.
-    :param catalog_url: Overrides default SH catalog API URL derived from *api_url*.
-    :param error_policy: "raise" or "warn". If "raise" an exception is raised on failed API requests.
-    :param error_handler: An optional function called with the response from a failed API request.
+    :param process_url: Overrides default SH process API URL
+        derived from *api_url*.
+    :param catalog_url: Overrides default SH catalog API URL
+        derived from *api_url*.
+    :param error_policy: "raise" or "warn".
+        If "raise" an exception is raised on failed API requests.
+    :param error_handler: An optional function called with the
+        response from a failed API request.
     :param enable_warnings: Allow emitting warnings on failed API requests.
-    :param num_retries: Number of retries for failed API requests, e.g. ```50`` times.
-    :param retry_backoff_max: Request retry backoff time in milliseconds, e.g. ``100`` milliseconds
-    :param retry_backoff_base:  Request retry backoff base. Must be greater than one, e.g. ``1.5``
+    :param num_retries: Number of retries for failed API
+        requests, e.g. ```50`` times.
+    :param retry_backoff_max: Request retry backoff
+        time in milliseconds, e.g. ``100`` milliseconds
+    :param retry_backoff_base:  Request retry backoff base.
+        Must be greater than one, e.g. ``1.5``
     :param session: Optional request session object (mostly for testing).
     """
 
@@ -85,9 +95,12 @@ class SentinelHub:
                  retry_backoff_base: float = DEFAULT_RETRY_BACKOFF_BASE,
                  session: Any = None):
         if instance_id:
-            warnings.warn('instance_id has been deprecated, it is no longer used')
-        self.api_url = api_url or os.environ.get('SH_API_URL', DEFAULT_SH_API_URL)
-        self.oauth2_url = oauth2_url or os.environ.get('SH_OAUTH2_URL', DEFAULT_SH_OAUTH2_URL)
+            warnings.warn('instance_id has been deprecated,'
+                          ' it is no longer used')
+        self.api_url = api_url or os.environ.get('SH_API_URL',
+                                                 DEFAULT_SH_API_URL)
+        self.oauth2_url = oauth2_url or os.environ.get('SH_OAUTH2_URL',
+                                                       DEFAULT_SH_OAUTH2_URL)
         self.process_url = process_url
         self.catalog_url = catalog_url
         self.error_policy = error_policy or 'fail'
@@ -102,19 +115,28 @@ class SentinelHub:
             client_secret = client_secret or DEFAULT_CLIENT_SECRET
 
             if not client_id or not client_secret:
-                raise ValueError('Both client_id and client_secret must be provided.\n'
-                                 'Consider setting environment variables SH_CLIENT_ID and SH_CLIENT_SECRET.\n'
-                                 'For more information refer to '
-                                 'https://docs.sentinel-hub.com/api/latest/#/API/authentication')
+                raise ValueError(
+                    'Both client_id and client_secret must be provided.\n'
+                    'Consider setting environment variables '
+                    'SH_CLIENT_ID and SH_CLIENT_SECRET.\n'
+                    'For more information refer to '
+                    'https://docs.sentinel-hub.com/'
+                    'api/latest/#/API/authentication'
+                )
 
             # Create a OAuth2 session
-            client = oauthlib.oauth2.BackendApplicationClient(client_id=client_id)
-            self.session: SerializableOAuth2Session = SerializableOAuth2Session(client=client)
+            client = oauthlib.oauth2.BackendApplicationClient(
+                client_id=client_id
+            )
+            self.session: SerializableOAuth2Session = \
+                SerializableOAuth2Session(client=client)
 
             # Get OAuth2 token for the session
-            self.token = self.session.fetch_token(token_url=self.oauth2_url + '/token',
-                                                  client_id=client_id,
-                                                  client_secret=client_secret)
+            self.token = self.session.fetch_token(
+                token_url=self.oauth2_url + '/token',
+                client_id=client_id,
+                client_secret=client_secret
+            )
             # print(self.token)
             self.client_id = client_id
         else:
@@ -149,7 +171,9 @@ class SentinelHub:
         return response.json()
 
     def band_names(self, dataset_name: str) -> List[str]:
-        response = self.session.get(self.api_url + f'/api/v1/process/dataset/{dataset_name}/bands')
+        response = self.session.get(self.api_url
+                                    + f'/api/v1/process/dataset/'
+                                      f'{dataset_name}/bands')
         SentinelHubError.maybe_raise_for_response(response)
         return response.json().get('data', {})
 
@@ -157,7 +181,9 @@ class SentinelHub:
         """
         See https://docs.sentinel-hub.com/api/latest/reference/#operation/getCollections
         """
-        response = self.session.get(f'{self.api_url}/api/v1/catalog/collections')
+        response = self.session.get(
+            f'{self.api_url}/api/v1/catalog/collections'
+        )
         SentinelHubError.maybe_raise_for_response(response)
         return response.json().get('collections', [])
 
@@ -165,26 +191,31 @@ class SentinelHub:
                      collection_name: str,
                      bbox: Tuple[float, float, float, float] = None,
                      crs: str = None,
-                     time_range: Tuple[str, str] = None) -> List[Dict[str, Any]]:
+                     time_range: Tuple[str, str] = None) \
+            -> List[Dict[str, Any]]:
         """
         Get geometric intersections of dataset given by *collection_name*
-        with optional *bbox* and *time_range*. The result is returned as a list of
-        features, whose properties include a "datetime" field.
+        with optional *bbox* and *time_range*. The result is returned
+        as a list of features, whose properties include a "datetime" field.
 
         :param collection_name: dataset collection name
         :param bbox: bounding box
         :param crs: Name of a coordinate reference system of the coordinates
             given by *bbox*. Ignored if *bbox* is not given.
         :param time_range: time range
-        :return: list of features that include a "datetime" field for all intersections.
+        :return: list of features that include a "datetime" field for
+            all intersections.
         """
         max_feature_count = SH_CATALOG_FEATURE_LIMIT
 
         request = dict(collections=[collection_name],
                        limit=max_feature_count,
-                       # Exclude most of the response data, as this is not required (yet)
-                       fields=dict(exclude=['geometry', 'bbox', 'assets', 'links'],
-                                   include=['properties.datetime']))
+                       # Exclude most of the response data,
+                       # as this is not required (yet)
+                       fields=dict(
+                           exclude=['geometry', 'bbox', 'assets', 'links'],
+                           include=['properties.datetime'])
+                       )
         if bbox:
             source_crs = pyproj.crs.CRS.from_string(crs or DEFAULT_CRS)
             if not source_crs.is_geographic:
@@ -231,13 +262,14 @@ class SentinelHub:
         return all_features
 
     @classmethod
-    def features_to_time_ranges(cls,
-                                features: List[Dict[str, Any]],
-                                max_timedelta: Union[str, pd.Timedelta] = '1H') \
-            -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
+    def features_to_time_ranges(
+            cls,
+            features: List[Dict[str, Any]],
+            max_timedelta: Union[str, pd.Timedelta] = '1H'
+    ) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
         """
-        Convert list of features from SH Catalog into list of time ranges whose time deltas are
-        not greater than *max_timedelta*.
+        Convert list of features from SH Catalog into list of time ranges
+        whose time deltas are not greater than *max_timedelta*.
 
         :param features: Tile dictionaries as returned by SH WFS
         :param max_timedelta: Maximum time delta for each generated time range
@@ -288,10 +320,10 @@ class SentinelHub:
             if response.ok:
                 # TODO (forman): verify response headers:
                 #   response_num_components, response_width, ...
-                # response_components = int(response.headers.get('SH-Components', '-1'))
-                # response_width = int(response.headers.get('SH-Width', '-1'))
-                # response_height = int(response.headers.get('SH-Height', '-1'))
-                # response_sample_type = response.headers.get('SH-SampleType')
+                # response_components = int(headers.get('SH-Components', '-1'))
+                # response_width = int(headers.get('SH-Width', '-1'))
+                # response_height = int(headers.get('SH-Height', '-1'))
+                # response_sample_type = headers.get('SH-SampleType')
                 return response
             else:
                 # Retry after 'Retry-After' with exponential backoff
@@ -302,7 +334,8 @@ class SentinelHub:
                     retry_message = \
                         f'Error {response.status_code}: {response.reason}. ' \
                         f'Attempt {i + 1} of {num_retries} to retry after ' \
-                        f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff} = {"%.2f" % retry_total} ms...'
+                        f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff}' \
+                        f' = {"%.2f" % retry_total} ms...'
                     warnings.warn(retry_message)
                 time.sleep(retry_total / 1000.0)
                 retry_backoff_max *= retry_backoff_base
@@ -326,24 +359,28 @@ class SentinelHub:
         return {
             'Accept': mime_type,
             'User-Agent': f'xcube_sh/{version} '
-                          f'{platform.python_implementation()}/{platform.python_version()} '
+                          f'{platform.python_implementation()}/'
+                          f'{platform.python_version()} '
                           f'{platform.system()}/{platform.version()}'
         }
 
     @classmethod
-    def new_data_request(cls,
-                         dataset_name: str,
-                         band_names: Sequence[str],
-                         size: Tuple[int, int],
-                         crs: str = None,
-                         bbox: Tuple[float, float, float, float] = None,
-                         time_range: Tuple[Union[str, pd.Timestamp], Union[str, pd.Timestamp]] = None,
-                         upsampling: str = 'NEAREST',
-                         downsampling: str = 'NEAREST',
-                         mosaicking_order: str = 'mostRecent',
-                         collection_id: str = None,
-                         band_units: Union[str, Sequence[str]] = None,
-                         band_sample_types: Union[str, Sequence[str]] = None) -> Dict:
+    def new_data_request(
+            cls,
+            dataset_name: str,
+            band_names: Sequence[str],
+            size: Tuple[int, int],
+            crs: str = None,
+            bbox: Tuple[float, float, float, float] = None,
+            time_range: Tuple[Union[str, pd.Timestamp],
+                              Union[str, pd.Timestamp]] = None,
+            upsampling: str = DEFAULT_RESAMPLING,
+            downsampling: str = DEFAULT_RESAMPLING,
+            mosaicking_order: str = DEFAULT_MOSAICKING_ORDER,
+            collection_id: str = None,
+            band_units: Union[str, Sequence[str]] = None,
+            band_sample_types: Union[str, Sequence[str]] = None
+    ) -> Dict:
 
         if bbox is None:
             bbox = [-180., -90., 180., 90.]
@@ -417,10 +454,12 @@ class SentinelHub:
             "    return {",
         ])
         if band_units:
+            band_names_str = ", ".join(map(repr, band_names))
+            band_units_str = ", ".join(map(repr, band_units))
             evalscript.extend([
                 "        input: [{",
-                "            bands: [" + ", ".join(map(repr, band_names)) + "],",
-                "            units: [" + ", ".join(map(repr, band_units)) + "],",
+                "            bands: [" + band_names_str + "],",
+                "            units: [" + band_units_str + "],",
                 "        }],",
             ])
         else:
@@ -432,10 +471,15 @@ class SentinelHub:
         ])
         if len(band_names) > 1:
             evalscript.extend(
-                ["            {id: " + repr(band_name) + ", bands: 1, sampleType: " + repr(sample_type) + "},"
-                 for band_name, sample_type in zip(band_names, band_sample_types)])
+                ["            {id: "
+                 + repr(band_name)
+                 + ", bands: 1, sampleType: "
+                 + repr(sample_type) + "},"
+                 for band_name, sample_type in zip(band_names,
+                                                   band_sample_types)])
         else:
-            evalscript.extend(["            {bands: 1, sampleType: " + repr(band_sample_types[0]) + "}"])
+            evalscript.extend(["            {bands: 1, sampleType: "
+                               + repr(band_sample_types[0]) + "}"])
 
         evalscript.extend([
             "        ]",
@@ -447,7 +491,11 @@ class SentinelHub:
                 "function evaluatePixel(sample) {",
                 "    return {",
             ])
-            evalscript.extend(["        " + band_name + ": [sample." + band_name + "]," for band_name in band_names])
+            evalscript.extend(["        "
+                               + band_name
+                               + ": [sample."
+                               + band_name + "],"
+                               for band_name in band_names])
             evalscript.extend([
                 "    };",
                 "}",
@@ -489,19 +537,24 @@ class SentinelHubError(ValueError):
                     detail = data.get('detail')
             except Exception:
                 pass
-            raise SentinelHubError(f'{e}: {detail}' if detail else f'{e}', response=response) from e
+            raise SentinelHubError(f'{e}: {detail}' if detail else f'{e}',
+                                   response=response) from e
 
 
 class SerializableOAuth2Session(requests_oauthlib.OAuth2Session):
     """
-    Aids fixing an issue with using the SentinelHubStore when distributing across a dask cluster.
-    The class requests_oauthlib.OAuth2Session does not implement the magic methods __getstate__ and __setstate__
+    Aids fixing an issue with using the SentinelHubStore when distributing
+    across a dask cluster.
+    The class requests_oauthlib.OAuth2Session does not implement the
+    magic methods __getstate__ and __setstate__
     which are used during pickling.
     """
-    _SERIALIZED_ATTRS = ['_client', 'compliance_hook', 'client_id', 'auto_refresh_url',
-                         'auto_refresh_kwargs', 'scope', 'redirect_uri', 'cookies',
-                         'trust_env', 'auth', 'headers', 'params', 'hooks', 'proxies',
-                         'stream', 'cert', 'verify', 'max_redirects', 'adapters']
+    _SERIALIZED_ATTRS = [
+        '_client', 'compliance_hook', 'client_id', 'auto_refresh_url',
+        'auto_refresh_kwargs', 'scope', 'redirect_uri', 'cookies',
+        'trust_env', 'auth', 'headers', 'params', 'hooks', 'proxies',
+        'stream', 'cert', 'verify', 'max_redirects', 'adapters'
+    ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
