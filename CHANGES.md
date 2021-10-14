@@ -1,5 +1,8 @@
 ## Changes in 0.9.1 (in development)
 
+* Warnings saying 
+  `RuntimeWarning: Failed to open Zarr store with consolidated metadata...`
+  are now silenced. (#69)
 * The xcube `sentinelhub` data store now correctly retrieves available
   dataset time ranges from Sentinel Hub catalog (#70)
 
