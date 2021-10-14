@@ -15,8 +15,8 @@
       {
         "type": "CUSTOM",
         "processing": {
-          "upsampling": "BILINEAR",
-          "downsampling": "BILINEAR"
+          "upsampling": "NEAREST",
+          "downsampling": "NEAREST"
         },
         "dataFilter": {
           "collectionId": "1a3ab057-3c51-447c-9f85-27d4b633b3f5"

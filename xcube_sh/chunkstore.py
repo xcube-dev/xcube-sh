@@ -577,6 +577,9 @@ class SentinelHubChunkStore(RemoteStore):
             bbox=bbox,
             band_sample_types=band_sample_types,
             crs=CRS_ID_TO_URI[self.cube_config.crs],
+            upsampling=self.cube_config.upsampling,
+            downsampling=self.cube_config.downsampling,
+            mosaicking_order=self.cube_config.mosaicking_order,
             collection_id=self.cube_config.collection_id,
             band_units=self.cube_config.band_units
         )
