@@ -1,5 +1,12 @@
 ## Changes in 0.9.1 (in development)
-
+* Added resampling parameters to cube configuration (#66) and
+  made `"NEAREST"` the default for `upsampling` and `downsampling` 
+  (was `"BILINEAR"`):
+  ```python
+  upsampling: str = "NEAREST"           # or "BILINEAR", "BICUBIC"
+  downsampling: str = "NEAREST"         # or "BILINEAR", "BICUBIC"
+  mosaicking_order: str = "mostRecent"  # or "leastRecent", "leastCC"
+  ```
 * Warnings saying 
   `RuntimeWarning: Failed to open Zarr store with consolidated metadata...`
   are now silenced. (#69)

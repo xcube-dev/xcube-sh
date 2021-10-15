@@ -125,7 +125,14 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         self.assertIsInstance(schema, JsonObjectSchema)
         self.assertEqual('object', schema.type)
         self.assertEqual({'time_range', 'spatial_res', 'bbox'}, schema.required)
+
         self.assertIn('bbox', schema.properties)
+        self.assertIn('spatial_res', schema.properties)
+        self.assertIn('crs', schema.properties)
+        self.assertIn('upsampling', schema.properties)
+        self.assertIn('downsampling', schema.properties)
+        self.assertIn('mosaicking_order', schema.properties)
+
         self.assertIn('time_range', schema.properties)
         self.assertEqual(
             {
@@ -135,8 +142,6 @@ class SentinelHubDataStoreTest(unittest.TestCase):
             },
             schema.properties['time_range'].to_dict())
         self.assertIn('time_period', schema.properties)
-        self.assertIn('spatial_res', schema.properties)
-        self.assertIn('crs', schema.properties)
 
     def test_describe_data(self):
         store = new_data_store(SH_DATA_STORE_ID)

@@ -15,8 +15,8 @@
       {
         "type": "S2L1C",
         "processing": {
-          "upsampling": "BILINEAR",
-          "downsampling": "BILINEAR"
+          "upsampling": "NEAREST",
+          "downsampling": "NEAREST"
         },
         "dataFilter": {
           "timeRange": {

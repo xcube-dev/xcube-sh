@@ -25,14 +25,18 @@ from datetime import datetime
 from typing import Tuple, Union, Optional, Sequence, Dict, Any
 
 import pandas as pd
-from xcube.util.assertions import assert_given, assert_true
 
+from xcube.util.assertions import assert_given, assert_true, assert_in
 from .constants import CRS_ID_TO_URI
 from .constants import CRS_URI_TO_ID
 from .constants import DEFAULT_CRS
 from .constants import DEFAULT_TILE_SIZE
 from .constants import DEFAULT_TIME_TOLERANCE
 from .constants import SH_MAX_IMAGE_SIZE
+from .constants import RESAMPLINGS
+from .constants import DEFAULT_RESAMPLING
+from .constants import DEFAULT_MOSAICKING_ORDER
+from .constants import MOSAICKING_ORDERS
 
 
 def _safe_int_div(x: int, y: int) -> int:
@@ -63,6 +67,16 @@ class CubeConfig:
     :param spatial_res: Spatial resolution. Must be > 0.
     :param crs: Coordinate reference system. If None, original source
         CRS will be used.
+    :param upsampling: Spatial upsampling method.
+        Must be one of 'NEAREST', 'BILINEAR', 'BICUBIC'.
+        Defaults to 'NEAREST'.
+    :param downsampling: Spatial downsampling method.
+        Must be one of 'NEAREST', 'BILINEAR', 'BICUBIC'.
+        Defaults to 'NEAREST'.
+    :param mosaicking_order: Order in which observations are
+        temporarilly aggregated.
+        Must be one of 'mostRecent', 'leastRecent', 'leastCC'.
+        Defaults to 'mostRecent'.
     :param time_range: Time range tuple; (start time, end time).
     :param time_period: A string denoting the temporal aggregation perriod,
         such as "8D", "1W", "2W".
@@ -87,6 +101,9 @@ class CubeConfig:
                  geometry: Union[str, Tuple[float, float, float, float]] = None,
                  spatial_res: float = None,
                  crs: str = None,
+                 upsampling: str = None,
+                 downsampling: str = None,
+                 mosaicking_order: str = None,
                  time_range: TimeRange = None,
                  time_period: Union[str, pd.Timedelta] = None,
                  time_tolerance: Union[str, pd.Timedelta] = None,
@@ -98,6 +115,15 @@ class CubeConfig:
         if crs in CRS_URI_TO_ID:
             crs = CRS_URI_TO_ID[crs]
         assert_true(crs in CRS_ID_TO_URI, 'invalid crs')
+
+        upsampling = upsampling or DEFAULT_RESAMPLING
+        assert_in(upsampling, RESAMPLINGS, 'upsampling')
+
+        downsampling = downsampling or DEFAULT_RESAMPLING
+        assert_in(downsampling, RESAMPLINGS, 'downsampling')
+
+        mosaicking_order = mosaicking_order or DEFAULT_MOSAICKING_ORDER
+        assert_in(mosaicking_order, MOSAICKING_ORDERS, 'mosaicking_order')
 
         if not dataset_name:
             assert_given(collection_id, 'collection_id')
@@ -225,6 +251,9 @@ class CubeConfig:
         self._bbox = bbox
         self._spatial_res = spatial_res
         self._crs = crs
+        self._upsampling = upsampling
+        self._downsampling = downsampling
+        self._mosaicking_order = mosaicking_order
         self._time_range = time_range
         self._time_period = time_period
         self._time_tolerance = time_tolerance
@@ -257,6 +286,14 @@ class CubeConfig:
 
     def as_dict(self) -> Dict[str, Any]:
         """
+        Deprecated. Use to_dict() instead.
+        """
+        warnings.warn("as_dict() has been deprecated. Use to_dict() instead.",
+                      DeprecationWarning)
+        return self.to_dict()
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
         Convert to JSON-serializable dictionary
         that can be passed to ctor as kwargs.
         """
@@ -275,6 +312,9 @@ class CubeConfig:
                     bbox=self.bbox,
                     spatial_res=self.spatial_res,
                     crs=self.crs,
+                    upsampling=self.upsampling,
+                    downsampling=self.downsampling,
+                    mosaicking_order=self.mosaicking_order,
                     time_range=time_range,
                     time_period=time_period,
                     time_tolerance=time_tolerance,
@@ -317,6 +357,18 @@ class CubeConfig:
     @property
     def spatial_res(self) -> float:
         return self._spatial_res
+
+    @property
+    def upsampling(self) -> str:
+        return self._upsampling
+
+    @property
+    def downsampling(self) -> str:
+        return self._downsampling
+
+    @property
+    def mosaicking_order(self) -> str:
+        return self._mosaicking_order
 
     @property
     def time_range(self) -> Tuple[pd.Timestamp, pd.Timestamp]:
