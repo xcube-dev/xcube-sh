@@ -1,4 +1,11 @@
 ## Changes in 0.9.1 (in development)
+
+* It is now possible to accessing BYOC/BYOD and DEM datasets and without
+  providing parameter `time_period`. (#67, #35)
+  In case such a dataset has no associated time information,  
+  we assume a single time slice (size of dimension `time` is one)
+  and the assigned start/end time is the query time range.
+
 * Added resampling parameters to cube configuration (#66) and
   made `"NEAREST"` the default for `upsampling` and `downsampling` 
   (was `"BILINEAR"`):
@@ -7,9 +14,11 @@
   downsampling: str = "NEAREST"         # or "BILINEAR", "BICUBIC"
   mosaicking_order: str = "mostRecent"  # or "leastRecent", "leastCC"
   ```
+
 * Warnings saying 
   `RuntimeWarning: Failed to open Zarr store with consolidated metadata...`
   are now silenced. (#69)
+
 * The xcube `sentinelhub` data store now correctly retrieves available
   dataset time ranges from Sentinel Hub catalog (#70)
 

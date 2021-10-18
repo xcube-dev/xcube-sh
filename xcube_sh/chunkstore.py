@@ -587,7 +587,28 @@ class SentinelHubChunkStore(RemoteStore):
                 time_end.strftime(datetime_format)
             )
         )
+        if not features:
+            # Maybe the dataset has no data in given time_range
+            # or the dataset has no associated time information
+            # such as some BYOC or DEM.
+            # Repeat query without time_range.
+            features = self._sentinel_hub.get_features(
+                collection_name=collection_name,
+                bbox=self._cube_config.bbox,
+                crs=self._cube_config.crs,
+            )
+            if not features:
+                # Still no results.
+                return []
 
+        if not features[0]:
+            # We found at least one dataset,
+            # but there is no time information associated with it.
+            # We now return simply the query time range.
+            return [(time_start, time_end)]
+
+        # Convert retrieved time stamps into time ranges for
+        # each time slice.
         return SentinelHub.features_to_time_ranges(features)
 
     def get_band_encoding(self, band_name: str) -> Dict[str, Any]:

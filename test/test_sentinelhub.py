@@ -64,15 +64,40 @@ class SentinelHubCatalogCollectionsTest(unittest.TestCase):
 class SentinelHubCatalogSearchTest(unittest.TestCase):
 
     def test_get_features(self):
-        features = SentinelHub().get_features(collection_name='sentinel-1-grd',
-                                              bbox=(13, 45, 14, 46),
-                                              time_range=('2019-12-10T00:00:00Z', '2019-12-11T00:00:00Z'))
+        features = SentinelHub().get_features(
+            collection_name='sentinel-1-grd',
+            bbox=(13, 45, 14, 46),
+            time_range=('2019-12-10T00:00:00Z', '2019-12-11T00:00:00Z')
+        )
         # print(json.dumps(features, indent=2))
         self.assertEqual(8, len(features))
         for feature in features:
             self.assertIn('properties', feature)
             properties = feature['properties']
             self.assertIn('datetime', properties)
+
+    def test_get_features_byod(self):
+        USER_COLLECTION_ID = '1a3ab057-3c51-447c-9f85-27d4b633b3f5'
+
+        features = SentinelHub().get_features(
+            collection_name=USER_COLLECTION_ID,
+            bbox=(1545577, 5761986,
+                  1705367, 5857046),
+            crs='EPSG:3857'
+        )
+        print(json.dumps(features, indent=2))
+        self.assertEqual(1, len(features))
+        self.assertEqual({}, features[0])
+
+        features = SentinelHub().get_features(
+            collection_name=USER_COLLECTION_ID,
+            time_range=('2016-01-01 12:00:00', '2021-01-01 12:00:00'),
+            bbox=(1545577, 5761986,
+                  1705367, 5857046),
+            crs='EPSG:3857'
+        )
+        print(json.dumps(features, indent=2))
+        self.assertEqual(0, len(features))
 
 
 class SentinelHubCatalogFeaturesTest(unittest.TestCase):
@@ -121,6 +146,7 @@ class SentinelHubCatalogFeaturesTest(unittest.TestCase):
 class SentinelHubGetDataTest(unittest.TestCase):
     OUTPUTS_DIR = os.path.normpath(os.path.join(THIS_DIR, '..', 'test-outputs'))
     RESPONSE_SINGLE_ZARR = os.path.join(OUTPUTS_DIR, 'response-single.zarr')
+    RESPONSE_SINGLE_BYOD_ZARR = os.path.join(OUTPUTS_DIR, 'response-single-byod.zarr')
     RESPONSE_MULTI_ZARR = os.path.join(OUTPUTS_DIR, 'response-multi.zarr')
     RESPONSE_SINGLE_TIF = os.path.join(OUTPUTS_DIR, 'response-single.tif')
     RESPONSE_MULTI_TAR = os.path.join(OUTPUTS_DIR, 'response-multi.tar')
@@ -149,6 +175,10 @@ class SentinelHubGetDataTest(unittest.TestCase):
         t2 = time.perf_counter()
         print(f"test_get_data_single_binary: took {t2 - t1} secs")
 
+        self.assertEqual('FLOAT32', response.headers.get('sh-sampletype'))
+        self.assertEqual('512', response.headers.get('sh-width'))
+        self.assertEqual('512', response.headers.get('sh-height'))
+
         _write_zarr_array(self.RESPONSE_SINGLE_ZARR, response.content, 0, (512, 512, 1), '<f4')
 
         sentinel_hub.close()
@@ -171,6 +201,37 @@ class SentinelHubGetDataTest(unittest.TestCase):
                                                  0.8227, 0.7387,
                                                  0.727, 0.7165],
                                                 dtype=np.float32),
+                                       np_array[0, 511, -10:, 0])
+
+    def test_get_data_single_binary_byod(self):
+        with open(REQUEST_SINGLE_BYOD_JSON, 'r') as fp:
+            request = json.load(fp)
+
+        sentinel_hub = SentinelHub()
+
+        t1 = time.perf_counter()
+        response = sentinel_hub.get_data(request, mime_type='application/octet-stream')
+        t2 = time.perf_counter()
+        print(f"test_get_data_single_binary_byod: took {t2 - t1} secs")
+
+        self.assertEqual('INT8', response.headers.get('sh-sampletype'))
+        self.assertEqual('512', response.headers.get('sh-width'))
+        self.assertEqual('305', response.headers.get('sh-height'))
+
+        _write_zarr_array(self.RESPONSE_SINGLE_BYOD_ZARR, response.content, 0, (512, 305, 1), 'i1')
+
+        sentinel_hub.close()
+
+        zarr_array = zarr.open_array(self.RESPONSE_SINGLE_BYOD_ZARR)
+        self.assertEqual((1, 512, 305, 1), zarr_array.shape)
+        self.assertEqual((1, 512, 305, 1), zarr_array.chunks)
+        np_array = np.array(zarr_array).astype(np.int8)
+        self.assertEqual(np.int8, np_array.dtype)
+        np.testing.assert_almost_equal(np.array([61, 52, -33, -56, -100, 88, 60, 82, -61, -79],
+                                                dtype=np.int8),
+                                       np_array[0, 0, 0:10, 0])
+        np.testing.assert_almost_equal(np.array([-79, -67, -26, -69, -85, -42, -6, -14, -29, -2],
+                                                dtype=np.int8),
                                        np_array[0, 511, -10:, 0])
 
     @unittest.skip('Known to fail, see TODO in code')
