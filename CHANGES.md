@@ -1,7 +1,7 @@
 ## Changes in 0.9.1 (in development)
 
 * It is now possible to accessing BYOC/BYOD and DEM datasets and without
-  providing parameter `time_period`. (#67, #35)
+  providing parameter `time_period`. (#67, #35. #25)
   In case such a dataset has no associated time information,  
   we assume a single time slice (size of dimension `time` is one)
   and the assigned start/end time is the query time range.
