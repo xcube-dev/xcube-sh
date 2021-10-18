@@ -1,10 +1,11 @@
 ## Changes in 0.9.1 (in development)
 
-* It is now possible to accessing BYOC/BYOD and DEM datasets and without
-  providing parameter `time_period`. (#67, #35. #25)
+* It is now possible accessing BYOC/BYOD and DEM datasets without
+  providing the `time_period` cube configuration parameter. 
+  (#67, #35. #25)
   In case such a dataset has no associated time information,  
-  we assume a single time slice (size of dimension `time` is one)
-  and the assigned start/end time is the query time range.
+  we assume a single time step (size of dimension `time` is one)
+  and assign the query time range to this time step.
 
 * Added resampling parameters to cube configuration (#66) and
   made `"NEAREST"` the default for `upsampling` and `downsampling` 
