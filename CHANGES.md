@@ -1,4 +1,5 @@
-## Changes in 0.9.1 (in development)
+## Changes in 0.9.1
+
 * Added resampling parameters to cube configuration (#66) and
   made `"NEAREST"` the default for `upsampling` and `downsampling` 
   (was `"BILINEAR"`):
