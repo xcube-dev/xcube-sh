@@ -553,12 +553,16 @@ class SentinelHubChunkStore(RemoteStore):
                  trace_store_calls=False):
         self._sentinel_hub = sentinel_hub
         if cube_config.band_names is None:
-            d = cube_config.to_dict()
-            d['band_names'] = sentinel_hub.band_names(
-                cube_config.dataset_name
-                if cube_config.dataset_name != 'CUSTOM'
-                else cube_config.collection_id
+            bands = sentinel_hub.bands(
+                cube_config.dataset_name,
+                collection_id=cube_config.collection_id
             )
+            band_names = [b['name'] for b in bands]
+            band_sample_types = [b.get('sampleType') for b in bands]
+            d = cube_config.to_dict()
+            d['band_names'] = band_names
+            if all(band_sample_types):
+                d['band_sample_types'] = band_sample_types
             cube_config = CubeConfig.from_dict(d)
         super().__init__(cube_config,
                          observer=observer,
@@ -626,7 +630,7 @@ class SentinelHubChunkStore(RemoteStore):
                 self.cube_config.dataset_name,
                 band_name, default='FLOAT32'
             )
-        elif isinstance(band_sample_types, tuple):
+        elif isinstance(band_sample_types, (tuple, list)):
             index = self.cube_config.band_names.index(band_name)
             sample_type = band_sample_types[index]
         else:  # isinstance(band_sample_types, str)

@@ -315,7 +315,7 @@ class SentinelHubCatalogueTest(unittest.TestCase):
         self.assertEqual(expected_dataset_names,
                          sentinel_hub.dataset_names)
 
-    def test_variable_names(self):
+    def test_band_names(self):
         expected_band_names = ['B01',
                                'B02',
                                'B03',
@@ -341,6 +341,35 @@ class SentinelHubCatalogueTest(unittest.TestCase):
             }
         }))
         self.assertEqual(expected_band_names, sentinel_hub.band_names('S2L2A'))
+        sentinel_hub.close()
+
+    def test_bands(self):
+        expected_band_names = ['B01',
+                               'B02',
+                               'B03',
+                               'B04',
+                               'B05',
+                               'B06',
+                               'B07',
+                               'B08',
+                               'B8A',
+                               'B09',
+                               'B10',
+                               'B11',
+                               'B12',
+                               'viewZenithMean',
+                               'viewAzimuthMean',
+                               'sunZenithAngles',
+                               'sunAzimuthAngles']
+        sentinel_hub = SentinelHub(session=SessionMock({
+            'get': {
+                'https://services.sentinel-hub.com/api/v1/process/dataset/S2L2A/bands': {
+                    'data': expected_band_names
+                }
+            }
+        }))
+        self.assertEqual([dict(name=b) for b in expected_band_names],
+                         sentinel_hub.bands('S2L2A'))
         sentinel_hub.close()
 
     def test_get_features(self):

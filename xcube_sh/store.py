@@ -294,25 +294,30 @@ class SentinelHubDataOpener(DataOpener):
     def _describe_data(self, data_id: str) -> DatasetDescriptor:
         dataset_metadata, collection_metadata = \
             self._get_dataset_and_collection_metadata(data_id)
-        band_metadatas = dataset_metadata.get('bands', {})
+        bands = dict(dataset_metadata.get('bands', {}))
 
         if self._sentinel_hub is not None and data_id != 'CUSTOM':
             # If we are connected to the API, we return band names by API
-            band_names = self._sentinel_hub.band_names(data_id)
-        else:
-            # Otherwise all we know about
-            band_names = band_metadatas.keys()
+            remote_bands = self._sentinel_hub.bands(data_id)
+            if remote_bands:
+                for band in remote_bands:
+                    band_copy = dict(band)
+                    band_name = band_copy.pop('name')
+                    if 'sampleType' in band_copy:
+                        band_copy['sample_type'] = band_copy.pop('sampleType')
+                    if band_name in bands:
+                        bands[band_name].update(band_copy)
+                    else:
+                        bands[band_name] = band_copy
 
         data_vars = {}
-        for band_name in band_names:
-            band_metadata = band_metadatas.get(band_name,
-                                               dict(sample_type='FLOAT32'))
+        for band_name, band_attrs in bands.items():
             data_vars[band_name] = \
                 VariableDescriptor(
                     name=band_name,
-                    dtype=band_metadata.get('sample_type', 'FLOAT32'),
-                    dims=('time', 'lat', 'lon'),
-                    attrs=band_metadata.copy()
+                    dtype=band_attrs.get('sample_type', 'FLOAT32'),
+                    dims=('time', 'y', 'x'),
+                    attrs=band_attrs.copy()
                 )
 
         dataset_attrs = dataset_metadata.copy()
@@ -323,6 +328,11 @@ class SentinelHubDataOpener(DataOpener):
             extent = collection_metadata.get('extent')
             if extent is not None:
                 bbox = extent.get("spatial", {}).get('bbox')
+                if isinstance(bbox, list) and len(bbox) > 0:
+                    if isinstance(bbox[0], list) and len(bbox[0]) == 4:
+                        bbox = tuple(bbox[0])
+                    elif len(bbox) == 4:
+                        bbox = tuple(bbox)
                 interval = extent.get("temporal", {}).get('interval')
                 if isinstance(interval, list) and len(interval) > 0:
                     if isinstance(interval[0], list) and len(interval[0]) == 2:
@@ -356,11 +366,12 @@ class SentinelHubDataOpener(DataOpener):
 
     def _get_dataset_and_collection_metadata(self, data_id: str) \
             -> Tuple[Dict[str, Any], Optional[Dict[str, Any]]]:
-        if data_id == 'CUSTOM':
+        if data_id.upper() == 'CUSTOM':
             return {}, None
         dataset_metadata = SentinelHubMetadata().datasets.get(data_id)
         if dataset_metadata is None:
-            raise DataStoreError(f'Dataset "{data_id}" not found.')
+            dataset_metadata = {}
+            # raise DataStoreError(f'No metadata for dataset "{data_id}" found.')
         if self._sentinel_hub is not None:
             # If we are connected to the API,
             # we may also have collection metadata
