@@ -554,7 +554,11 @@ class SentinelHubChunkStore(RemoteStore):
         self._sentinel_hub = sentinel_hub
         if cube_config.band_names is None:
             d = cube_config.to_dict()
-            d['band_names'] = sentinel_hub.band_names(cube_config.dataset_name)
+            d['band_names'] = sentinel_hub.band_names(
+                cube_config.dataset_name
+                if cube_config.dataset_name != 'CUSTOM'
+                else cube_config.collection_id
+            )
             cube_config = CubeConfig.from_dict(d)
         super().__init__(cube_config,
                          observer=observer,
