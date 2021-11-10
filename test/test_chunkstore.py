@@ -260,6 +260,48 @@ class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):
             sorted(list(self.observed_kwargs.keys())))
 
 
+# noinspection PyTypeChecker
+class SentinelHubStore3DTestWithFillValue(unittest.TestCase):
+    default_kwargs = dict(
+        dataset_name='S2L1C',
+        band_names=['B01', 'B08', 'B12'],
+        bbox=(10.2, 53.5, 10.3, 53.6),
+        spatial_res=0.1 / 4000,
+        time_range=('2017-08-01', '2017-08-31'),
+        time_period='1D'
+    )
+
+    def test_all_zero(self):
+        cube_config = CubeConfig(band_fill_values=0,
+                                 **self.default_kwargs)
+        self.store = SentinelHubChunkStore(SentinelHubMock(cube_config),
+                                           cube_config)
+        cube = xr.open_zarr(self.store)
+        self.assertEqual(0, cube.B01.encoding.get('_FillValue'))
+        self.assertEqual(0, cube.B08.encoding.get('_FillValue'))
+        self.assertEqual(0, cube.B12.encoding.get('_FillValue'))
+
+    def test_individual(self):
+        cube_config = CubeConfig(band_fill_values=[1, 2, 3],
+                                 **self.default_kwargs)
+        self.store = SentinelHubChunkStore(SentinelHubMock(cube_config),
+                                           cube_config)
+        cube = xr.open_zarr(self.store)
+        self.assertEqual(1, cube.B01.encoding.get('_FillValue'))
+        self.assertEqual(2, cube.B08.encoding.get('_FillValue'))
+        self.assertEqual(3, cube.B12.encoding.get('_FillValue'))
+
+    def test_individual_nan(self):
+        cube_config = CubeConfig(band_fill_values=[np.nan, np.nan, np.nan],
+                                 **self.default_kwargs)
+        self.store = SentinelHubChunkStore(SentinelHubMock(cube_config),
+                                           cube_config)
+        cube = xr.open_zarr(self.store)
+        self.assertEqual(None, cube.B01.encoding.get('_FillValue'))
+        self.assertEqual(None, cube.B08.encoding.get('_FillValue'))
+        self.assertEqual(None, cube.B12.encoding.get('_FillValue'))
+
+
 class SentinelHubStore4DTest(SentinelHubStoreTest):
     def get_cube_config(self):
         return CubeConfig(dataset_name='S2L1C',

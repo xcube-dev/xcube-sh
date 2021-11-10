@@ -21,6 +21,7 @@
 
 import itertools
 import json
+import math
 import time
 from abc import abstractmethod, ABCMeta
 from collections import MutableMapping
@@ -575,7 +576,8 @@ class SentinelHubChunkStore(RemoteStore):
         if time_period is not None:
             return super().get_time_ranges()
 
-        if self._cube_config.dataset_name == 'CUSTOM':
+        if self._cube_config.dataset_name is None \
+                or self._cube_config.dataset_name.upper() == 'CUSTOM':
             collection_name = self._cube_config.collection_id
         else:
             collection_name = self._METADATA.dataset_collection_name(
@@ -620,34 +622,44 @@ class SentinelHubChunkStore(RemoteStore):
         return SentinelHub.features_to_time_ranges(features)
 
     def get_band_encoding(self, band_name: str) -> Dict[str, Any]:
+
         band_sample_types = self.cube_config.band_sample_types
         if not band_sample_types:
             sample_type = self._METADATA.dataset_band_sample_type(
-                self.cube_config.dataset_name,
-                band_name, default='FLOAT32'
+                self.cube_config.dataset_name, band_name, default='FLOAT32'
             )
         elif isinstance(band_sample_types, (tuple, list)):
             index = self.cube_config.band_names.index(band_name)
             sample_type = band_sample_types[index]
         else:  # isinstance(band_sample_types, str)
             sample_type = band_sample_types
-
+        # Convert to sample type name to Zarr dtype value
         dtype = self._SAMPLE_TYPE_TO_DTYPE.get(sample_type)
         if dtype is None:
-            raise ValueError(f'Invalid sample type {sample_type}')
+            raise TypeError(f'Invalid sample type {sample_type!r},'
+                            f' must be one of'
+                            f' {tuple(self._SAMPLE_TYPE_TO_DTYPE.keys())}.')
 
         band_fill_values = self.cube_config.band_fill_values
-        if not band_fill_values:
+        if band_fill_values is None:
             fill_value = self._METADATA.dataset_band_fill_value(
-                self.cube_config.dataset_name,
-                band_name, default=None
+                self.cube_config.dataset_name, band_name, default=None
             )
         elif isinstance(band_fill_values, (tuple, list)):
             index = self.cube_config.band_names.index(band_name)
             fill_value = band_fill_values[index]
         else:  # isinstance(band_fill_values, Number)
             fill_value = band_fill_values
-
+        # Force fill value to be serializable
+        if isinstance(fill_value, float):
+            fill_value = float(fill_value)
+            if math.isnan(fill_value):
+                fill_value = None
+        elif isinstance(fill_value, int):
+            fill_value = int(fill_value)
+        elif fill_value is not None:
+            raise TypeError(f'Invalid fill value {fill_value!r}, must be'
+                            f' int, float, or None')
         return dict(dtype=dtype,
                     fill_value=fill_value,
                     compressor=dict(id='zlib', level=8),

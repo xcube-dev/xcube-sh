@@ -132,7 +132,7 @@ class CubeConfig:
             assert_given(collection_id, 'collection_id')
             dataset_name = 'CUSTOM'
         if collection_id:
-            assert_true(dataset_name == 'CUSTOM',
+            assert_true(dataset_name.upper() == 'CUSTOM',
                         'dataset_name must be "CUSTOM"')
 
         assert_given(spatial_res, 'spatial_res')
@@ -249,7 +249,7 @@ class CubeConfig:
         self._dataset_name = dataset_name
         self._band_names = tuple(band_names) \
             if band_names is not None else None
-        self._band_fill_values = band_fill_values or None
+        self._band_fill_values = band_fill_values
         self._band_sample_types = band_sample_types or None
         self._band_units = band_units or None
         self._bbox = bbox
@@ -310,8 +310,9 @@ class CubeConfig:
             if self.time_tolerance else None
         return dict(dataset_name=self.dataset_name,
                     band_names=self.band_names,
-                    band_units=self.band_units,
+                    band_fill_values=self.band_fill_values,
                     band_sample_types=self.band_sample_types,
+                    band_units=self.band_units,
                     tile_size=self.tile_size,
                     bbox=self.bbox,
                     spatial_res=self.spatial_res,
