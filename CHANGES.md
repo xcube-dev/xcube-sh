@@ -1,5 +1,5 @@
 
-## Changes in 0.9.2 (in development)
+## Changes in 0.9.2
 
 * It is now possible accessing BYOC/BYOD and DEM datasets without
   providing the `time_period` cube configuration parameter. 
