@@ -32,10 +32,10 @@ class CubeConfigTest(unittest.TestCase):
     def test_adjust_sizes(self):
         spatial_res = 0.00018
         common_kwargs = dict(dataset_name='S2L2A',
-                             band_names=('B01', 'B02', 'B03'),
+                             band_names=['B01', 'B02', 'B03'],
                              spatial_res=spatial_res,
                              tile_size=(512, 512),
-                             time_range=('2019-01-01', '2019-01-02'))
+                             time_range=['2019-01-01', '2019-01-02'])
 
         # size will be smaller than chunk sizes
         config = CubeConfig(bbox=(10.11, 54.17, 10.14, 54.19), **common_kwargs)
@@ -181,13 +181,18 @@ class CubeConfigTest(unittest.TestCase):
         self.assertEqual("Found invalid parameters in cube configuration: 'geometrix', 'special_res'",
                          f'{cm.exception}')
 
-    def test_band_names_may_be_null(self):
-        config = CubeConfig(dataset_name='S2L2A',
-                            band_names=None,
-                            bbox=(10.11, 54.17, 10.14, 54.19),
-                            spatial_res=0.00001,
-                            time_range=('2019-01-01', '2019-01-02'))
+    def test_band_names(self):
+        common_kwargs = dict(dataset_name='S2L2A',
+                             bbox=(10.11, 54.17, 10.14, 54.19),
+                             spatial_res=0.00001,
+                             time_range=('2019-01-01', '2019-01-02'))
+
+        config = CubeConfig(**common_kwargs)
         self.assertEqual(None, config.band_names)
+
+        config = CubeConfig(band_names=["B02", "B03"], **common_kwargs)
+        self.assertIsInstance(config.band_names, tuple)
+        self.assertEqual(("B02", "B03"), config.band_names)
 
     def test_deprecated_geometry_still_works(self):
         config = CubeConfig(dataset_name='S2L2A',

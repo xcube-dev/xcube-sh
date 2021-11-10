@@ -264,11 +264,21 @@ def info(datasets: List[str] = None):
     else:
         response = dict()
         for dataset_name in datasets:
-            band_names = sentinel_hub.band_names(dataset_name)
-            bands = dict()
-            for band_name in band_names:
-                bands[band_name] = sentinel_hub.METADATA.dataset_band(dataset_name, band_name, default={})
-            response[dataset_name] = bands
+            bands = sentinel_hub.bands(dataset_name)
+            bands_dict = dict()
+            for band in bands:
+                band_dict = dict(band)
+                band_name = band_dict.pop('name')
+                band_dict.update(
+                    sentinel_hub.METADATA.dataset_band(dataset_name,
+                                                       band_name,
+                                                       default={})
+                )
+                band_sample_type = band.pop('sampleType', None)
+                if band_sample_type:
+                    band_dict['sample_type'] = band_sample_type
+                bands_dict[band_name] = band_dict
+            response[dataset_name] = bands_dict
     print(json.dumps(response, indent=2))
 
 

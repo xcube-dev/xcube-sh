@@ -26,6 +26,8 @@ DEFAULT_CLIENT_SECRET = os.environ.get('SH_CLIENT_SECRET')
 
 DEFAULT_SH_API_URL = 'https://services.sentinel-hub.com'
 DEFAULT_SH_OAUTH2_URL = f'{DEFAULT_SH_API_URL}/oauth'
+DEFAULT_SH_METADATA_API_URL = f'{DEFAULT_SH_API_URL}/configuration/' \
+                              f'api/v1/metadata/collection/byoc-%s'
 
 SH_CATALOG_FEATURE_LIMIT = 100  # SH Catalog only allows this number of features to requested.
 
