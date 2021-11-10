@@ -31,13 +31,13 @@ from xcube.util.assertions import assert_given, assert_true, assert_in
 from .constants import CRS_ID_TO_URI
 from .constants import CRS_URI_TO_ID
 from .constants import DEFAULT_CRS
+from .constants import DEFAULT_MOSAICKING_ORDER
+from .constants import DEFAULT_RESAMPLING
 from .constants import DEFAULT_TILE_SIZE
 from .constants import DEFAULT_TIME_TOLERANCE
-from .constants import SH_MAX_IMAGE_SIZE
-from .constants import RESAMPLINGS
-from .constants import DEFAULT_RESAMPLING
-from .constants import DEFAULT_MOSAICKING_ORDER
 from .constants import MOSAICKING_ORDERS
+from .constants import RESAMPLINGS
+from .constants import SH_MAX_IMAGE_SIZE
 
 
 def _safe_int_div(x: int, y: int) -> int:

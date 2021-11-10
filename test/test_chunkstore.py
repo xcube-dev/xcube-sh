@@ -381,8 +381,11 @@ class SentinelHubMock:
         self._config = config
         self._requests = []
 
-    def band_names(self, dataset_name: str):
+    def band_names(self, dataset_name: str, collection_id=None):
         return S2_BAND_NAMES
+
+    def bands(self, dataset_name: str, collection_id=None):
+        return [dict(name=b) for b in S2_BAND_NAMES]
 
     # noinspection PyUnusedLocal
     def get_features(self, collection_name, bbox, crs, time_range):

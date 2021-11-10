@@ -43,6 +43,7 @@ from .constants import DEFAULT_RESAMPLING
 from .constants import DEFAULT_RETRY_BACKOFF_BASE
 from .constants import DEFAULT_RETRY_BACKOFF_MAX
 from .constants import DEFAULT_SH_API_URL
+from .constants import DEFAULT_SH_METADATA_API_URL
 from .constants import DEFAULT_SH_OAUTH2_URL
 from .constants import SH_CATALOG_FEATURE_LIMIT
 from .metadata import SentinelHubMetadata
@@ -170,12 +171,32 @@ class SentinelHub:
         SentinelHubError.maybe_raise_for_response(response)
         return response.json()
 
-    def band_names(self, dataset_name: str) -> List[str]:
-        response = self.session.get(self.api_url
-                                    + f'/api/v1/process/dataset/'
-                                      f'{dataset_name}/bands')
+    def band_names(self, dataset_name: str, collection_id: str = None) -> List[str]:
+        if dataset_name.upper() == 'CUSTOM':
+            url = DEFAULT_SH_METADATA_API_URL % collection_id
+            response = self.session.get(url)
+            SentinelHubError.maybe_raise_for_response(response)
+            bands = response.json().get('bands', [])
+            return [band.get('name') for band in bands]
+
+        url = f'{self.api_url}/api/v1/process/dataset/{dataset_name}/bands'
+        response = self.session.get(url)
         SentinelHubError.maybe_raise_for_response(response)
         return response.json().get('data', {})
+
+    def bands(self, dataset_name: str, collection_id: str = None) \
+            -> List[Dict[str, Any]]:
+        if dataset_name.upper() == 'CUSTOM':
+            url = DEFAULT_SH_METADATA_API_URL % collection_id
+            response = self.session.get(url)
+            SentinelHubError.maybe_raise_for_response(response)
+            return response.json().get('bands', [])
+
+        url = f'{self.api_url}/api/v1/process/dataset/{dataset_name}/bands'
+        response = self.session.get(url)
+        SentinelHubError.maybe_raise_for_response(response)
+        band_names = response.json().get('data', [])
+        return [dict(name=band_name) for band_name in band_names]
 
     def collections(self) -> List[Dict[str, Any]]:
         """
