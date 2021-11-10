@@ -208,14 +208,16 @@ class SentinelHub:
         """
         max_feature_count = SH_CATALOG_FEATURE_LIMIT
 
-        request = dict(collections=[collection_name],
-                       limit=max_feature_count,
-                       # Exclude most of the response data,
-                       # as this is not required (yet)
-                       fields=dict(
-                           exclude=['geometry', 'bbox', 'assets', 'links'],
-                           include=['properties.datetime'])
-                       )
+        request = dict(
+            collections=[collection_name],
+            limit=max_feature_count,
+            # Exclude most of the response data,
+            # as this is not required (yet)
+            fields=dict(
+                exclude=['geometry', 'bbox', 'assets', 'links'],
+                include=['properties.datetime']
+            )
+        )
         if bbox:
             source_crs = pyproj.crs.CRS.from_string(crs or DEFAULT_CRS)
             if not source_crs.is_geographic:
@@ -229,8 +231,20 @@ class SentinelHub:
             request.update(bbox=bbox)
 
         if time_range:
+            def to_sh_format(dt: str) -> pd.Timestamp:
+                dt = pd.to_datetime(dt,
+                                    infer_datetime_format=True,
+                                    utc=True)
+                # SH wants the old-style UTC-'Z'
+                # noinspection PyTypeChecker
+                return dt.isoformat().replace('+00:00', 'Z')
+
             t1, t2 = time_range
-            request.update(datetime=f'{t1}/{t2}')
+            if t1 or t2:
+                request.update(
+                    datetime=f'{to_sh_format(t1) if t1 else ".."}/'
+                             f'{to_sh_format(t2) if t2 else ".."}'
+                )
 
         catalog_url = self.catalog_url \
                       or f'{self.api_url}/api/v1/catalog/search'
@@ -277,13 +291,27 @@ class SentinelHub:
         """
         max_timedelta = pd.to_timedelta(max_timedelta) \
             if isinstance(max_timedelta, str) else max_timedelta
-        feature_properties = [feature["properties"] for feature in features]
-        timestamps = sorted(
-            set(pd.to_datetime(properties["datetime"], utc=True)
-                for properties in feature_properties)
-        )
+
+        timestamps = []
+        for feature in features:
+            if 'properties' not in feature:
+                continue
+            properties = feature['properties']
+            if 'datetime' not in properties:
+                continue
+            datetime = properties['datetime']
+            if not datetime:
+                continue
+            try:
+                timestamps.append(pd.to_datetime(datetime, utc=True))
+            except ValueError as e:
+                warnings.warn(f'failed parsing'
+                              f' feature.properties.datetime: {e}',
+                              source=e)
+
+        timestamps = sorted(set(timestamps))
         num_timestamps = len(timestamps)
-        # noinspection PyTypeChecker
+
         time_ranges: List[Tuple[pd.Timestamp, pd.Timestamp]] = []
         i = 0
         while i < num_timestamps:
@@ -295,6 +323,7 @@ class SentinelHub:
                 timestamp2 = timestamp
                 i += 1
             time_ranges.append((timestamp1, timestamp2))
+
         return time_ranges
 
     def get_data(self, request: Dict, mime_type=None) -> requests.Response:

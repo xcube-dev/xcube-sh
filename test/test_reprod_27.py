@@ -74,7 +74,7 @@ class ReproduceIssue27Test(unittest.TestCase):
         self.assertEqual({'.zgroup', '.zattrs', 'lon/.zarray', 'lon/.zattrs', 'lon/0'},
                          set(src_store.keys()))
 
-        dataset = xarray.open_zarr(src_store)
+        dataset = xarray.open_zarr(src_store, consolidated=False)
         self.assertIn('lon', dataset)
         self.assertEqual(values, list(dataset.lon.values))
 

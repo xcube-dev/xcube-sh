@@ -303,7 +303,6 @@ LOTL2_UNITS = ['reflectance', 'reflectance', 'reflectance', 'reflectance', 'refl
                'kelvin', 'Unitless', 'Unitless', 'Unitless', 'kelvin', 'radiance', 'radiance', 'radiance', 'Unitless',
                'emissivity coefficient', 'emissivity coefficient', 'kilometers']
 
-
 LOTL2_BAND_METADATA = {LOTL2_BAND_NAMES[i]: dict(sample_type='UINT16',
                                                  units=LOTL2_UNITS[i],
                                                  wavelength=LOTL2_WAVELENGTHS[i],

@@ -296,7 +296,7 @@ class SentinelHubDataOpener(DataOpener):
             self._get_dataset_and_collection_metadata(data_id)
         band_metadatas = dataset_metadata.get('bands', {})
 
-        if self._sentinel_hub is not None:
+        if self._sentinel_hub is not None and data_id != 'CUSTOM':
             # If we are connected to the API, we return band names by API
             band_names = self._sentinel_hub.band_names(data_id)
         else:
@@ -356,6 +356,8 @@ class SentinelHubDataOpener(DataOpener):
 
     def _get_dataset_and_collection_metadata(self, data_id: str) \
             -> Tuple[Dict[str, Any], Optional[Dict[str, Any]]]:
+        if data_id == 'CUSTOM':
+            return {}, None
         dataset_metadata = SentinelHubMetadata().datasets.get(data_id)
         if dataset_metadata is None:
             raise DataStoreError(f'Dataset "{data_id}" not found.')
@@ -444,7 +446,6 @@ class SentinelHubDataStore(DefaultSearchMixin,
         return DATASET_TYPE.alias,
 
     def get_data_types_for_data(self, data_id: str) -> Tuple[str, ...]:
-        self._get_dataset_and_collection_metadata(data_id)
         return self.get_data_types()
 
     def get_data_ids(self,
