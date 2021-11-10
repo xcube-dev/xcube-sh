@@ -8,6 +8,11 @@
   we assume a single time step (size of dimension `time` is one)
   and assign the query time range to this time step.
 
+* Introduced a new cube configuration parameter `band_fill_values` 
+  that can be used to specify the fill value (= no-data value)
+  for either all bands if given as a scalar numbers or for individual bands,
+  if given as list or tuple of numbers. (#34)
+
 
 ## Changes in 0.9.1
 

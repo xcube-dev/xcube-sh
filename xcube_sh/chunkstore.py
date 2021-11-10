@@ -616,23 +616,34 @@ class SentinelHubChunkStore(RemoteStore):
         return SentinelHub.features_to_time_ranges(features)
 
     def get_band_encoding(self, band_name: str) -> Dict[str, Any]:
-        fill_value = self._METADATA.dataset_band_fill_value(
-            self.cube_config.dataset_name,
-            band_name, default=None
-        )
         band_sample_types = self.cube_config.band_sample_types
         if not band_sample_types:
             sample_type = self._METADATA.dataset_band_sample_type(
                 self.cube_config.dataset_name,
                 band_name, default='FLOAT32'
             )
-        elif isinstance(band_sample_types, tuple):
+        elif isinstance(band_sample_types, (tuple, list)):
             index = self.cube_config.band_names.index(band_name)
             sample_type = band_sample_types[index]
         else:  # isinstance(band_sample_types, str)
             sample_type = band_sample_types
 
-        dtype = self._SAMPLE_TYPE_TO_DTYPE[sample_type]
+        dtype = self._SAMPLE_TYPE_TO_DTYPE.get(sample_type)
+        if dtype is None:
+            raise ValueError(f'Invalid sample type {sample_type}')
+
+        band_fill_values = self.cube_config.band_fill_values
+        if not band_fill_values:
+            fill_value = self._METADATA.dataset_band_fill_value(
+                self.cube_config.dataset_name,
+                band_name, default=None
+            )
+        elif isinstance(band_fill_values, (tuple, list)):
+            index = self.cube_config.band_names.index(band_name)
+            fill_value = band_fill_values[index]
+        else:  # isinstance(band_fill_values, Number)
+            fill_value = band_fill_values
+
         return dict(dtype=dtype,
                     fill_value=fill_value,
                     compressor=dict(id='zlib', level=8),

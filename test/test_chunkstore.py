@@ -29,7 +29,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import zarr
-
 from xcube_sh.chunkstore import SentinelHubChunkStore
 from xcube_sh.config import CubeConfig
 from xcube_sh.metadata import S2_BAND_NAMES
