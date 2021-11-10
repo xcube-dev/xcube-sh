@@ -186,14 +186,20 @@ class SentinelHubDataOpener(DataOpener):
             )
         )
 
-        band_names = cube_config_kwargs.pop('variable_names', None)
-        band_units = cube_config_kwargs.pop('variable_units', None)
+        band_names = cube_config_kwargs.pop('variable_names',
+                                            None)
         band_sample_types = cube_config_kwargs.pop('variable_sample_types',
                                                    None)
+        band_fill_values = cube_config_kwargs.pop('variable_fill_values',
+                                                   None)
+        band_units = cube_config_kwargs.pop('variable_units',
+                                            None)
+
         cube_config = CubeConfig(dataset_name=data_id,
                                  band_names=band_names,
                                  band_units=band_units,
                                  band_sample_types=band_sample_types,
+                                 band_fill_values=band_fill_values,
                                  **cube_config_kwargs)
         chunk_store = SentinelHubChunkStore(sentinel_hub, cube_config,
                                             **chunk_store_kwargs)
