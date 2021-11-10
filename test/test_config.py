@@ -135,6 +135,7 @@ class CubeConfigTest(unittest.TestCase):
     def test_from_and_to_dict(self):
         config = CubeConfig.from_dict(dict(dataset_name='S2L2A',
                                            band_names=('B01', 'B02', 'B03'),
+                                           band_fill_values=0,
                                            bbox=(10.11, 54.17, 10.14, 54.19),
                                            spatial_res=0.00001,
                                            tile_size=(512, 512),
@@ -142,6 +143,7 @@ class CubeConfigTest(unittest.TestCase):
         expected = {
             'band_names': ('B01', 'B02', 'B03'),
             'band_sample_types': None,
+            'band_fill_values': 0,
             'band_units': None,
             'collection_id': None,
             'crs': 'WGS84',

@@ -92,7 +92,7 @@ class SentinelHubMetadata:
         return band.get('fill_value', default) if band else default
 
     def _dataset_direct(self, dataset_name: str) -> Optional[Dict]:
-        return self._metadata['datasets'].get(dataset_name)
+        return self._metadata['datasets'].get(dataset_name.upper())
 
     def _dataset_bands_direct(self, dataset_name: str) -> Optional[Dict]:
         dataset = self._dataset_direct(dataset_name)

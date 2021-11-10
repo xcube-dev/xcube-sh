@@ -3,10 +3,18 @@
 
 * It is now possible accessing BYOC/BYOD and DEM datasets without
   providing the `time_period` cube configuration parameter. 
-  (#67, #35. #25)
   In case such a dataset has no associated time information,  
   we assume a single time step (size of dimension `time` is one)
-  and assign the query time range to this time step.
+  and assign the query time range to this time step. (#75, #67, #35)
+
+* The cube configuration parameter `band_names` can now be omitted
+  also for BYOC collections. In this case, the returned data cube 
+  will contain all available using their native sample types. (#76)
+
+* Introduced a new cube configuration parameter `band_fill_values` 
+  that can be used to specify the fill value (= no-data value)
+  for either all bands if given as a scalar numbers or for individual bands,
+  if given as list or tuple of numbers. (#34)
 
 
 ## Changes in 0.9.1

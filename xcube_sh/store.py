@@ -23,7 +23,6 @@ from typing import Iterator, Tuple, Optional, Dict, Any, Union, Container
 
 import xarray as xr
 import zarr
-
 from xcube.core.store import DATASET_TYPE
 from xcube.core.store import DataDescriptor
 from xcube.core.store import DataOpener
@@ -41,6 +40,7 @@ from xcube.util.jsonschema import JsonIntegerSchema
 from xcube.util.jsonschema import JsonNumberSchema
 from xcube.util.jsonschema import JsonObjectSchema
 from xcube.util.jsonschema import JsonStringSchema
+
 from .chunkstore import SentinelHubChunkStore
 from .config import CubeConfig
 from .constants import CRS_ID_TO_URI
@@ -214,27 +214,41 @@ class SentinelHubDataOpener(DataOpener):
         cube_params = dict(
             dataset_name=JsonStringSchema(min_length=1),
             variable_names=JsonArraySchema(
-                items=JsonStringSchema(
-                    enum=dsd.data_vars.keys()
-                    if dsd and dsd.data_vars
-                    else None)),
-            variable_units=JsonArraySchema(),
-            variable_sample_types=JsonArraySchema(),
-            tile_size=JsonArraySchema(items=(
-                JsonNumberSchema(minimum=1,
-                                 maximum=2500,
-                                 default=DEFAULT_TILE_SIZE),
-                JsonNumberSchema(minimum=1,
-                                 maximum=2500,
-                                 default=DEFAULT_TILE_SIZE)
+                # Note, in xcube-sh < 0.9.2 formerly used an enum here.
+                # However, that doesn't work for BYOC, so we omit that
+                # limitation.
+                items=JsonStringSchema()
             ),
-                default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-            crs=JsonStringSchema(default=DEFAULT_CRS,
-                                 enum=CRS_ID_TO_URI.keys()),
-            bbox=JsonArraySchema(items=(JsonNumberSchema(),
-                                        JsonNumberSchema(),
-                                        JsonNumberSchema(),
-                                        JsonNumberSchema())),
+            variable_fill_values=JsonArraySchema(
+                items=JsonNumberSchema(nullable=True)
+            ),
+            variable_sample_types=JsonArraySchema(
+                items=JsonStringSchema()
+            ),
+            variable_units=JsonArraySchema(
+                items=JsonStringSchema()
+            ),
+            tile_size=JsonArraySchema(
+                items=(
+                    JsonNumberSchema(minimum=1,
+                                     maximum=2500,
+                                     default=DEFAULT_TILE_SIZE),
+                    JsonNumberSchema(minimum=1,
+                                     maximum=2500,
+                                     default=DEFAULT_TILE_SIZE)
+                ),
+                default=(DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)
+            ),
+            crs=JsonStringSchema(
+                default=DEFAULT_CRS,
+                enum=CRS_ID_TO_URI.keys()
+            ),
+            bbox=JsonArraySchema(
+                items=(JsonNumberSchema(),
+                       JsonNumberSchema(),
+                       JsonNumberSchema(),
+                       JsonNumberSchema())
+            ),
             spatial_res=JsonNumberSchema(exclusive_minimum=0.0),
             upsampling=JsonStringSchema(
                 default=DEFAULT_RESAMPLING,
@@ -248,9 +262,11 @@ class SentinelHubDataOpener(DataOpener):
                 default=DEFAULT_MOSAICKING_ORDER,
                 enum=MOSAICKING_ORDERS
             ),
-            time_range=JsonDateSchema.new_range(min_date=min_date,
-                                                max_date=max_date,
-                                                nullable=True),
+            time_range=JsonDateSchema.new_range(
+                min_date=min_date,
+                max_date=max_date,
+                nullable=True
+            ),
             # TODO: add pattern
             time_period=JsonStringSchema(
                 default='1D', nullable=True,
@@ -263,8 +279,7 @@ class SentinelHubDataOpener(DataOpener):
                 format='^([1-9]*[0-9]*)[NULSTH]$'
             ),
             collection_id=JsonStringSchema(),
-            four_d=JsonBooleanSchema(
-                default=False),
+            four_d=JsonBooleanSchema(default=False),
         )
         cache_params = dict(
             max_cache_size=JsonIntegerSchema(minimum=0),
@@ -292,11 +307,12 @@ class SentinelHubDataOpener(DataOpener):
         )
 
     def _describe_data(self, data_id: str) -> DatasetDescriptor:
+        assert_not_none(data_id, 'data_id')
         dataset_metadata, collection_metadata = \
             self._get_dataset_and_collection_metadata(data_id)
         bands = dict(dataset_metadata.get('bands', {}))
 
-        if self._sentinel_hub is not None and data_id != 'CUSTOM':
+        if self._sentinel_hub is not None and data_id.upper() != 'CUSTOM':
             # If we are connected to the API, we return band names by API
             remote_bands = self._sentinel_hub.bands(data_id)
             if remote_bands:

@@ -23,6 +23,7 @@ import math
 import warnings
 from datetime import datetime
 from typing import Tuple, Union, Optional, Sequence, Dict, Any
+from numbers import Number
 
 import pandas as pd
 
@@ -58,8 +59,9 @@ class CubeConfig:
         *dataset_name* must be omitted or set to "CUSTOM".
     :param band_names: Optional sequence of band names. If omitted (=None)
         all bands are included.
-    :param band_units: Band units. Optional.
+    :param band_fill_values: Band fill values. Optional.
     :param band_sample_types: Band sample types. Optional.
+    :param band_units: Band units. Optional.
     :param tile_size: Tile size as tuple (width, height). Optional.
     :param chunk_size: Deprecated. Use *tile_size*.
     :param bbox: tuple of 4 numbers: (x1, y1, x2, y2)
@@ -93,8 +95,9 @@ class CubeConfig:
     def __init__(self,
                  dataset_name: str = None,
                  band_names: Sequence[str] = None,
-                 band_units: Union[str, Sequence[str]] = None,
                  band_sample_types: Union[str, Sequence[str]] = None,
+                 band_fill_values: Union[Number, Sequence[Number]] = None,
+                 band_units: Union[str, Sequence[str]] = None,
                  tile_size: Union[str, Tuple[int, int]] = None,
                  chunk_size: Union[str, Tuple[int, int]] = None,
                  bbox: Bbox = None,
@@ -129,7 +132,7 @@ class CubeConfig:
             assert_given(collection_id, 'collection_id')
             dataset_name = 'CUSTOM'
         if collection_id:
-            assert_true(dataset_name == 'CUSTOM',
+            assert_true(dataset_name.upper() == 'CUSTOM',
                         'dataset_name must be "CUSTOM"')
 
         assert_given(spatial_res, 'spatial_res')
@@ -246,8 +249,9 @@ class CubeConfig:
         self._dataset_name = dataset_name
         self._band_names = tuple(band_names) \
             if band_names is not None else None
-        self._band_units = band_units or None
+        self._band_fill_values = band_fill_values
         self._band_sample_types = band_sample_types or None
+        self._band_units = band_units or None
         self._bbox = bbox
         self._spatial_res = spatial_res
         self._crs = crs
@@ -306,8 +310,9 @@ class CubeConfig:
             if self.time_tolerance else None
         return dict(dataset_name=self.dataset_name,
                     band_names=self.band_names,
-                    band_units=self.band_units,
+                    band_fill_values=self.band_fill_values,
                     band_sample_types=self.band_sample_types,
+                    band_units=self.band_units,
                     tile_size=self.tile_size,
                     bbox=self.bbox,
                     spatial_res=self.spatial_res,
@@ -335,12 +340,16 @@ class CubeConfig:
         return self._band_names
 
     @property
-    def band_units(self) -> Union[None, str, Sequence[str]]:
-        return self._band_units
-
-    @property
     def band_sample_types(self) -> Union[None, str, Sequence[str]]:
         return self._band_sample_types
+
+    @property
+    def band_fill_values(self) -> Union[None, Number, Sequence[Number]]:
+        return self._band_fill_values
+
+    @property
+    def band_units(self) -> Union[None, str, Sequence[str]]:
+        return self._band_units
 
     @property
     def crs(self) -> str:
