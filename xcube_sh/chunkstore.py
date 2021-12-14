@@ -728,10 +728,13 @@ class SentinelHubChunkStore(RemoteStore):
             request,
             mime_type='application/octet-stream'
         )
-        if not response.ok:
-            raise KeyError(f'{key}: cannot fetch chunk for variable'
+
+        if response is None or not response.ok:
+            message = (f'{key}: cannot fetch chunk for variable'
                            f' {band_name!r}, bbox {bbox!r}, and'
-                           f' time_range {time_range!r}: '
-                           f'{SentinelHubError(response)}')
+                           f' time_range {time_range!r}')
+            if response is not None:
+                message += f': {SentinelHubError(response)}'
+            raise KeyError(message)
 
         return response.content

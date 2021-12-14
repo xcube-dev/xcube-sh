@@ -25,7 +25,7 @@ import platform
 import random
 import time
 import warnings
-from typing import List, Any, Dict, Tuple, Union, Sequence, Callable
+from typing import List, Any, Dict, Tuple, Union, Sequence, Callable, Optional
 
 import oauthlib.oauth2
 import pandas as pd
@@ -347,7 +347,8 @@ class SentinelHub:
 
         return time_ranges
 
-    def get_data(self, request: Dict, mime_type=None) -> requests.Response:
+    def get_data(self, request: Dict, mime_type=None) \
+            -> Optional[requests.Response]:
         outputs = request['output']['responses']
         if not mime_type:
             if len(outputs) > 1:
@@ -363,11 +364,22 @@ class SentinelHub:
         headers = self._get_request_headers(mime_type)
 
         response = None
+        response_error = None
         for i in range(num_retries):
-            response = self.session.post(process_url,
-                                         json=request,
-                                         headers=headers)
-            if response.ok:
+            try:
+                response = self.session.post(process_url,
+                                             json=request,
+                                             headers=headers)
+                response_error = None
+            except requests.exceptions.RequestException as e:
+                # What may be seen here is:
+                # requests.exceptions.ChunkedEncodingError:
+                # ("Connection broken:
+                #  InvalidChunkLength(got length b'', 0 bytes read)",
+                #  InvalidChunkLength(got length b'', 0 bytes read))
+                response_error = e
+                response = None
+            if response is not None and response.ok:
                 # TODO (forman): verify response headers:
                 #   response_num_components, response_width, ...
                 # response_components = int(headers.get('SH-Components', '-1'))
@@ -377,12 +389,18 @@ class SentinelHub:
                 return response
             else:
                 # Retry after 'Retry-After' with exponential backoff
-                retry_min = int(response.headers.get('Retry-After', '100'))
+                if response is not None:
+                    error_message = f'Error {response.status_code}:' \
+                                    f' {response.reason}'
+                    retry_min = int(response.headers.get('Retry-After', '100'))
+                else:
+                    error_message = f'Error: {response_error}'
+                    retry_min = 100
                 retry_backoff = random.random() * retry_backoff_max
                 retry_total = retry_min + retry_backoff
                 if self.enable_warnings:
                     retry_message = \
-                        f'Error {response.status_code}: {response.reason}. ' \
+                        f'{error_message}. ' \
                         f'Attempt {i + 1} of {num_retries} to retry after ' \
                         f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff}' \
                         f' = {"%.2f" % retry_total} ms...'
@@ -394,12 +412,18 @@ class SentinelHub:
             self.error_handler(response)
 
         if self.error_policy == 'fail':
-            SentinelHubError.maybe_raise_for_response(response)
-        elif self.error_policy == 'warn' and self.enable_warnings:
-            try:
+            if response_error:
+                raise response_error
+            elif response is not None:
                 SentinelHubError.maybe_raise_for_response(response)
-            except SentinelHubError as e:
-                warnings.warn(f'Failed to fetch data: {e}')
+        elif self.error_policy == 'warn' and self.enable_warnings:
+            if response_error:
+                warnings.warn(f'Failed to fetch data: {response_error}')
+            elif response is not None:
+                try:
+                    SentinelHubError.maybe_raise_for_response(response)
+                except SentinelHubError as e:
+                    warnings.warn(f'Failed to fetch data: {e}')
 
         # Return failed response (response.ok == False)
         return response
