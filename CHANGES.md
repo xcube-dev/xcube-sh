@@ -1,5 +1,10 @@
 ## Changes in 0.9.3 (in development)
 
+* Sometimes a `requests.exceptions.ChunkedEncodingError` was raised
+  when a large number of data cube tiles were requested concurrently.
+  The error occurred in cases where the Sentinel Hub server was no longer
+  able to stream response data. The problem has been mitigated by  
+  applying the same retry strategy as for "normal" HTTP error codes.
 
 ## Changes in 0.9.2
 
