@@ -213,7 +213,7 @@ class SentinelHubGetDataTest(unittest.TestCase):
         t2 = time.perf_counter()
         print(f"test_get_data_single_binary_byod: took {t2 - t1} secs")
 
-        self.assertEqual('INT8', response.headers.get('sh-sampletype'))
+        self.assertEqual('UINT8', response.headers.get('sh-sampletype'))
         self.assertEqual('512', response.headers.get('sh-width'))
         self.assertEqual('305', response.headers.get('sh-height'))
 
