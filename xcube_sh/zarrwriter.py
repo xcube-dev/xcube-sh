@@ -1,12 +1,12 @@
 # The MIT License (MIT)
-# Copyright (c) 2021 by the xcube development team and contributors
+# Copyright (c) 2022 by the xcube development team and contributors
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
 #
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
@@ -15,9 +15,9 @@
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 
 import json
 import os.path
@@ -34,7 +34,8 @@ class ZarrWriter:
         self._ensured_paths = set()
 
     def ensure_dir(self, dir_path):
-        if dir_path not in self._ensured_paths and not os.path.exists(dir_path):
+        if dir_path not in self._ensured_paths\
+                and not os.path.exists(dir_path):
             os.mkdir(dir_path)
             self._ensured_paths.add(dir_path)
 
@@ -59,9 +60,13 @@ class ZarrWriter:
                     array_name: str,
                     array: Union[np.ndarray, Sequence[Any]],
                     attrs: Dict[str, Any] = None):
-        zarr.convenience.save_array(self.sub_path(array_name), array, fill_value=None)
+        zarr.convenience.save_array(self.sub_path(array_name),
+                                    array,
+                                    fill_value=None)
         if attrs:
-            array = zarr.convenience.open_array(self.sub_path(array_name), 'r+')
+            array = zarr.convenience.open_array(
+                self.sub_path(array_name), 'r+'
+            )
             array.attrs.update(**(attrs or dict()))
 
     def write_slice_bytes(self,
@@ -74,7 +79,8 @@ class ZarrWriter:
         array_index[dim_index] = slice_index
         array_file_name = '.'.join(map(str, array_index))
         self.ensure_sub_dir(array_name)
-        self.write_byte_data(os.path.join(self.sub_path(array_name), array_file_name), slice_bytes)
+        self.write_byte_data(os.path.join(self.sub_path(array_name),
+                                          array_file_name), slice_bytes)
 
     def write_slice_bytes_metadata(self,
                                    array_name: str,

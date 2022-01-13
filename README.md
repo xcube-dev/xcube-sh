@@ -3,11 +3,12 @@
 # xcube-sh
 
 An [xcube plugin](https://xcube.readthedocs.io/en/latest/plugins.html) that
-allows generating data cubes from the SENTINEL Hub Cloud API.
+allows generating data cubes from the Sentinel Hub Cloud API.
 
 ## Setup
 
-First install [`xcube`](https://github.com/dcs4cop/xcube), then the `xcube_sh` plugin.
+First install [`xcube`](https://github.com/dcs4cop/xcube), 
+then the `xcube_sh` plugin.
 
 ### Install xcube
 
@@ -26,13 +27,15 @@ Once `xcube` will be available from conda-forge:
     
 ### Install xcube_sh
 
-You cannot use the `xcube_sh` plugin without specifying your SENTINEL Hub credentials:
+You cannot use the `xcube_sh` plugin without specifying your Sentinel Hub 
+credentials:
 
     $ export SH_CLIENT_ID=<your client ID>    
     $ export SH_CLIENT_SECRET=<your client secret>    
 
-While `xcube_sh` is not yet available from conda-forge, install it from sources. 
-We'll need to update the `xcube` environment first, then install `xcube_sh`:
+While `xcube_sh` is not yet available from conda-forge, 
+install it from sources. We'll need to update the `xcube` environment first, 
+then install `xcube_sh`:
 
     $ conda activate xcube
     $ conda install -c conda-forge oauthlib pip

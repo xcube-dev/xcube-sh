@@ -8,6 +8,8 @@
   able to stream response data. The problem has been mitigated by  
   applying the same retry strategy as for "normal" HTTP error codes.
 
+* Changed spelling `SENTINEL Hub` into `Sentinel Hub` in docs and logs.
+
 ## Changes in 0.9.2
 
 * It is now possible accessing BYOC/BYOD and DEM datasets without
@@ -125,7 +127,7 @@
 * Enhanced band metadata and added flag encodings for Sentinel-3 OCLI L1B datasets. 
   Additional band metadata and flag encodings for Sentinel-3 SLSTR L1B datasets will follow soon. 
    
-* Now using SENTINEL Hub's Catalogue API instead of the WFS (#14)
+* Now using Sentinel Hub's Catalogue API instead of the WFS (#14)
   - to determine actual observations within given bounding box and time range;
   - to determine time range of available data collections.  
 
@@ -134,7 +136,7 @@
 
 ## Changes in 0.3.0.dev1
  
-*Note, this version has been accidently released as v0.5.0.*
+*Note, this version has been accidentally released as v0.5.0.*
 
 * Documented store open parameters. Store open parameter `variable_names` and  
   `CubeConfig` parameter `band_names` may now be `None`. In this case all 

@@ -1,12 +1,12 @@
 # The MIT License (MIT)
-# Copyright (c) 2021 by the xcube development team and contributors
+# Copyright (c) 2022 by the xcube development team and contributors
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
 #
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
@@ -15,9 +15,9 @@
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 
 import warnings
 from typing import Any, Dict, Optional, List, Tuple
@@ -41,42 +41,55 @@ DEFAULT_GEN_OUTPUT_PATH = 'out.zarr'
                context_settings={"ignore_unknown_options": True})
 @click.argument('request', default=None, type=str, required=False)
 @click.option('--dataset', '-d', 'dataset_name',
-              help='Dataset name. The name of a valid SENTINEL Hub dataset.')
+              help='Dataset name. The name of a valid Sentinel Hub dataset.')
 @click.option('--band', '-b', 'band_names',
               help='Band name. The name of a band in given dataset. '
-                   'Can be repeated for multiple bands. Defaults to all bands of a dataset.',
+                   'Can be repeated for multiple bands. '
+                   'Defaults to all bands of a dataset.',
               multiple=True)
 @click.option('--tile_size', '--tile-size',
-              help='Tile size given as number of grid cells using format "<size>" or "<width>,<height>".')
+              help='Tile size given as number of grid cells using '
+                   'format "<size>" or "<width>,<height>".')
 @click.option('--geom', '-g', 'geometry',
-              help='Geometry WKT, GeoJSON object, or bounding box using format "<lon1>,<lat1>,<lon2>,<lat2>". '
+              help='Geometry WKT, GeoJSON object, or bounding box using '
+                   'format "<lon1>,<lat1>,<lon2>,<lat2>". '
                    'Coordinates must be in decimal degree.')
 @click.option('--res', '-r', 'spatial_res',
               help="Spatial resolution in degrees.",
               type=float)
 @click.option('--crs',
-              help=f'Coordinate reference system (CRS) URL. Defaults to "{DEFAULT_CRS}". '
-                   f'Other CRSes may be passed by their EPSG codes, e.g. "EPSG:32612" for UTM zone 12 North.')
+              help=f'Coordinate reference system (CRS) URL. '
+                   f'Defaults to "{DEFAULT_CRS}". '
+                   f'Other CRSes may be passed by their EPSG codes, '
+                   f'e.g. "EPSG:32612" for UTM zone 12 North.')
 @click.option('--time', '-t', 'time_range',
-              help='Time or time range using format "date" or "<first-date>,<last-date>".')
+              help='Time or time range using format "date" '
+                   'or "<first-date>,<last-date>".')
 @click.option('--period', '-p', 'time_period',
-              help='Time (aggregation) period. Format is "<period>" or "<num><period>" '
-                   'where <num> is a positive integer and <period> is one of "H", "D", "W", "Y". '
+              help='Time (aggregation) period. Format is "<period>" '
+                   'or "<num><period>" '
+                   'where <num> is a positive integer and <period> '
+                   'is one of "H", "D", "W", "Y". '
                    'Defaults to a period suitable for the dataset.')
 @click.option('--tolerance', '--tol', 'time_tolerance',
-              help='Time (request) tolerance. Format is "<period>" or "<num><period>" '
-                   'where <num> is a positive integer and <period> is one of "S", "M", "H". '
+              help='Time (request) tolerance. Format is "<period>" '
+                   'or "<num><period>" '
+                   'where <num> is a positive integer and <period> '
+                   'is one of "S", "M", "H". '
                    f'Defaults to "{DEFAULT_TIME_TOLERANCE}".')
 @click.option('--output', '-o', 'output_path',
-              help=f'Output ZARR directory. Defaults to "{DEFAULT_GEN_OUTPUT_PATH}".')
+              help=f'Output ZARR directory. '
+                   f'Defaults to "{DEFAULT_GEN_OUTPUT_PATH}".')
 @click.option('--4d', 'four_d',
               is_flag=True,
               help='Write a single data 4D array "band_data" to the output. '
                    'Will slightly increase execution speed. '
-                   'By default, bands are written to separate 3D arrays, e.g. "B01", "B02".')
+                   'By default, bands are written to separate 3D arrays, '
+                   'e.g. "B01", "B02".')
 @click.option('--verbose', '-v',
               is_flag=True,
-              help='Print information about each single SENTINEL Hub Process API request to stdout.')
+              help='Print information about each single '
+                   'Sentinel Hub Process API request to stdout.')
 def gen(request: Optional[str],
         dataset_name: Optional[str],
         band_names: Optional[Tuple],
@@ -91,15 +104,15 @@ def gen(request: Optional[str],
         four_d: bool,
         verbose: bool):
     """
-    Generate a data cube from SENTINEL Hub.
+    Generate a data cube from Sentinel Hub.
 
     By default, the command will create a Zarr dataset with 3D arrays
     for each band e.g. "B01", "B02" with dimensions "time", "lat", "lon".
     Use option "--4d" to write a single 4D array "band_data"
     with dimensions "time", "lat", "lon", "band".
 
-    Please use command "xcube sh req" to generate example request files that can be passed as REQUEST.
-    REQUEST may have JSON or YAML format.
+    Please use command "xcube sh req" to generate example request files
+    that can be passed as REQUEST. REQUEST may have JSON or YAML format.
     You can also pipe a JSON request into this command. In this case
     """
     import json
@@ -121,24 +134,27 @@ def gen(request: Optional[str],
         request_dict = {}
 
     cube_config_dict = request_dict.get('cube_config', {})
-    _overwrite_config_params(cube_config_dict,
-                             dataset_name=dataset_name,
-                             band_names=band_names if band_names else None,  # because of multiple=True
-                             tile_size=tile_size,
-                             geometry=geometry,
-                             spatial_res=spatial_res,
-                             crs=crs,
-                             time_range=time_range,
-                             time_period=time_period,
-                             time_tolerance=time_tolerance,
-                             four_d=four_d)
+    _overwrite_config_params(
+        cube_config_dict,
+        dataset_name=dataset_name,
+        band_names=band_names if band_names else None,
+        tile_size=tile_size,
+        geometry=geometry,
+        spatial_res=spatial_res,
+        crs=crs,
+        time_range=time_range,
+        time_period=time_period,
+        time_tolerance=time_tolerance,
+        four_d=four_d
+    )
 
     input_config_dict = request_dict.get('input_config', {})
     if 'datastore_id' in input_config_dict:
         input_config_dict = dict(input_config_dict)
         datastore_id = input_config_dict.pop('datastore_id')
         if datastore_id != 'sentinelhub':
-            warnings.warn(f'Unknown datastore_id={datastore_id!r} encountered in request. Ignoring it...')
+            warnings.warn(f'Unknown datastore_id={datastore_id!r} '
+                          f'encountered in request. Ignoring it...')
     # _overwrite_config_params(input_config_dict, ...)
     # TODO: validate input_config_dict
 
@@ -155,7 +171,8 @@ def gen(request: Optional[str],
     else:
         output_path = DEFAULT_GEN_OUTPUT_PATH
     if not _is_bucket_url(output_path) and os.path.exists(output_path):
-        raise click.ClickException(f'Output {output_path} already exists. Move it away first.')
+        raise click.ClickException(f'Output {output_path} '
+                                   f'already exists. Move it away first.')
 
     sentinel_hub = SentinelHub(**input_config_dict)
 
@@ -170,13 +187,18 @@ def gen(request: Optional[str],
         cube = xr.open_zarr(store)
         if _is_bucket_url(output_path):
             client_kwargs = {k: output_config_dict.pop(k)
-                             for k in ('provider_access_key_id', 'provider_secret_access_key')
+                             for k in ('provider_access_key_id',
+                                       'provider_secret_access_key')
                              if k in output_config_dict}
-            write_dataset(cube, output_path, format_name='zarr', client_kwargs=client_kwargs, **output_config_dict)
+            write_dataset(cube, output_path,
+                          format_name='zarr', client_kwargs=client_kwargs,
+                          **output_config_dict)
         else:
-            write_dataset(cube, output_path, **output_config_dict)
+            write_dataset(cube, output_path,
+                          **output_config_dict)
 
-    print(f"Cube written to {output_path}, took {'%.2f' % cm.duration} seconds.")
+    print(f"Cube written to {output_path}, "
+          f"took {'%.2f' % cm.duration} seconds.")
 
     if verbose:
         request_collector.stats.dump()
@@ -184,16 +206,19 @@ def gen(request: Optional[str],
 
 @click.command(name="req")
 @click.option('--output', '-o', 'output_path', metavar='OUTPUT',
-              help="A configuration JSON or YAML file to which the request template will be written. "
+              help="A configuration JSON or YAML file to which "
+                   "the request template will be written. "
                    f"Defaults to stdout.")
 @click.option('--s3', 'is_s3_config', is_flag=True,
-              help="Whether to create an example request that would write to a user defined AWS S3 bucket.")
+              help="Whether to create an example request that would "
+                   "write to a user defined AWS S3 bucket.")
 def req(output_path: str,
         is_s3_config: bool):
     """
     Write a request template file.
-    The generated file will use default or example values for all request parameters.
-    It should be edited and can then be passed as argument to the "xcube sh gen" command:
+    The generated file will use default or example values for
+    all request parameters. It should be edited and can then be passed
+    as argument to the "xcube sh gen" command:
 
     \b
         $ xcube sg req -o request.json
@@ -237,7 +262,8 @@ def req(output_path: str,
                        output_config=output_config)
     if output_path:
         if os.path.exists(output_path):
-            raise click.ClickException(f'Output {output_path} already exists. Move it away first.')
+            raise click.ClickException(f'Output {output_path} already '
+                                       f'exists. Move it away first.')
         with open(output_path, 'w') as fp:
             if output_path.endswith('.json'):
                 json.dump(config_dict, fp, indent=2)
@@ -251,9 +277,9 @@ def req(output_path: str,
 @click.argument('datasets', nargs=-1)
 def info(datasets: List[str] = None):
     """
-    Print SentinelHub metadata info. If DATASETS (names of datasets) are not present,
-    the list of available dataset names are returned. Otherwise,
-    the the variables of the given datasets are returned.
+    Print SentinelHub metadata info. If DATASETS (names of datasets)
+    are not present, the list of available dataset names are returned.
+    Otherwise, the the variables of the given datasets are returned.
     """
     from xcube_sh.sentinelhub import SentinelHub
 
@@ -303,7 +329,8 @@ def _load_request(request_file: Optional[str]) -> Dict[str, Any]:
     import yaml
 
     if request_file and not os.path.exists(request_file):
-        raise click.ClickException(f'Configuration file {request_file} not found.')
+        raise click.ClickException(f'Configuration file '
+                                   f'{request_file} not found.')
 
     try:
         if not request_file:
@@ -317,7 +344,8 @@ def _load_request(request_file: Optional[str]) -> Dict[str, Any]:
             else:
                 return yaml.safe_load(fp)
     except BaseException as e:
-        raise click.ClickException(f'Error loading configuration file {request_file}: {e}')
+        raise click.ClickException(f'Error loading configuration '
+                                   f'file {request_file}: {e}')
 
 
 def _overwrite_config_params(config: Dict[str, Any], **config_updates):
