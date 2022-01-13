@@ -1,4 +1,4 @@
-## Changes in 0.9.3 (in development)
+## Changes in 0.9.3
 
 * Added header `SH-Tag: xcube-sh` to SH API requests. (#80)
 
