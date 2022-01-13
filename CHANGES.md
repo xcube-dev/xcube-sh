@@ -1,5 +1,7 @@
 ## Changes in 0.9.3 (in development)
 
+* Added header `SH-Tag: xcube-sh` to SH API requests. (#80)
+
 * Sometimes a `requests.exceptions.ChunkedEncodingError` was raised
   when a large number of data cube tiles were requested concurrently.
   The error occurred in cases where the Sentinel Hub server was no longer

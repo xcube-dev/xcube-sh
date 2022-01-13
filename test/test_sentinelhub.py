@@ -20,16 +20,15 @@
 # SOFTWARE.
 
 import json
+import numpy as np
 import os
 import os.path
 import pickle
 import shutil
 import time
 import unittest
-from typing import Any, Sequence, Dict
-
-import numpy as np
 import zarr
+from typing import Any, Sequence, Dict
 
 from xcube_sh.constants import CRS_ID_TO_URI
 from xcube_sh.sentinelhub import SentinelHub
@@ -505,6 +504,18 @@ class SentinelHubNewRequestTest(unittest.TestCase):
             expected_request = json.load(fp)
 
         self.assertEqual(expected_request, request)
+
+
+class SentinelHubRequestHeaderTest(unittest.TestCase):
+
+    def test_request_headers(self):
+        headers = SentinelHub._get_request_headers('application/json')
+        self.assertEqual('application/json',
+                         headers.get('Accept'))
+        self.assertEqual('xcube-sh',
+                         headers.get('SH-Tag'))
+        self.assertRegex(headers.get('User-Agent'),
+                         'xcube_sh/.* */* .*/.*')
 
 
 class SerializableOAuth2SessionTest(unittest.TestCase):

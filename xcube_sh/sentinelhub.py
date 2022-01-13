@@ -432,6 +432,7 @@ class SentinelHub:
     def _get_request_headers(cls, mime_type: str):
         return {
             'Accept': mime_type,
+            'SH-Tag': 'xcube-sh',
             'User-Agent': f'xcube_sh/{version} '
                           f'{platform.python_implementation()}/'
                           f'{platform.python_version()} '
