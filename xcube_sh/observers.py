@@ -1,12 +1,12 @@
 # The MIT License (MIT)
-# Copyright (c) 2021 by the xcube development team and contributors
+# Copyright (c) 2022 by the xcube development team and contributors
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
 #
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
@@ -15,9 +15,9 @@
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 
 import sys
 
@@ -39,7 +39,8 @@ class Observers:
             if band_name == BAND_DATA_ARRAY_NAME:
                 print(f"Received chunk {chunk_index}, took {duration}")
             else:
-                print(f"Received chunk {chunk_index} for band {band_name}: took {duration}")
+                print(f"Received chunk {chunk_index}"
+                      f" for band {band_name}: took {duration}")
 
         return _dump_request
 
@@ -76,7 +77,8 @@ class _RequestStats:
             self.duration_mean = durations.mean()
             self.duration_std = durations.std()
             # Another interesting metric is the number of requests
-            # for individual chunks (repeated requests) or the number of errors
+            # for individual chunks (repeated requests)
+            # or the number of errors
         else:
             self.duration_min = None
             self.duration_max = None
@@ -87,27 +89,43 @@ class _RequestStats:
     def dump(self, fp=None):
         fp = fp if fp is not None else sys.stdout
         if self.num_requests > 0:
-            fp.write(f'Number of requests: {self.num_requests}\n'
-                     f'Request duration min: {_format_ms(self.duration_min)}\n'
-                     f'Request duration max: {_format_ms(self.duration_max)}\n'
-                     f'Request duration median: {_format_ms(self.duration_median)}\n'
-                     f'Request duration mean: {_format_ms(self.duration_mean)}\n'
-                     f'Request duration std.dev.: {_format_ms(self.duration_std)}\n')
+            fp.write(
+                f'Number of requests: '
+                f'{self.num_requests}\n'
+                f'Request duration min: '
+                f'{_format_ms(self.duration_min)}\n'
+                f'Request duration max: '
+                f'{_format_ms(self.duration_max)}\n'
+                f'Request duration median: '
+                f'{_format_ms(self.duration_median)}\n'
+                f'Request duration mean: '
+                f'{_format_ms(self.duration_mean)}\n'
+                f'Request duration std.dev.: '
+                f'{_format_ms(self.duration_std)}\n'
+            )
         else:
             fp.write(f'No requests made yet.\n')
 
     def _repr_html_(self):
         if self.num_requests > 0:
-            return (f'<html>'
-                    f'<table>'
-                    f'<tr><td>Number of requests:</td><td>{self.num_requests}</td></tr>'
-                    f'<tr><td>Request duration min:</td><td>{_format_ms(self.duration_min)}</td></tr>'
-                    f'<tr><td>Request duration max:</td><td>{_format_ms(self.duration_max)}</td></tr>'
-                    f'<tr><td>Request duration median:</td><td>{_format_ms(self.duration_median)}</td></tr>'
-                    f'<tr><td>Request duration mean:</td><td>{_format_ms(self.duration_mean)}</td></tr>'
-                    f'<tr><td>Request duration std:</td><td>{_format_ms(self.duration_std)}</td></tr>'
-                    f'</table>'
-                    f'</html>')
+            return (
+                f'<html>'
+                f'<table>'
+                f'<tr><td>Number of requests:</td>'
+                f'<td>{self.num_requests}</td></tr>'
+                f'<tr><td>Request duration min:</td>'
+                f'<td>{_format_ms(self.duration_min)}</td></tr>'
+                f'<tr><td>Request duration max:</td>'
+                f'<td>{_format_ms(self.duration_max)}</td></tr>'
+                f'<tr><td>Request duration median:</td>'
+                f'<td>{_format_ms(self.duration_median)}</td></tr>'
+                f'<tr><td>Request duration mean:</td>'
+                f'<td>{_format_ms(self.duration_mean)}</td></tr>'
+                f'<tr><td>Request duration std:</td>'
+                f'<td>{_format_ms(self.duration_std)}</td></tr>'
+                f'</table>'
+                f'</html>'
+            )
         else:
             return (f'<html>'
                     f'<p>No requests made yet.</p>'

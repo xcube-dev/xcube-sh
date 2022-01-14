@@ -1,35 +1,34 @@
 # The MIT License (MIT)
-# Copyright (c) 2019 by the xcube development team and contributors
+# Copyright (c) 2022 by the xcube development team and contributors
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in
-# the Software without restriction, including without limitation the rights to
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-# of the Software, and to permit persons to whom the Software is furnished to do
-# so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 
 import json
+import numpy as np
 import os
 import os.path
 import pickle
 import shutil
 import time
 import unittest
-from typing import Any, Sequence, Dict
-
-import numpy as np
 import zarr
+from typing import Any, Sequence, Dict
 
 from xcube_sh.constants import CRS_ID_TO_URI
 from xcube_sh.sentinelhub import SentinelHub
@@ -214,7 +213,7 @@ class SentinelHubGetDataTest(unittest.TestCase):
         t2 = time.perf_counter()
         print(f"test_get_data_single_binary_byod: took {t2 - t1} secs")
 
-        self.assertEqual('INT8', response.headers.get('sh-sampletype'))
+        self.assertEqual('UINT8', response.headers.get('sh-sampletype'))
         self.assertEqual('512', response.headers.get('sh-width'))
         self.assertEqual('305', response.headers.get('sh-height'))
 
@@ -505,6 +504,18 @@ class SentinelHubNewRequestTest(unittest.TestCase):
             expected_request = json.load(fp)
 
         self.assertEqual(expected_request, request)
+
+
+class SentinelHubRequestHeaderTest(unittest.TestCase):
+
+    def test_request_headers(self):
+        headers = SentinelHub._get_request_headers('application/json')
+        self.assertEqual('application/json',
+                         headers.get('Accept'))
+        self.assertEqual('xcube-sh',
+                         headers.get('SH-Tag'))
+        self.assertRegex(headers.get('User-Agent'),
+                         'xcube_sh/.* */* .*/.*')
 
 
 class SerializableOAuth2SessionTest(unittest.TestCase):

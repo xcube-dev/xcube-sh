@@ -1,12 +1,12 @@
 # The MIT License (MIT)
-# Copyright (c) 2021 by the xcube development team and contributors
+# Copyright (c) 2022 by the xcube development team and contributors
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
 #
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
@@ -15,9 +15,9 @@
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 
 from typing import Iterator, Tuple, Optional, Dict, Any, Union, Container
 
@@ -117,8 +117,8 @@ class SentinelHubDataOpener(DataOpener):
             - spatial resolution in units of the CRS. Required parameter.
         * ``time_range: Tuple[Optional[str], Optional[str]]``
             - tuple (start-time, end-time).
-            Both start-time and end-time, if given, should use ISO 8601 format.
-            Required parameter.
+            Both start-time and end-time, if given, should use ISO 8601
+            format. Required parameter.
         * ``time_period: str``
             - Pandas-compatible time period/frequency, e.g. "4D", "2W"
         * ``time_tolerance: str``
@@ -191,7 +191,7 @@ class SentinelHubDataOpener(DataOpener):
         band_sample_types = cube_config_kwargs.pop('variable_sample_types',
                                                    None)
         band_fill_values = cube_config_kwargs.pop('variable_fill_values',
-                                                   None)
+                                                  None)
         band_units = cube_config_kwargs.pop('variable_units',
                                             None)
 
@@ -357,7 +357,8 @@ class SentinelHubDataOpener(DataOpener):
                         bbox = tuple(bbox)
                 interval = extent.get("temporal", {}).get('interval')
                 if isinstance(interval, list) and len(interval) > 0:
-                    if isinstance(interval[0], list) and len(interval[0]) == 2:
+                    if isinstance(interval[0], list) \
+                            and len(interval[0]) == 2:
                         min_datetime, max_datetime = interval[0]
                     else:
                         min_datetime, max_datetime = interval
@@ -393,7 +394,6 @@ class SentinelHubDataOpener(DataOpener):
         dataset_metadata = SentinelHubMetadata().datasets.get(data_id)
         if dataset_metadata is None:
             dataset_metadata = {}
-            # raise DataStoreError(f'No metadata for dataset "{data_id}" found.')
         if self._sentinel_hub is not None:
             # If we are connected to the API,
             # we may also have collection metadata
@@ -423,22 +423,22 @@ class SentinelHubDataStore(DefaultSearchMixin,
     def get_data_store_params_schema(cls) -> JsonObjectSchema:
         sh_params = dict(
             client_id=JsonStringSchema(
-                title='SENTINEL Hub API client identifier',
+                title='Sentinel Hub API client identifier',
                 description='Preferably set by environment'
                             ' variable SH_CLIENT_ID'
             ),
             client_secret=JsonStringSchema(
-                title='SENTINEL Hub API client secret',
+                title='Sentinel Hub API client secret',
                 description='Preferably set by environment'
                             ' variable SH_CLIENT_SECRET'
             ),
             api_url=JsonStringSchema(
                 default=DEFAULT_SH_API_URL,
-                title='SENTINEL Hub API URL'
+                title='Sentinel Hub API URL'
             ),
             oauth2_url=JsonStringSchema(
                 default=DEFAULT_SH_OAUTH2_URL,
-                title='SENTINEL Hub API authorisation URL'
+                title='Sentinel Hub API authorisation URL'
             ),
             enable_warnings=JsonBooleanSchema(
                 default=False,
@@ -503,7 +503,9 @@ class SentinelHubDataStore(DefaultSearchMixin,
                     collection_id = collection.get('id')
                     collection_title = collection.get('title') \
                         if include_titles else None
-                    collection_dataset = collection_datasets.get(collection_id)
+                    collection_dataset = collection_datasets.get(
+                        collection_id
+                    )
                     if collection_dataset is not None:
                         dataset_name = collection_dataset.get('dataset_name')
                         if dataset_name is not None:
@@ -550,7 +552,8 @@ class SentinelHubDataStore(DefaultSearchMixin,
 
     def get_open_data_params_schema(self,
                                     data_id: str = None,
-                                    opener_id: str = None) -> JsonObjectSchema:
+                                    opener_id: str = None) \
+            -> JsonObjectSchema:
         self._assert_valid_opener_id(opener_id)
         return super().get_open_data_params_schema(data_id)
 

@@ -1,12 +1,12 @@
 # The MIT License (MIT)
-# Copyright (c) 2021 by the xcube development team and contributors
+# Copyright (c) 2022 by the xcube development team and contributors
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
 #
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
@@ -15,9 +15,9 @@
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 
 import json
 import os
@@ -171,7 +171,8 @@ class SentinelHub:
         SentinelHubError.maybe_raise_for_response(response)
         return response.json()
 
-    def band_names(self, dataset_name: str, collection_id: str = None) -> List[str]:
+    def band_names(self, dataset_name: str, collection_id: str = None) \
+            -> List[str]:
         if dataset_name.upper() == 'CUSTOM':
             url = DEFAULT_SH_METADATA_API_URL % collection_id
             response = self.session.get(url)
@@ -283,7 +284,8 @@ class SentinelHub:
 
             feature_collection = json.loads(response.content)
             if feature_collection.get('type') != 'FeatureCollection' \
-                    or not isinstance(feature_collection.get('features'), list):
+                    or not isinstance(feature_collection.get('features'),
+                                      list):
                 raise SentinelHubError(f'Got unexpected'
                                        f' result from {response.url}',
                                        response=response)
@@ -432,6 +434,7 @@ class SentinelHub:
     def _get_request_headers(cls, mime_type: str):
         return {
             'Accept': mime_type,
+            'SH-Tag': 'xcube-sh',
             'User-Agent': f'xcube_sh/{version} '
                           f'{platform.python_implementation()}/'
                           f'{platform.python_version()} '
@@ -488,11 +491,17 @@ class SentinelHub:
                     if not isinstance(time_range_to, str):
                         time_range_to = time_range_to.isoformat()
                     time_range_element['to'] = time_range_to
-                data_element["dataFilter"].update(timeRange=time_range_element)
+                data_element["dataFilter"].update(
+                    timeRange=time_range_element
+                )
             if mosaicking_order and time_range:
-                data_element["dataFilter"].update(mosaickingOrder=mosaicking_order)
+                data_element["dataFilter"].update(
+                    mosaickingOrder=mosaicking_order
+                )
             if collection_id:
-                data_element["dataFilter"].update(collectionId=collection_id)
+                data_element["dataFilter"].update(
+                    collectionId=collection_id
+                )
 
         input_element = {
             "bounds": {
