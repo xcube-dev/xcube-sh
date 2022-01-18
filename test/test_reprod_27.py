@@ -21,7 +21,7 @@
 
 import json
 import unittest
-from collections import MutableMapping
+from collections.abc import MutableMapping
 from typing import Dict, KeysView, Iterator
 
 import numpy as np
