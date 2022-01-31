@@ -33,7 +33,7 @@ build_script:
   - mkdir -p ~/micromamba/pkgs/
   - export MAMBA_ROOT_PREFIX=~/micromamba
   - export MAMBA_EXE=$(pwd)/micromamba
-  - . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
+  - . $MAMBA_ROOT_PREFIX/etc/profile.d/micromamba.sh
 
   # Clone xcube repository, install xcube dependencies with micromamba,
   # and install the latest version of xcube with setup.py.
