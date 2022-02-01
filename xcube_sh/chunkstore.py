@@ -24,7 +24,7 @@ import json
 import math
 import time
 from abc import abstractmethod, ABCMeta
-from collections import MutableMapping
+from collections.abc import MutableMapping
 from typing import Iterator, Any, List, Dict, Tuple, Callable, \
     Iterable, KeysView
 

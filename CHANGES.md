@@ -1,3 +1,7 @@
+## Changes in 0.9.4 (in development)
+
+* Fixed some import statements to be compatible with Python 3.10.
+
 ## Changes in 0.9.3
 
 * Added header `SH-Tag: xcube-sh` to SH API requests. (#80)
