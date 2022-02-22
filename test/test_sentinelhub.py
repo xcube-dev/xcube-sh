@@ -20,21 +20,24 @@
 # DEALINGS IN THE SOFTWARE.
 
 import json
-import numpy as np
 import os
 import os.path
 import pickle
 import shutil
 import time
 import unittest
-import zarr
 from typing import Any, Sequence, Dict
+
+import numpy as np
+import oauthlib.oauth2
+import zarr
 
 from xcube_sh.constants import CRS_ID_TO_URI
 from xcube_sh.sentinelhub import SentinelHub
 from xcube_sh.sentinelhub import SerializableOAuth2Session
 
-HAS_SH_CREDENTIALS = 'SH_CLIENT_ID' in os.environ and 'SH_CLIENT_SECRET' in os.environ
+HAS_SH_CREDENTIALS = 'SH_CLIENT_ID' in os.environ \
+                     and 'SH_CLIENT_SECRET' in os.environ
 REQUIRE_SH_CREDENTIALS = 'requires SH credentials'
 
 THIS_DIR = os.path.dirname(__file__)
@@ -47,8 +50,9 @@ REQUEST_MULTI_BYOD_JSON = os.path.join(THIS_DIR, 'request-multi-byod.json')
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
 class SentinelHubCatalogCollectionsTest(unittest.TestCase):
     def test_it(self):
-        sentinel_hub = SentinelHub(api_url='https://creodias.sentinel-hub.com')
-        # sentinel_hub = SentinelHub(api_url='https://services-uswest2.sentinel-hub.com')
+        sentinel_hub = SentinelHub(
+            api_url='https://creodias.sentinel-hub.com'
+        )
         # sentinel_hub = SentinelHub()
         collections = sentinel_hub.collections()
         self.assertIsInstance(collections, list)
@@ -76,10 +80,10 @@ class SentinelHubCatalogSearchTest(unittest.TestCase):
             self.assertIn('datetime', properties)
 
     def test_get_features_byod(self):
-        USER_COLLECTION_ID = '1a3ab057-3c51-447c-9f85-27d4b633b3f5'
+        user_collection_id = '1a3ab057-3c51-447c-9f85-27d4b633b3f5'
 
         features = SentinelHub().get_features(
-            collection_name=USER_COLLECTION_ID,
+            collection_name=user_collection_id,
             bbox=(1545577, 5761986,
                   1705367, 5857046),
             crs='EPSG:3857'
@@ -89,7 +93,7 @@ class SentinelHubCatalogSearchTest(unittest.TestCase):
         self.assertEqual({}, features[0])
 
         features = SentinelHub().get_features(
-            collection_name=USER_COLLECTION_ID,
+            collection_name=user_collection_id,
             time_range=('2016-01-01 12:00:00', '2021-01-01 12:00:00'),
             bbox=(1545577, 5761986,
                   1705367, 5857046),
@@ -101,51 +105,89 @@ class SentinelHubCatalogSearchTest(unittest.TestCase):
 
 class SentinelHubCatalogFeaturesTest(unittest.TestCase):
     def test_features_to_time_ranges(self):
-        properties = [{'datetime': '2019-09-17T10:35:42Z'}, {'datetime': '2019-09-17T10:35:46Z'},
-                      {'datetime': '2019-10-09T10:25:46Z'}, {'datetime': '2019-10-10T10:45:38Z'},
-                      {'datetime': '2019-09-19T10:25:44Z'}, {'datetime': '2019-09-20T10:45:35Z'},
-                      {'datetime': '2019-09-20T10:45:43Z'}, {'datetime': '2019-09-22T10:35:42Z'},
-                      {'datetime': '2019-09-27T10:35:44Z'}, {'datetime': '2019-09-27T10:35:48Z'},
-                      {'datetime': '2019-10-02T10:35:47Z'}, {'datetime': '2019-10-04T10:25:47Z'},
-                      {'datetime': '2019-10-05T10:45:36Z'}, {'datetime': '2019-10-05T10:45:44Z'},
-                      {'datetime': '2019-10-07T10:35:45Z'}, {'datetime': '2019-10-07T10:35:49Z'},
-                      {'datetime': '2019-09-29T10:25:46Z'}, {'datetime': '2019-09-30T10:45:37Z'},
-                      {'datetime': '2019-09-25T10:45:35Z'}, {'datetime': '2019-09-25T10:45:43Z'},
-                      {'datetime': '2019-09-30T10:45:45Z'}, {'datetime': '2019-10-02T10:35:43Z'},
-                      {'datetime': '2019-10-10T10:45:46Z'}, {'datetime': '2019-10-12T10:35:44Z'},
-                      {'datetime': '2019-09-22T10:35:46Z'}, {'datetime': '2019-09-24T10:25:46Z'},
-                      {'datetime': '2019-10-12T10:35:48Z'}, {'datetime': '2019-10-14T10:25:48Z'},
-                      {'datetime': '2019-10-15T10:45:36Z'}, {'datetime': '2019-10-15T10:45:44Z'},
-                      {'datetime': '2019-10-17T10:35:46Z'}, {'datetime': '2019-10-17T10:35:50Z'}, ]
+        properties = [{'datetime': '2019-09-17T10:35:42Z'},
+                      {'datetime': '2019-09-17T10:35:46Z'},
+                      {'datetime': '2019-10-09T10:25:46Z'},
+                      {'datetime': '2019-10-10T10:45:38Z'},
+                      {'datetime': '2019-09-19T10:25:44Z'},
+                      {'datetime': '2019-09-20T10:45:35Z'},
+                      {'datetime': '2019-09-20T10:45:43Z'},
+                      {'datetime': '2019-09-22T10:35:42Z'},
+                      {'datetime': '2019-09-27T10:35:44Z'},
+                      {'datetime': '2019-09-27T10:35:48Z'},
+                      {'datetime': '2019-10-02T10:35:47Z'},
+                      {'datetime': '2019-10-04T10:25:47Z'},
+                      {'datetime': '2019-10-05T10:45:36Z'},
+                      {'datetime': '2019-10-05T10:45:44Z'},
+                      {'datetime': '2019-10-07T10:35:45Z'},
+                      {'datetime': '2019-10-07T10:35:49Z'},
+                      {'datetime': '2019-09-29T10:25:46Z'},
+                      {'datetime': '2019-09-30T10:45:37Z'},
+                      {'datetime': '2019-09-25T10:45:35Z'},
+                      {'datetime': '2019-09-25T10:45:43Z'},
+                      {'datetime': '2019-09-30T10:45:45Z'},
+                      {'datetime': '2019-10-02T10:35:43Z'},
+                      {'datetime': '2019-10-10T10:45:46Z'},
+                      {'datetime': '2019-10-12T10:35:44Z'},
+                      {'datetime': '2019-09-22T10:35:46Z'},
+                      {'datetime': '2019-09-24T10:25:46Z'},
+                      {'datetime': '2019-10-12T10:35:48Z'},
+                      {'datetime': '2019-10-14T10:25:48Z'},
+                      {'datetime': '2019-10-15T10:45:36Z'},
+                      {'datetime': '2019-10-15T10:45:44Z'},
+                      {'datetime': '2019-10-17T10:35:46Z'},
+                      {'datetime': '2019-10-17T10:35:50Z'}, ]
         features = [dict(properties=p) for p in properties]
         time_ranges = SentinelHub.features_to_time_ranges(features)
-        self.assertEqual([('2019-09-17T10:35:42+00:00', '2019-09-17T10:35:46+00:00'),
-                          ('2019-09-19T10:25:44+00:00', '2019-09-19T10:25:44+00:00'),
-                          ('2019-09-20T10:45:35+00:00', '2019-09-20T10:45:43+00:00'),
-                          ('2019-09-22T10:35:42+00:00', '2019-09-22T10:35:46+00:00'),
-                          ('2019-09-24T10:25:46+00:00', '2019-09-24T10:25:46+00:00'),
-                          ('2019-09-25T10:45:35+00:00', '2019-09-25T10:45:43+00:00'),
-                          ('2019-09-27T10:35:44+00:00', '2019-09-27T10:35:48+00:00'),
-                          ('2019-09-29T10:25:46+00:00', '2019-09-29T10:25:46+00:00'),
-                          ('2019-09-30T10:45:37+00:00', '2019-09-30T10:45:45+00:00'),
-                          ('2019-10-02T10:35:43+00:00', '2019-10-02T10:35:47+00:00'),
-                          ('2019-10-04T10:25:47+00:00', '2019-10-04T10:25:47+00:00'),
-                          ('2019-10-05T10:45:36+00:00', '2019-10-05T10:45:44+00:00'),
-                          ('2019-10-07T10:35:45+00:00', '2019-10-07T10:35:49+00:00'),
-                          ('2019-10-09T10:25:46+00:00', '2019-10-09T10:25:46+00:00'),
-                          ('2019-10-10T10:45:38+00:00', '2019-10-10T10:45:46+00:00'),
-                          ('2019-10-12T10:35:44+00:00', '2019-10-12T10:35:48+00:00'),
-                          ('2019-10-14T10:25:48+00:00', '2019-10-14T10:25:48+00:00'),
-                          ('2019-10-15T10:45:36+00:00', '2019-10-15T10:45:44+00:00'),
-                          ('2019-10-17T10:35:46+00:00', '2019-10-17T10:35:50+00:00')],
-                         [(tr[0].isoformat(), tr[1].isoformat()) for tr in time_ranges])
+        self.assertEqual([('2019-09-17T10:35:42+00:00',
+                           '2019-09-17T10:35:46+00:00'),
+                          ('2019-09-19T10:25:44+00:00',
+                           '2019-09-19T10:25:44+00:00'),
+                          ('2019-09-20T10:45:35+00:00',
+                           '2019-09-20T10:45:43+00:00'),
+                          ('2019-09-22T10:35:42+00:00',
+                           '2019-09-22T10:35:46+00:00'),
+                          ('2019-09-24T10:25:46+00:00',
+                           '2019-09-24T10:25:46+00:00'),
+                          ('2019-09-25T10:45:35+00:00',
+                           '2019-09-25T10:45:43+00:00'),
+                          ('2019-09-27T10:35:44+00:00',
+                           '2019-09-27T10:35:48+00:00'),
+                          ('2019-09-29T10:25:46+00:00',
+                           '2019-09-29T10:25:46+00:00'),
+                          ('2019-09-30T10:45:37+00:00',
+                           '2019-09-30T10:45:45+00:00'),
+                          ('2019-10-02T10:35:43+00:00',
+                           '2019-10-02T10:35:47+00:00'),
+                          ('2019-10-04T10:25:47+00:00',
+                           '2019-10-04T10:25:47+00:00'),
+                          ('2019-10-05T10:45:36+00:00',
+                           '2019-10-05T10:45:44+00:00'),
+                          ('2019-10-07T10:35:45+00:00',
+                           '2019-10-07T10:35:49+00:00'),
+                          ('2019-10-09T10:25:46+00:00',
+                           '2019-10-09T10:25:46+00:00'),
+                          ('2019-10-10T10:45:38+00:00',
+                           '2019-10-10T10:45:46+00:00'),
+                          ('2019-10-12T10:35:44+00:00',
+                           '2019-10-12T10:35:48+00:00'),
+                          ('2019-10-14T10:25:48+00:00',
+                           '2019-10-14T10:25:48+00:00'),
+                          ('2019-10-15T10:45:36+00:00',
+                           '2019-10-15T10:45:44+00:00'),
+                          ('2019-10-17T10:35:46+00:00',
+                           '2019-10-17T10:35:50+00:00')],
+                         [(tr[0].isoformat(), tr[1].isoformat()) for tr in
+                          time_ranges])
 
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
 class SentinelHubGetDataTest(unittest.TestCase):
-    OUTPUTS_DIR = os.path.normpath(os.path.join(THIS_DIR, '..', 'test-outputs'))
+    OUTPUTS_DIR = os.path.normpath(os.path.join(THIS_DIR,
+                                                '..', 'test-outputs'))
     RESPONSE_SINGLE_ZARR = os.path.join(OUTPUTS_DIR, 'response-single.zarr')
-    RESPONSE_SINGLE_BYOD_ZARR = os.path.join(OUTPUTS_DIR, 'response-single-byod.zarr')
+    RESPONSE_SINGLE_BYOD_ZARR = os.path.join(OUTPUTS_DIR,
+                                             'response-single-byod.zarr')
     RESPONSE_MULTI_ZARR = os.path.join(OUTPUTS_DIR, 'response-multi.zarr')
     RESPONSE_SINGLE_TIF = os.path.join(OUTPUTS_DIR, 'response-single.tif')
     RESPONSE_MULTI_TAR = os.path.join(OUTPUTS_DIR, 'response-multi.tar')
@@ -161,7 +203,9 @@ class SentinelHubGetDataTest(unittest.TestCase):
         def handle_error(func, path, exc_info):
             print(f'error: failed to rmtree {path}')
 
-        shutil.rmtree(cls.OUTPUTS_DIR, ignore_errors=True, onerror=handle_error)
+        shutil.rmtree(cls.OUTPUTS_DIR,
+                      ignore_errors=True,
+                      onerror=handle_error)
 
     def test_get_data_single_binary(self):
         with open(REQUEST_SINGLE_JSON, 'r') as fp:
@@ -170,7 +214,10 @@ class SentinelHubGetDataTest(unittest.TestCase):
         sentinel_hub = SentinelHub()
 
         t1 = time.perf_counter()
-        response = sentinel_hub.get_data(request, mime_type='application/octet-stream')
+        response = sentinel_hub.get_data(
+            request,
+            mime_type='application/octet-stream'
+        )
         t2 = time.perf_counter()
         print(f"test_get_data_single_binary: took {t2 - t1} secs")
 
@@ -178,7 +225,11 @@ class SentinelHubGetDataTest(unittest.TestCase):
         self.assertEqual('512', response.headers.get('sh-width'))
         self.assertEqual('512', response.headers.get('sh-height'))
 
-        _write_zarr_array(self.RESPONSE_SINGLE_ZARR, response.content, 0, (512, 512, 1), '<f4')
+        _write_zarr_array(self.RESPONSE_SINGLE_ZARR,
+                          response.content,
+                          0,
+                          (512, 512, 1),
+                          '<f4')
 
         sentinel_hub.close()
 
@@ -209,7 +260,10 @@ class SentinelHubGetDataTest(unittest.TestCase):
         sentinel_hub = SentinelHub()
 
         t1 = time.perf_counter()
-        response = sentinel_hub.get_data(request, mime_type='application/octet-stream')
+        response = sentinel_hub.get_data(
+            request,
+            mime_type='application/octet-stream'
+        )
         t2 = time.perf_counter()
         print(f"test_get_data_single_binary_byod: took {t2 - t1} secs")
 
@@ -217,7 +271,8 @@ class SentinelHubGetDataTest(unittest.TestCase):
         self.assertEqual('512', response.headers.get('sh-width'))
         self.assertEqual('305', response.headers.get('sh-height'))
 
-        _write_zarr_array(self.RESPONSE_SINGLE_BYOD_ZARR, response.content, 0, (512, 305, 1), 'i1')
+        _write_zarr_array(self.RESPONSE_SINGLE_BYOD_ZARR, response.content, 0,
+                          (512, 305, 1), 'i1')
 
         sentinel_hub.close()
 
@@ -226,12 +281,16 @@ class SentinelHubGetDataTest(unittest.TestCase):
         self.assertEqual((1, 512, 305, 1), zarr_array.chunks)
         np_array = np.array(zarr_array).astype(np.int8)
         self.assertEqual(np.int8, np_array.dtype)
-        np.testing.assert_almost_equal(np.array([61, 52, -33, -56, -100, 88, 60, 82, -61, -79],
-                                                dtype=np.int8),
-                                       np_array[0, 0, 0:10, 0])
-        np.testing.assert_almost_equal(np.array([-79, -67, -26, -69, -85, -42, -6, -14, -29, -2],
-                                                dtype=np.int8),
-                                       np_array[0, 511, -10:, 0])
+        np.testing.assert_almost_equal(
+            np.array([61, 52, -33, -56, -100, 88, 60, 82, -61, -79],
+                     dtype=np.int8),
+            np_array[0, 0, 0:10, 0]
+        )
+        np.testing.assert_almost_equal(
+            np.array([-79, -67, -26, -69, -85, -42, -6, -14, -29, -2],
+                     dtype=np.int8),
+            np_array[0, 511, -10:, 0]
+        )
 
     @unittest.skip('Known to fail, see TODO in code')
     def test_get_data_multi_binary(self):
@@ -240,13 +299,21 @@ class SentinelHubGetDataTest(unittest.TestCase):
 
         sentinel_hub = SentinelHub()
 
-        # TODO (forman): discuss with Primoz how to effectively do multi-bands request
+        # TODO (forman): discuss with Primoz how
+        #  to effectively do multi-bands request
         t1 = time.perf_counter()
-        response = sentinel_hub.get_data(request, mime_type='application/octet-stream')
+        response = sentinel_hub.get_data(
+            request,
+            mime_type='application/octet-stream'
+        )
         t2 = time.perf_counter()
         print(f"test_get_data_multi_binary: took {t2 - t1} secs")
 
-        _write_zarr_array(self.RESPONSE_MULTI_ZARR, response.content, 0, (512, 512, 4), '<f4')
+        _write_zarr_array(self.RESPONSE_MULTI_ZARR,
+                          response.content,
+                          0,
+                          (512, 512, 4),
+                          '<f4')
 
         sentinel_hub.close()
 
@@ -259,13 +326,15 @@ class SentinelHubGetDataTest(unittest.TestCase):
                                                  0.5922, 0.5822,
                                                  0.5735, 0.4921,
                                                  0.5902, 0.6518,
-                                                 0.5825, 0.5321], dtype=np.float32),
+                                                 0.5825, 0.5321],
+                                                dtype=np.float32),
                                        np_array[0, 0, 0:10, 0])
         np.testing.assert_almost_equal(np.array([0.8605, 0.8528,
                                                  0.8495, 0.8378,
                                                  0.8143, 0.7959,
                                                  0.7816, 0.7407,
-                                                 0.7182, 0.7326], dtype=np.float32),
+                                                 0.7182, 0.7326],
+                                                dtype=np.float32),
                                        np_array[0, 511, -10:, 0])
 
     def test_get_data_single(self):
@@ -308,7 +377,11 @@ class SentinelHubCatalogueTest(unittest.TestCase):
         sentinel_hub = SentinelHub(session=SessionMock({
             'get': {
                 'https://services.sentinel-hub.com/configuration/v1/datasets':
-                    [{'id': "DEM"}, {'id': "S2L1C"}, {'id': "S2L2A"}, {'id': "CUSTOM"}, {'id': "S1GRD"}]
+                    [{'id': "DEM"},
+                     {'id': "S2L1C"},
+                     {'id': "S2L2A"},
+                     {'id': "CUSTOM"},
+                     {'id': "S1GRD"}]
 
             }}))
         self.assertEqual(expected_dataset_names,
@@ -362,7 +435,8 @@ class SentinelHubCatalogueTest(unittest.TestCase):
                                'sunAzimuthAngles']
         sentinel_hub = SentinelHub(session=SessionMock({
             'get': {
-                'https://services.sentinel-hub.com/api/v1/process/dataset/S2L2A/bands': {
+                'https://services.sentinel-hub.com/api/v1/'
+                'process/dataset/S2L2A/bands': {
                     'data': expected_band_names
                 }
             }
@@ -372,8 +446,10 @@ class SentinelHubCatalogueTest(unittest.TestCase):
         sentinel_hub.close()
 
     def test_get_features(self):
-        properties = [{'datetime': '2019-10-02T10:35:47Z'}, {'datetime': '2019-10-04T10:25:47Z'},
-                      {'datetime': '2019-10-05T10:45:36Z'}, {'datetime': '2019-10-05T10:45:44Z'}]
+        properties = [{'datetime': '2019-10-02T10:35:47Z'},
+                      {'datetime': '2019-10-04T10:25:47Z'},
+                      {'datetime': '2019-10-05T10:45:36Z'},
+                      {'datetime': '2019-10-05T10:45:44Z'}]
         expected_features = [dict(properties=p) for p in properties]
         sentinel_hub = SentinelHub(session=SessionMock({
             'post': {
@@ -381,13 +457,13 @@ class SentinelHubCatalogueTest(unittest.TestCase):
                     dict(type='FeatureCollection', features=expected_features)
             }
         }))
-        self.assertEqual(expected_features, sentinel_hub.get_features(collection_name='sentinel-2-l2a',
-                                                                      bbox=(12, 53, 13, 54),
-                                                                      time_range=('2019-10-02', '2019-10-05')))
+        self.assertEqual(expected_features, sentinel_hub.get_features(
+            collection_name='sentinel-2-l2a',
+            bbox=(12, 53, 13, 54),
+            time_range=('2019-10-02', '2019-10-05')))
         sentinel_hub.close()
 
 
-@unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
 class SentinelHubTokenInfoTest(unittest.TestCase):
 
     def test_token_info(self):
@@ -402,8 +478,30 @@ class SentinelHubTokenInfoTest(unittest.TestCase):
                     expected_token_info
             }
         }))
-        self.assertEqual(expected_token_info, {k: v for k, v in sentinel_hub.token_info.items()
-                                               if k in ['name', 'email', 'active']})
+        self.assertEqual(expected_token_info,
+                         {k: v for k, v in sentinel_hub.token_info.items()
+                          if k in ['name', 'email', 'active']})
+        sentinel_hub.close()
+
+
+class SentinelHubTokenRefreshTest(unittest.TestCase):
+
+    def test_token_can_be_refreshed(self):
+        request = dict()
+        session = SessionMock({
+            'post': {
+                'https://services.sentinel-hub.com/api/v1/process': bytes(),
+                'token_expired': True
+            }
+        })
+        sentinel_hub = SentinelHub(session=session)
+        self.assertFalse(session.token_refreshed)
+        response = sentinel_hub.get_data(
+            request,
+            mime_type="application/octet-stream"
+        )
+        self.assertTrue(response.ok)
+        self.assertTrue(session.token_refreshed)
         sentinel_hub.close()
 
 
@@ -414,7 +512,8 @@ class SentinelHubNewRequestTest(unittest.TestCase):
             'S2L1C',
             ['B02'],
             (512, 512),
-            time_range=("2018-10-01T00:00:00.000Z", "2018-10-10T00:00:00.000Z"),
+            time_range=("2018-10-01T00:00:00.000Z",
+                        "2018-10-10T00:00:00.000Z"),
             bbox=(
                 13.822,
                 45.850,
@@ -438,7 +537,8 @@ class SentinelHubNewRequestTest(unittest.TestCase):
             'S2L1C',
             ['B02', 'B03', 'B04', 'B08'],
             (512, 512),
-            time_range=("2018-10-01T00:00:00.000Z", "2018-10-10T00:00:00.000Z"),
+            time_range=("2018-10-01T00:00:00.000Z",
+                        "2018-10-10T00:00:00.000Z"),
             bbox=(
                 13.822,
                 45.850,
@@ -535,10 +635,12 @@ class SerializableOAuth2SessionTest(unittest.TestCase):
         valid_test_attrs.remove('adapters')
 
         actual = actual.__dict__
-        actual = dict((k, actual[k]) for k in valid_test_attrs if k in actual)
+        actual = dict((k, actual[k])
+                      for k in valid_test_attrs if k in actual)
 
         expected = session.__dict__
-        expected = dict((k, expected[k]) for k in valid_test_attrs if k in expected)
+        expected = dict((k, expected[k])
+                        for k in valid_test_attrs if k in expected)
 
         self.assertEqual(expected, actual)
 
@@ -578,17 +680,32 @@ def _write_zarr_array(dir_path: str,
 class SessionMock:
     def __init__(self, mapping: Dict):
         self.mapping = mapping
+        self.token_refreshed = False
+
+    # noinspection PyUnusedLocal
+    def fetch_token(self,
+                    token_url: str,
+                    client_id: str,
+                    client_secret: str):
+        self.token_refreshed = True
 
     # noinspection PyUnusedLocal
     def get(self, url, **kwargs):
+        self._maybe_raise_token_expired_error('get')
         return self._response(self.mapping['get'][url])
 
     # noinspection PyUnusedLocal
     def post(self, url, **kwargs):
+        self._maybe_raise_token_expired_error('post')
         return self._response(self.mapping['post'][url])
 
     def close(self):
         pass
+
+    def _maybe_raise_token_expired_error(self, method: str):
+        if self.mapping[method].get('token_expired') \
+                and not self.token_refreshed:
+            raise oauthlib.oauth2.TokenExpiredError()
 
     @classmethod
     def _response(cls, content_obj):
