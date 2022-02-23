@@ -484,7 +484,27 @@ class SentinelHubTokenInfoTest(unittest.TestCase):
         sentinel_hub.close()
 
 
-class SentinelHubTokenRefreshTest(unittest.TestCase):
+class SentinelHubAuthTest(unittest.TestCase):
+
+    def test_not_auth_yet(self):
+        request = dict()
+        session = SessionMock({
+            'post': {
+                'https://services.sentinel-hub.com/api/v1/process': bytes(),
+                'status_code': 401
+            }
+        })
+        sentinel_hub = SentinelHub(session=session,
+                                   client_id="john",
+                                   client_secret="doe")
+        self.assertFalse(session.token_refreshed)
+        response = sentinel_hub.get_data(
+            request,
+            mime_type="application/octet-stream"
+        )
+        self.assertTrue(response.ok)
+        self.assertTrue(session.token_refreshed)
+        sentinel_hub.close()
 
     def test_token_can_be_refreshed(self):
         request = dict()
@@ -505,7 +525,6 @@ class SentinelHubTokenRefreshTest(unittest.TestCase):
         self.assertTrue(response.ok)
         self.assertTrue(session.token_refreshed)
         sentinel_hub.close()
-
 
 class SentinelHubNewRequestTest(unittest.TestCase):
 
@@ -693,13 +712,16 @@ class SessionMock:
 
     # noinspection PyUnusedLocal
     def get(self, url, **kwargs):
-        self._maybe_raise_token_expired_error('get')
-        return self._response(self.mapping['get'][url])
+        return self._invoke(url, 'get')
 
     # noinspection PyUnusedLocal
     def post(self, url, **kwargs):
-        self._maybe_raise_token_expired_error('post')
-        return self._response(self.mapping['post'][url])
+        return self._invoke(url, 'post')
+
+    def _invoke(self, url: str, method: str):
+        self._maybe_raise_token_expired_error(method)
+        status_code = self.mapping[method].get("status_code", 200)
+        return self._response(self.mapping[method][url], status_code)
 
     def close(self):
         pass
@@ -710,17 +732,18 @@ class SessionMock:
             raise oauthlib.oauth2.TokenExpiredError()
 
     @classmethod
-    def _response(cls, content_obj):
-        return SessionResponseMock(content_obj)
+    def _response(cls, content_obj, status_code):
+        return SessionResponseMock(content_obj, status_code=status_code)
 
 
 class SessionResponseMock:
-    def __init__(self, content_obj):
+    def __init__(self, content_obj, status_code=200):
         self.content_obj = content_obj
+        self.status_code = status_code
 
     @property
     def ok(self) -> bool:
-        return True
+        return 200 <= self.status_code < 400
 
     @property
     def content(self):
