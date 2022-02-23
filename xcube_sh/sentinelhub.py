@@ -348,6 +348,7 @@ class SentinelHub:
 
         response = None
         response_error = None
+        last_retry = False
         for retry in range(num_retries):
             try:
                 response = self.session.post(process_url,
@@ -355,7 +356,9 @@ class SentinelHub:
                                              headers=headers)
                 response_error = None
             except oauthlib.oauth2.TokenExpiredError as e:
-                if retry == num_retries - 1:
+                if not last_retry and retry == num_retries - 1:
+                    # Force a last retry
+                    last_retry = True
                     retry -= 1
                 self._fetch_token()
                 response_error = e
@@ -369,7 +372,9 @@ class SentinelHub:
                 response_error = e
                 response = None
             if response is not None and response.status_code == 401:
-                if retry == num_retries - 1:
+                if not last_retry and retry == num_retries - 1:
+                    # Force a last retry
+                    last_retry = True
                     retry -= 1
                 self._fetch_token()
             if response is not None and response.ok:

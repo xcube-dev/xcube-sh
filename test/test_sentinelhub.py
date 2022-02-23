@@ -496,13 +496,14 @@ class SentinelHubAuthTest(unittest.TestCase):
         })
         sentinel_hub = SentinelHub(session=session,
                                    client_id="john",
-                                   client_secret="doe")
+                                   client_secret="doe",
+                                   num_retries=2)
         self.assertFalse(session.token_refreshed)
         response = sentinel_hub.get_data(
             request,
             mime_type="application/octet-stream"
         )
-        self.assertTrue(response.ok)
+        self.assertFalse(response.ok)
         self.assertTrue(session.token_refreshed)
         sentinel_hub.close()
 
@@ -516,7 +517,8 @@ class SentinelHubAuthTest(unittest.TestCase):
         })
         sentinel_hub = SentinelHub(session=session,
                                    client_id="john",
-                                   client_secret="doe")
+                                   client_secret="doe",
+                                   num_retries=2)
         self.assertFalse(session.token_refreshed)
         response = sentinel_hub.get_data(
             request,
@@ -740,6 +742,8 @@ class SessionResponseMock:
     def __init__(self, content_obj, status_code=200):
         self.content_obj = content_obj
         self.status_code = status_code
+        self.reason = '<reason not used>'
+        self.headers = dict()
 
     @property
     def ok(self) -> bool:
