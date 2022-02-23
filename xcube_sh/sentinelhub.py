@@ -368,7 +368,7 @@ class SentinelHub:
                 #  InvalidChunkLength(got length b'', 0 bytes read))
                 response_error = e
                 response = None
-            if response.status_code == 401:
+            if response is not None and response.status_code == 401:
                 if retry == num_retries - 1:
                     retry -= 1
                 self._fetch_token()
