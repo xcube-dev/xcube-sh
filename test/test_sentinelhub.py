@@ -494,7 +494,9 @@ class SentinelHubTokenRefreshTest(unittest.TestCase):
                 'token_expired': True
             }
         })
-        sentinel_hub = SentinelHub(session=session)
+        sentinel_hub = SentinelHub(session=session,
+                                   client_id="john",
+                                   client_secret="doe")
         self.assertFalse(session.token_refreshed)
         response = sentinel_hub.get_data(
             request,
