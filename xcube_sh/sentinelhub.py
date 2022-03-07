@@ -348,13 +348,18 @@ class SentinelHub:
 
         response = None
         response_error = None
-        for i in range(num_retries):
+        last_retry = False
+        for retry in range(num_retries):
             try:
                 response = self.session.post(process_url,
                                              json=request,
                                              headers=headers)
                 response_error = None
             except oauthlib.oauth2.TokenExpiredError as e:
+                if not last_retry and retry == num_retries - 1:
+                    # Force a last retry
+                    last_retry = True
+                    retry -= 1
                 self._fetch_token()
                 response_error = e
                 response = None
@@ -366,6 +371,12 @@ class SentinelHub:
                 #  InvalidChunkLength(got length b'', 0 bytes read))
                 response_error = e
                 response = None
+            if response is not None and response.status_code == 401:
+                if not last_retry and retry == num_retries - 1:
+                    # Force a last retry
+                    last_retry = True
+                    retry -= 1
+                self._fetch_token()
             if response is not None and response.ok:
                 # TODO (forman): verify response headers:
                 #   response_num_components, response_width, ...
@@ -390,7 +401,7 @@ class SentinelHub:
                 if self.enable_warnings:
                     retry_message = \
                         f'{error_message}. ' \
-                        f'Attempt {i + 1} of {num_retries} to retry after ' \
+                        f'Attempt {retry + 1} of {num_retries} to retry after ' \
                         f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff}' \
                         f' = {"%.2f" % retry_total} ms...'
                     warnings.warn(retry_message)
@@ -600,6 +611,7 @@ class SentinelHub:
             client_id=self.client_id,
             client_secret=self.client_secret
         )
+
 
 class SentinelHubError(ValueError):
     def __init__(self, *args, response=None, **kwargs):
