@@ -1,4 +1,4 @@
-## Changes in 0.9.4 (in development)
+## Changes in 0.9.4
 
 * Avoiding `TokenExpiredError` that occurred after 
   requesting tiles from Sentinel Hub after more than 1h. (#49)
