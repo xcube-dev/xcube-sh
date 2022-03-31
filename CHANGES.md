@@ -1,3 +1,8 @@
+## Changes in 0.9.5 (in development)
+
+* Now logging Sentinel Hub access token fetching and non-recoverable 
+  errors when accessing data.
+
 ## Changes in 0.9.4
 
 * Avoiding `TokenExpiredError` that occurred after 

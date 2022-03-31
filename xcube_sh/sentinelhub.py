@@ -45,6 +45,7 @@ from .constants import DEFAULT_RETRY_BACKOFF_MAX
 from .constants import DEFAULT_SH_API_URL
 from .constants import DEFAULT_SH_METADATA_API_URL
 from .constants import DEFAULT_SH_OAUTH2_URL
+from .constants import LOG
 from .constants import SH_CATALOG_FEATURE_LIMIT
 from .metadata import SentinelHubMetadata
 from .version import version
@@ -349,6 +350,8 @@ class SentinelHub:
         response = None
         response_error = None
         last_retry = False
+        start_time = time.time()
+
         for retry in range(num_retries):
             try:
                 response = self.session.post(process_url,
@@ -408,8 +411,19 @@ class SentinelHub:
                 time.sleep(retry_total / 1000.0)
                 retry_backoff_max *= retry_backoff_base
 
+        end_time = time.time()
+
+        # Here: response.ok == False
+
         if self.error_handler:
             self.error_handler(response)
+
+        LOG.error(f'Failed to fetch data from Sentinel Hub'
+                  f' after {end_time - start_time} seconds'
+                  f' and {num_retries} retries',
+                  exc_info=response_error)
+        if response is not None:
+            LOG.error(f'HTTP status code was {response.status_code}')
 
         if self.error_policy == 'fail':
             if response_error:
@@ -611,6 +625,8 @@ class SentinelHub:
             client_id=self.client_id,
             client_secret=self.client_secret
         )
+
+        LOG.info('fetched Sentinel Hub access token successfully')
 
 
 class SentinelHubError(ValueError):
