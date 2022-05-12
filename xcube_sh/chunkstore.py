@@ -226,11 +226,13 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
         self._add_static_array('time', t_array, time_attrs)
         self._add_static_array('time_bnds', t_bnds_array, time_bnds_attrs)
 
+        crs_var_attrs = dict()
         if not crs.is_geographic:
             self._add_static_array('crs', np.array(0), dict(
                 _ARRAY_DIMENSIONS=[],
                 **crs.to_cf(),
             ))
+            crs_var_attrs['grid_mapping'] = 'crs'
 
         if self._cube_config.four_d:
             if crs.is_geographic:
@@ -250,7 +252,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                    [t_array.size, height, width, num_bands],
                                    [1, tile_height, tile_width, num_bands],
                                    band_encoding,
-                                   band_attrs)
+                                   {**band_attrs, **crs_var_attrs})
         else:
             if crs.is_geographic:
                 band_array_dimensions = ['time', 'lat', 'lon']
@@ -265,7 +267,7 @@ class RemoteStore(MutableMapping, metaclass=ABCMeta):
                                        [t_array.size, height, width],
                                        [1, tile_height, tile_width],
                                        band_encoding,
-                                       band_attrs)
+                                       {**band_attrs, **crs_var_attrs})
 
         self._consolidate_metadata()
 
