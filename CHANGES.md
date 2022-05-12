@@ -1,10 +1,10 @@
-## Changes in 0.9.5 (in development)
+## Changes in 0.9.5
 
 * If requesting a non-geographic target projection, spatial reference
   information is now provided in a CF-compliant way. (#85)
 
-* Now logging Sentinel Hub access token fetching and non-recoverable 
-  errors when accessing data.
+* Now logging when a new Sentinel Hub access token is fetched. 
+  Also logging non-recoverable errors when accessing data.
 
 ## Changes in 0.9.4
 
