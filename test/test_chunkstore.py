@@ -27,8 +27,10 @@ from collections import namedtuple
 
 import numpy as np
 import pandas as pd
+import pyproj
 import xarray as xr
 import zarr
+
 from xcube_sh.chunkstore import SentinelHubChunkStore
 from xcube_sh.config import CubeConfig
 from xcube_sh.metadata import S2_BAND_NAMES
@@ -44,8 +46,6 @@ class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
 
         self.assertEqual((4000, 4000), cube_config.size)
         self.assertEqual((1000, 1000), cube_config.tile_size)
-        np.testing.assert_almost_equal(cube_config.bbox, (10.2, 53.5, 10.3, 53.6))
-        np.testing.assert_almost_equal(cube_config.geometry, (10.2, 53.5, 10.3, 53.6))
 
         self.cube_config = cube_config
         # noinspection PyTypeChecker
@@ -173,8 +173,41 @@ class SentinelHubStore3DTestWithAllBands(SentinelHubStoreTest):
     def test_all_bands_available(self):
         # noinspection PyTypeChecker
         cube = xr.open_zarr(self.store)
-        self.assertEqual(['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12', 'B8A'],
-                         sorted(cube.data_vars))
+        self.assertEqual(
+            ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09',
+             'B10', 'B11', 'B12', 'B8A'],
+            sorted(cube.data_vars))
+
+
+class SentinelHubStore3DTestWithNonDefaultCrs(SentinelHubStoreTest):
+
+    def get_cube_config(self):
+        crs_name = 'EPSG:3035'
+        crs = pyproj.CRS.from_string(crs_name)
+        t = pyproj.Transformer.from_crs('CRS84', crs)
+        (x1, y1), (x2, y2) = t.transform((10.2, 10.3), (53.5, 53.6))
+        spatial_res = (x2 - x1) / 4000
+        y2 = y1 + spatial_res * 4000
+        return CubeConfig(dataset_name='S2L2A',
+                          band_names=['B01', 'B08', 'B12'],
+                          bbox=(x1, y1, x2, y2),
+                          crs=crs_name,
+                          spatial_res=spatial_res,
+                          time_range=('2017-08-01', '2017-08-31'),
+                          time_period=None,
+                          four_d=False)
+
+    def test_crs_info_ok(self):
+        cube = xr.open_zarr(self.store)
+        self.assertIn('crs', cube)
+        crs_var = cube['crs']
+        crs_cf_attrs = pyproj.CRS.from_cf(crs_var.attrs)
+        print(crs_cf_attrs)
+        for band_name in ['B01', 'B08', 'B12']:
+            self.assertIn(band_name, cube)
+            band = cube[band_name]
+            self.assertIn("grid_mapping", band.attrs)
+            self.assertEqual("crs", band.attrs["grid_mapping"])
 
 
 class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):

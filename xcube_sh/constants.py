@@ -19,7 +19,10 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import logging
 import os
+
+LOG = logging.getLogger('xcube.sh')
 
 DEFAULT_CLIENT_ID = os.environ.get('SH_CLIENT_ID')
 DEFAULT_CLIENT_SECRET = os.environ.get('SH_CLIENT_SECRET')

@@ -28,6 +28,7 @@ import numpy as np
 import xarray
 
 
+@unittest.skip(reason="no longer occurs in zarr 2.11.0")
 class ReproduceIssue27Test(unittest.TestCase):
     """
     This test reproduces issue #27.

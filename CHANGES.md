@@ -1,6 +1,20 @@
-## Changes in 0.9.4 (in development)
+## Changes in 0.9.6 (in development)
 
 * Fixed some import statements to be compatible with Python 3.10.
+
+## Changes in 0.9.5
+
+* If requesting a non-geographic target projection, spatial reference
+  information is now provided in a CF-compliant way. (#85)
+
+* Now logging when a new Sentinel Hub access token is fetched. 
+  Also logging non-recoverable errors when accessing data.
+
+## Changes in 0.9.4
+
+* Avoiding `TokenExpiredError` that occurred after 
+  requesting tiles from Sentinel Hub after more than 1h. (#49)
+
 
 ## Changes in 0.9.3
 

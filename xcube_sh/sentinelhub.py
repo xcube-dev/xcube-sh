@@ -45,6 +45,7 @@ from .constants import DEFAULT_RETRY_BACKOFF_MAX
 from .constants import DEFAULT_SH_API_URL
 from .constants import DEFAULT_SH_METADATA_API_URL
 from .constants import DEFAULT_SH_OAUTH2_URL
+from .constants import LOG
 from .constants import SH_CATALOG_FEATURE_LIMIT
 from .metadata import SentinelHubMetadata
 from .version import version
@@ -81,20 +82,20 @@ class SentinelHub:
     METADATA = SentinelHubMetadata()
 
     def __init__(self,
-                 client_id: str = None,
-                 client_secret: str = None,
-                 instance_id: str = None,
-                 api_url: str = None,
-                 oauth2_url: str = None,
-                 process_url: str = None,
-                 catalog_url: str = None,
+                 client_id: Optional[str] = None,
+                 client_secret: Optional[str] = None,
+                 instance_id: Optional[str] = None,
+                 api_url: Optional[str] = None,
+                 oauth2_url: Optional[str] = None,
+                 process_url: Optional[str] = None,
+                 catalog_url: Optional[str] = None,
                  enable_warnings: bool = False,
                  error_policy: str = 'fail',
-                 error_handler: Callable[[Any], None] = None,
+                 error_handler: Optional[Callable[[Any], None]] = None,
                  num_retries: int = DEFAULT_NUM_RETRIES,
                  retry_backoff_max: int = DEFAULT_RETRY_BACKOFF_MAX,
                  retry_backoff_base: float = DEFAULT_RETRY_BACKOFF_BASE,
-                 session: Any = None):
+                 session: Union["SerializableOAuth2Session", Any] = None):
         if instance_id:
             warnings.warn('instance_id has been deprecated,'
                           ' it is no longer used')
@@ -102,6 +103,7 @@ class SentinelHub:
                                                  DEFAULT_SH_API_URL)
         self.oauth2_url = oauth2_url or os.environ.get('SH_OAUTH2_URL',
                                                        DEFAULT_SH_OAUTH2_URL)
+        self.token_url = self.oauth2_url + '/token'
         self.process_url = process_url
         self.catalog_url = catalog_url
         self.error_policy = error_policy or 'fail'
@@ -110,39 +112,17 @@ class SentinelHub:
         self.num_retries = num_retries
         self.retry_backoff_max = retry_backoff_max
         self.retry_backoff_base = retry_backoff_base
+        self.session: Optional[SerializableOAuth2Session] = session
+        # Client credentials
+        self.client_id = client_id or DEFAULT_CLIENT_ID
+        self.client_secret = client_secret or DEFAULT_CLIENT_SECRET
         if session is None:
-            # Client credentials
-            client_id = client_id or DEFAULT_CLIENT_ID
-            client_secret = client_secret or DEFAULT_CLIENT_SECRET
-
-            if not client_id or not client_secret:
-                raise ValueError(
-                    'Both client_id and client_secret must be provided.\n'
-                    'Consider setting environment variables '
-                    'SH_CLIENT_ID and SH_CLIENT_SECRET.\n'
-                    'For more information refer to '
-                    'https://docs.sentinel-hub.com/'
-                    'api/latest/#/API/authentication'
-                )
-
             # Create a OAuth2 session
             client = oauthlib.oauth2.BackendApplicationClient(
-                client_id=client_id
+                client_id=self.client_id
             )
-            self.session: SerializableOAuth2Session = \
-                SerializableOAuth2Session(client=client)
-
-            # Get OAuth2 token for the session
-            self.token = self.session.fetch_token(
-                token_url=self.oauth2_url + '/token',
-                client_id=client_id,
-                client_secret=client_secret
-            )
-            # print(self.token)
-            self.client_id = client_id
-        else:
-            self.session: Any = session
-            self.token = None
+            self.session = SerializableOAuth2Session(client=client)
+            self._fetch_token()
 
     def __del__(self):
         self.close()
@@ -167,7 +147,9 @@ class SentinelHub:
         """
         See https://docs.sentinel-hub.com/api/latest/reference/#tag/configuration_dataset
         """
-        response = self.session.get(self.api_url + '/configuration/v1/datasets')
+        response = self.session.get(
+            self.api_url + '/configuration/v1/datasets'
+        )
         SentinelHubError.maybe_raise_for_response(response)
         return response.json()
 
@@ -351,8 +333,8 @@ class SentinelHub:
 
     def get_data(self, request: Dict, mime_type=None) \
             -> Optional[requests.Response]:
-        outputs = request['output']['responses']
         if not mime_type:
+            outputs = request['output']['responses']
             if len(outputs) > 1:
                 mime_type = 'application/tar'
             else:
@@ -367,12 +349,23 @@ class SentinelHub:
 
         response = None
         response_error = None
-        for i in range(num_retries):
+        last_retry = False
+        start_time = time.time()
+
+        for retry in range(num_retries):
             try:
                 response = self.session.post(process_url,
                                              json=request,
                                              headers=headers)
                 response_error = None
+            except oauthlib.oauth2.TokenExpiredError as e:
+                if not last_retry and retry == num_retries - 1:
+                    # Force a last retry
+                    last_retry = True
+                    retry -= 1
+                self._fetch_token()
+                response_error = e
+                response = None
             except requests.exceptions.RequestException as e:
                 # What may be seen here is:
                 # requests.exceptions.ChunkedEncodingError:
@@ -381,10 +374,16 @@ class SentinelHub:
                 #  InvalidChunkLength(got length b'', 0 bytes read))
                 response_error = e
                 response = None
+            if response is not None and response.status_code == 401:
+                if not last_retry and retry == num_retries - 1:
+                    # Force a last retry
+                    last_retry = True
+                    retry -= 1
+                self._fetch_token()
             if response is not None and response.ok:
                 # TODO (forman): verify response headers:
                 #   response_num_components, response_width, ...
-                # response_components = int(headers.get('SH-Components', '-1'))
+                # response_components = int(headers.get('SH-Components','-1'))
                 # response_width = int(headers.get('SH-Width', '-1'))
                 # response_height = int(headers.get('SH-Height', '-1'))
                 # response_sample_type = headers.get('SH-SampleType')
@@ -394,7 +393,9 @@ class SentinelHub:
                 if response is not None:
                     error_message = f'Error {response.status_code}:' \
                                     f' {response.reason}'
-                    retry_min = int(response.headers.get('Retry-After', '100'))
+                    retry_min = int(response.headers.get(
+                        'Retry-After', '100'
+                    ))
                 else:
                     error_message = f'Error: {response_error}'
                     retry_min = 100
@@ -403,15 +404,26 @@ class SentinelHub:
                 if self.enable_warnings:
                     retry_message = \
                         f'{error_message}. ' \
-                        f'Attempt {i + 1} of {num_retries} to retry after ' \
+                        f'Attempt {retry + 1} of {num_retries} to retry after ' \
                         f'{"%.2f" % retry_min} + {"%.2f" % retry_backoff}' \
                         f' = {"%.2f" % retry_total} ms...'
                     warnings.warn(retry_message)
                 time.sleep(retry_total / 1000.0)
                 retry_backoff_max *= retry_backoff_base
 
+        end_time = time.time()
+
+        # Here: response.ok == False
+
         if self.error_handler:
             self.error_handler(response)
+
+        LOG.error(f'Failed to fetch data from Sentinel Hub'
+                  f' after {end_time - start_time} seconds'
+                  f' and {num_retries} retries',
+                  exc_info=response_error)
+        if response is not None:
+            LOG.error(f'HTTP status code was {response.status_code}')
 
         if self.error_policy == 'fail':
             if response_error:
@@ -597,9 +609,29 @@ class SentinelHub:
             "evalscript": "\n".join(evalscript)
         }))
 
+    def _fetch_token(self):
+        if not self.client_id or not self.client_secret:
+            raise ValueError(
+                'Both client_id and client_secret must be provided.\n'
+                'Consider setting environment variables '
+                'SH_CLIENT_ID and SH_CLIENT_SECRET.\n'
+                'For more information refer to '
+                'https://docs.sentinel-hub.com/'
+                'api/latest/#/API/authentication'
+            )
+
+        self.session.fetch_token(
+            token_url=self.oauth2_url + '/token',
+            client_id=self.client_id,
+            client_secret=self.client_secret
+        )
+
+        LOG.info('fetched Sentinel Hub access token successfully')
+
 
 class SentinelHubError(ValueError):
     def __init__(self, *args, response=None, **kwargs):
+        # noinspection PyArgumentList
         super().__init__(*args, **kwargs)
         self._response = response
 
