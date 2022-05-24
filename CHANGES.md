@@ -1,3 +1,7 @@
+## Changes in 0.9.6 (in development)
+
+* Fixed some import statements to be compatible with Python 3.10.
+
 ## Changes in 0.9.5
 
 * If requesting a non-geographic target projection, spatial reference
@@ -11,7 +15,6 @@
 * Avoiding `TokenExpiredError` that occurred after 
   requesting tiles from Sentinel Hub after more than 1h. (#49)
 
-* Fixed some import statements to be compatible with Python 3.10.
 
 ## Changes in 0.9.3
 
