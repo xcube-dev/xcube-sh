@@ -223,7 +223,8 @@ class SentinelHubDataOpener(DataOpener):
                 # Note, in xcube-sh < 0.9.2 formerly used an enum here.
                 # However, that doesn't work for BYOC, so we omit that
                 # limitation.
-                items=JsonStringSchema()
+                items=JsonStringSchema(),
+                nullable=True
             ),
             variable_fill_values=JsonArraySchema(
                 items=JsonNumberSchema(nullable=True)

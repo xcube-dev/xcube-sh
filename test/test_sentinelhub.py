@@ -88,9 +88,9 @@ class SentinelHubCatalogSearchTest(unittest.TestCase):
                   1705367, 5857046),
             crs='EPSG:3857'
         )
-        print(json.dumps(features, indent=2))
+        # print(json.dumps(features, indent=2))
         self.assertEqual(1, len(features))
-        self.assertEqual({}, features[0])
+        self.assertEqual({'properties': {}}, features[0])
 
         features = SentinelHub().get_features(
             collection_name=user_collection_id,
