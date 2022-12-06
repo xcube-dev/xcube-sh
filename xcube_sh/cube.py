@@ -66,4 +66,9 @@ def open_cube(cube_config: CubeConfig,
                                        trace_store_calls=trace_store_calls)
     if max_cache_size:
         cube_store = zarr.LRUStoreCache(cube_store, max_cache_size)
-    return xr.open_zarr(cube_store)
+
+    cube = xr.open_zarr(cube_store)
+    if hasattr(cube, 'zarr_store'):
+        cube.zarr_store.set(cube_store)
+
+    return cube

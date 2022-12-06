@@ -19,6 +19,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import collections.abc
 import unittest
 
 import numpy as np
@@ -106,17 +107,28 @@ class CubeTest(unittest.TestCase):
     def test_open_cube(self):
         cube = open_cube(cube_config=cube_config)
         self.assertIsInstance(cube, xr.Dataset)
+        self.assert_has_zarr_store(cube)
 
     def test_time_max_none(self):
         cube = open_cube(cube_config=cube_config_t1_none)
         self.assertIsInstance(cube, xr.Dataset)
-        self.assertEqual(np.datetime64('today', 'D'), np.datetime64(cube.time.values[-1], 'D'))  # self.assertEqual()
+        self.assertEqual(np.datetime64('today', 'D'),
+                         np.datetime64(cube.time.values[-1], 'D'))
+        self.assert_has_zarr_store(cube)
 
     def test_time_none(self):
         cube = open_cube(cube_config=cube_config_t_none)
         self.assertIsInstance(cube, xr.Dataset)
-        self.assertEqual(np.datetime64('2021-02-16'), np.datetime64(cube.time.values[-1], 'D'))  # self.assertEqual()
-        self.assertEqual(np.datetime64('2015-06-27'), np.datetime64(cube.time.values[0], 'D'))  # self.assertEqual()
+        self.assertEqual(np.datetime64('2021-02-16'),
+                         np.datetime64(cube.time.values[-1], 'D'))
+        self.assertEqual(np.datetime64('2015-06-27'),
+                         np.datetime64(cube.time.values[0], 'D'))
+        self.assert_has_zarr_store(cube)
+
+    def assert_has_zarr_store(self, cube):
+        if hasattr(cube, 'zarr_store'):
+            self.assertIsInstance(cube.zarr_store.get(),
+                                  collections.abc.Mapping)
 
 
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)

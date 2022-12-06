@@ -3,6 +3,8 @@
 * Fixed Landsat radiance/reflectance bands to have 
   sample type `FLOAT32` by default, was `UNIT16`. (#89) 
 * Avoid having `wavelength: NaN` values in band metadata attributes.
+* Implemented performance optimizations for use of datasets 
+  in xcube server. (#88)
 * The open parameter `variable_names` in the `sentinelhub` data store  
   is now optional. 
 * Fixed some import statements to be compatible with Python 3.10.
