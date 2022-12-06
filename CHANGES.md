@@ -1,4 +1,4 @@
-## Changes in 0.9.6 (in development)
+## Changes in 0.10.0
 
 * Fixed Landsat radiance/reflectance bands to have 
   sample type `FLOAT32` by default, was `UNIT16`. (#89) 
