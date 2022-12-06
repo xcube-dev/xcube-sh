@@ -207,7 +207,12 @@ class SentinelHubDataOpener(DataOpener):
         if max_cache_size:
             chunk_store = zarr.LRUStoreCache(chunk_store,
                                              max_size=max_cache_size)
-        return xr.open_zarr(chunk_store, **open_params)
+        cube = xr.open_zarr(chunk_store, **open_params)
+
+        if hasattr(cube, 'zarr_store'):
+            cube.zarr_store.set(chunk_store)
+
+        return cube
 
     ##########################################################################
     # Implementation helpers

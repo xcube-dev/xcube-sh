@@ -1,5 +1,7 @@
 ## Changes in 0.9.6 (in development)
 
+* Implemented performance optimizations for use of datasets 
+  in xcube server. (#88)
 * The open parameter `variable_names` in the `sentinelhub` data store  
   is now optional. 
 * Fixed some import statements to be compatible with Python 3.10.
