@@ -72,9 +72,9 @@ class SentinelHubMetadataTest(unittest.TestCase):
         self.assertEqual((21, 21), self._assert_all_wavelengths_numeric('S3OLCI'))
         self.assertEqual((11, 11), self._assert_all_wavelengths_numeric('S3SLSTR'))
         self.assertEqual((0, 0), self._assert_all_wavelengths_numeric('S5PL2'))
-        self.assertEqual((12, 0), self._assert_all_wavelengths_numeric('L8L1C'))
-        self.assertEqual((17, 0), self._assert_all_wavelengths_numeric('LOTL1'))
-        self.assertEqual((19, 0), self._assert_all_wavelengths_numeric('LOTL2'))
+        self.assertEqual((11, 0), self._assert_all_wavelengths_numeric('L8L1C'))
+        self.assertEqual((11, 0), self._assert_all_wavelengths_numeric('LOTL1'))
+        self.assertEqual((8, 0), self._assert_all_wavelengths_numeric('LOTL2'))
         self.assertEqual((7, 7), self._assert_all_wavelengths_numeric('MODIS'))
 
     def _assert_all_wavelengths_numeric(self, ds_name: str) -> Tuple[int, int]:

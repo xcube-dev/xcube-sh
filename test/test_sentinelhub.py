@@ -253,6 +253,11 @@ class SentinelHubGetDataTest(unittest.TestCase):
                                                 dtype=np.float32),
                                        np_array[0, 511, -10:, 0])
 
+    # As of 2022-12-06 this tests produces HTTP code 500 (server error)
+
+    @unittest.skip(
+        'As of 2022-12-06 this tests produces HTTP code 500 (server error)'
+    )
     def test_get_data_single_binary_byod(self):
         with open(REQUEST_SINGLE_BYOD_JSON, 'r') as fp:
             request = json.load(fp)

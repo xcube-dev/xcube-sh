@@ -328,10 +328,29 @@ S5PL2_BAND_METADATA = {
     for i in range(len(S5PL2_BAND_NAMES))
 }
 
-L8L1C_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07',
-                    'B08', 'B09', 'B10', 'B11', 'BQA']
-L8L1C_WAVELENGTHS = [443, 482, 561.5, 654.5, 865, 1608.5, 2200.5, 589.5,
-                     1373.5, 10895, 12005, float('nan')]
+
+def _get_band_attrs(units: str, wavelength: float, resolution: int):
+    return dict(
+        sample_type='FLOAT32',
+        units=units,
+        wavelength=wavelength,
+        resolution=resolution,
+        fill_value=0.0
+    ) if wavelength > 0 else dict(
+        sample_type='UINT16',
+        units=units,
+        resolution=resolution,
+    )
+
+
+L8L1C_BAND_NAMES = ['B01', 'B02', 'B03', 'B04',
+                    'B05', 'B06', 'B07', 'B08',
+                    'B09', 'B10', 'B11',
+                    'BQA']
+L8L1C_WAVELENGTHS = [443., 482., 561.5, 654.5, 865.,
+                     1608.5, 2200.5, 589.5,
+                     1373.5, 10895., 12005.,
+                     0]
 L8L1C_RESOLUTIONS = [30, 30, 30, 30, 30, 30, 30, 15, 30, 100, 100, 30]
 L8L1C_UNITS = [
     'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance',
@@ -340,22 +359,24 @@ L8L1C_UNITS = [
 ]
 
 L8L1C_BAND_METADATA = {
-    L8L1C_BAND_NAMES[i]: dict(sample_type='UINT16',
-                              units=L8L1C_UNITS[i],
-                              wavelength=L8L1C_WAVELENGTHS[i],
-                              resolution=L8L1C_RESOLUTIONS[i],
-                              # fill_value=0.0
-                              )
+    L8L1C_BAND_NAMES[i]: _get_band_attrs(
+        units=L8L1C_UNITS[i],
+        wavelength=L8L1C_WAVELENGTHS[i],
+        resolution=L8L1C_RESOLUTIONS[i]
+    )
     for i in range(len(L8L1C_BAND_NAMES))
 }
 
-LOTL1_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08',
-                    'B09', 'B10', 'B11', 'BQA', 'QA_RADSAT',
+LOTL1_BAND_NAMES = ['B01', 'B02', 'B03', 'B04',
+                    'B05', 'B06', 'B07', 'B08',
+                    'B09', 'B10', 'B11',
+                    'BQA', 'QA_RADSAT',
                     'VAA', 'VZA', 'SAA', 'SZA']
-LOTL1_WAVELENGTHS = [443, 482, 561.5, 654.5, 865, 1608.5, 2200.5, 589.5,
-                     1373.5, 10895, 12005, float('nan'),
-                     float('nan'), float('nan'), float('nan'), float('nan'),
-                     float('nan')]
+LOTL1_WAVELENGTHS = [443., 482., 561.5, 654.5,
+                     865., 1608.5, 2200.5, 589.5,
+                     1373.5, 10895., 12005.,
+                     0, 0,
+                     0, 0, 0, 0]
 LOTL1_RESOLUTIONS = [30, 30, 30, 30, 30, 30, 30, 15, 30, 100, 100, 30, 30,
                      30, 30, 30, 30]
 LOTL1_UNITS = [
@@ -367,24 +388,24 @@ LOTL1_UNITS = [
 ]
 
 LOTL1_BAND_METADATA = {
-    LOTL1_BAND_NAMES[i]: dict(sample_type='UINT16',
-                              units=LOTL1_UNITS[i],
-                              wavelength=LOTL1_WAVELENGTHS[i],
-                              resolution=LOTL1_RESOLUTIONS[i],
-                              # fill_value=0.0
-                              )
+    LOTL1_BAND_NAMES[i]: _get_band_attrs(
+        units=LOTL1_UNITS[i],
+        wavelength=LOTL1_WAVELENGTHS[i],
+        resolution=LOTL1_RESOLUTIONS[i],
+    )
     for i in range(len(LOTL1_BAND_NAMES))
 }
 
-LOTL2_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07',
-                    'B10', 'BQA', 'QA_RADSAT', 'SR_QA_AEROSOL',
-                    'ST_QA', 'ST_TRAD', 'ST_URAD', 'ST_DRAD', 'ST_ATRAN',
+LOTL2_BAND_NAMES = ['B01', 'B02', 'B03', 'B04',
+                    'B05', 'B06', 'B07', 'B10',
+                    'BQA', 'QA_RADSAT', 'SR_QA_AEROSOL', 'ST_QA',
+                    'ST_TRAD', 'ST_URAD', 'ST_DRAD', 'ST_ATRAN',
                     'ST_EMIS', 'ST_EMSD', 'ST_CDIST']
-LOTL2_WAVELENGTHS = [443, 482, 561.5, 654.5, 865, 1608.5, 2200.5, 10895,
-                     float('nan'), float('nan'), float('nan'),
-                     float('nan'), float('nan'), float('nan'), float('nan'),
-                     float('nan'), float('nan'), float('nan'),
-                     float('nan')]
+LOTL2_WAVELENGTHS = [443, 482, 561.5, 654.5,
+                     865., 1608.5, 2200.5, 10895.,
+                     0, 0, 0, 0,
+                     0, 0, 0, 0,
+                     0, 0, 0]
 LOTL2_RESOLUTIONS = [30, 30, 30, 30, 30, 30, 30, 100, 30, 30, 30, 30, 30,
                      30, 30, 30, 30, 30, 30]
 LOTL2_UNITS = [
@@ -396,12 +417,10 @@ LOTL2_UNITS = [
 ]
 
 LOTL2_BAND_METADATA = {
-    LOTL2_BAND_NAMES[i]: dict(
-        sample_type='UINT16',
+    LOTL2_BAND_NAMES[i]: _get_band_attrs(
         units=LOTL2_UNITS[i],
         wavelength=LOTL2_WAVELENGTHS[i],
         resolution=LOTL2_RESOLUTIONS[i],
-        # fill_value=0.0
     )
     for i in range(len(LOTL2_BAND_NAMES))
 }
@@ -419,7 +438,7 @@ MODIS_BANDWIDTHS = [50, 35, 20, 20, 20, 24, 50]
 MODIS_RESOLUTIONS = [500, 500, 500, 500, 500, 500, 500]
 MODIS_BAND_METADATA = {
     MODIS_BAND_NAMES[i]: dict(
-        sample_type='UINT16',
+        sample_type='FLOAT32',
         units='reflectance',
         wavelength=MODIS_WAVELENGTHS[i],
         bandwidth=MODIS_BANDWIDTHS[i],
