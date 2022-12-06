@@ -24,6 +24,7 @@ import zlib
 from abc import ABCMeta
 from abc import abstractmethod
 from collections import namedtuple
+from typing import Tuple, List, Dict, Any
 
 import numpy as np
 import pandas as pd
@@ -463,7 +464,13 @@ class SentinelHubMock:
         return [dict(name=b) for b in S2_BAND_NAMES]
 
     # noinspection PyUnusedLocal
-    def get_features(self, collection_name, bbox, crs, time_range):
+    def get_features(self,
+                     collection_name: str,
+                     bbox: Tuple[float, float, float, float] = None,
+                     crs: str = None,
+                     time_range: Tuple[str, str] = None,
+                     bad_request_ok: bool = False) \
+            -> List[Dict[str, Any]]:
         """Return dummy catalog features"""
         start_time, end_time = map(pd.to_datetime, time_range)
         datetime = start_time + pd.to_timedelta('8H')

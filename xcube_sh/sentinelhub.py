@@ -98,7 +98,8 @@ class SentinelHub:
                  session: Union["SerializableOAuth2Session", Any] = None):
         if instance_id:
             warnings.warn('instance_id has been deprecated,'
-                          ' it is no longer used')
+                          ' it is no longer used',
+                          DeprecationWarning)
         self.api_url = api_url or os.environ.get('SH_API_URL',
                                                  DEFAULT_SH_API_URL)
         self.oauth2_url = oauth2_url or os.environ.get('SH_OAUTH2_URL',
@@ -195,7 +196,8 @@ class SentinelHub:
                      collection_name: str,
                      bbox: Tuple[float, float, float, float] = None,
                      crs: str = None,
-                     time_range: Tuple[str, str] = None) \
+                     time_range: Tuple[str, str] = None,
+                     bad_request_ok: bool = False) \
             -> List[Dict[str, Any]]:
         """
         Get geometric intersections of dataset given by *collection_name*
@@ -207,6 +209,8 @@ class SentinelHub:
         :param crs: Name of a coordinate reference system of the coordinates
             given by *bbox*. Ignored if *bbox* is not given.
         :param time_range: time range
+        :param bad_request_ok: return empty list rather than raise error
+            on bad request
         :return: list of features that include a "datetime" field for
             all intersections.
         """
@@ -262,6 +266,9 @@ class SentinelHub:
                                          json=request,
                                          headers=headers)
 
+            if bad_request_ok and response.status_code == 400:
+                break
+
             SentinelHubError.maybe_raise_for_response(response)
 
             feature_collection = json.loads(response.content)
@@ -273,6 +280,8 @@ class SentinelHub:
                                        response=response)
 
             features = feature_collection['features']
+            if not features:
+                break
             all_features.extend(features)
             features_count = len(features)
             feature_offset += features_count
