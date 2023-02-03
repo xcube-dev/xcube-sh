@@ -62,7 +62,8 @@ class SentinelHubDataOpenerTest(unittest.TestCase):
         schema = opener.get_open_data_params_schema('S2L2A')
         self.assertIsInstance(schema, JsonObjectSchema)
         self.assertEqual('object', schema.type)
-        self.assertEqual({'time_range', 'spatial_res', 'bbox'}, schema.required)
+        self.assertEqual({'time_range', 'spatial_res', 'bbox'},
+                         set(schema.required))
         self.assertIn('time_range', schema.properties)
         self.assertIn('time_period', schema.properties)
         self.assertIn('spatial_res', schema.properties)
@@ -124,7 +125,8 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         schema = store.get_open_data_params_schema('S2L2A')
         self.assertIsInstance(schema, JsonObjectSchema)
         self.assertEqual('object', schema.type)
-        self.assertEqual({'time_range', 'spatial_res', 'bbox'}, schema.required)
+        self.assertEqual({'time_range', 'spatial_res', 'bbox'},
+                         set(schema.required))
 
         self.assertIn('bbox', schema.properties)
         self.assertIn('spatial_res', schema.properties)
