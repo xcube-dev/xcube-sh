@@ -1,3 +1,11 @@
+## Changes in 0.10.1
+
+* Fixed problem with that some parameters that were listed as result from 
+  `get_open_data_params_schema` caused a TypeError.
+  Removed `dataset_name` from `open_params_schema` (was redundant due to 
+  `data_id`) and added support for parameters `mosaicking_period`, 
+  `upsampling`, `downsampling`, and `variable_fill_values`. (#94)
+
 ## Changes in 0.10.0
 
 * Fixed Landsat radiance/reflectance bands to have 
