@@ -164,12 +164,16 @@ class SentinelHubDataOpener(DataOpener):
             open_params,
             (
                 'variable_names',
+                'variable_fill_values',
                 'variable_units',
                 'variable_sample_types',
                 'crs',
                 'tile_size',
                 'bbox',
                 'spatial_res',
+                'upsampling',
+                'downsampling',
+                'mosaicking_order',
                 'time_range',
                 'time_period',
                 'time_tolerance',
@@ -223,7 +227,6 @@ class SentinelHubDataOpener(DataOpener):
             if dsd.time_range is not None else (None, None)
 
         cube_params = dict(
-            dataset_name=JsonStringSchema(min_length=1),
             variable_names=JsonArraySchema(
                 # Note, in xcube-sh < 0.9.2 formerly used an enum here.
                 # However, that doesn't work for BYOC, so we omit that
