@@ -1,3 +1,5 @@
+## Changes in 0.10.2 (in development)
+
 ## Changes in 0.10.1
 
 * Fixed problem with that some parameters that were listed as result from 
