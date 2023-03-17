@@ -197,18 +197,26 @@ class SentinelHub:
                      bbox: Tuple[float, float, float, float] = None,
                      crs: str = None,
                      time_range: Tuple[str, str] = None,
-                     bad_request_ok: bool = False) \
+                     bad_request_ok: bool = False,
+                     **extra_search_params) \
             -> List[Dict[str, Any]]:
         """
         Get geometric intersections of dataset given by *collection_name*
         with optional *bbox* and *time_range*. The result is returned
         as a list of features, whose properties include a "datetime" field.
 
+        Extra keyword arguments can be used to add
+        additional search parameters to the query such as ``filter``
+        and ``fields``. See Sentinel Hub Catalog API documentation at
+        https://docs.sentinel-hub.com/api/latest/api/catalog/.
+
         :param collection_name: dataset collection name
         :param bbox: bounding box
         :param crs: Name of a coordinate reference system of the coordinates
             given by *bbox*. Ignored if *bbox* is not given.
         :param time_range: time range
+        :param extra_search_params: additional search parameters merged into the
+            request.
         :param bad_request_ok: return empty list rather than raise error
             on bad request
         :return: list of features that include a "datetime" field for
@@ -216,15 +224,34 @@ class SentinelHub:
         """
         max_feature_count = SH_CATALOG_FEATURE_LIMIT
 
-        request = dict(
+        # 'properties.datetime' is always required
+        required_fields = ['properties.datetime']
+        # Exclude most of the response data, as this is not required (yet)
+        skipped_fields = ['geometry', 'bbox', 'assets', 'links']
+
+        fields = extra_search_params.pop("fields", {})
+        included_fields = list(fields.get("include", []))
+        excluded_fields = list(fields.get("exclude", []))
+
+        for field in required_fields:
+            if field not in included_fields:
+                included_fields.append(field)
+            if field in excluded_fields:
+                excluded_fields.remove(field)
+
+        for field in skipped_fields:
+            if field not in excluded_fields \
+                    and field not in included_fields:
+                excluded_fields.append(field)
+
+        fields = dict(include=included_fields,
+                      exclude=excluded_fields)
+
+        request = dict(extra_search_params)
+        request.update(
             collections=[collection_name],
             limit=max_feature_count,
-            # Exclude most of the response data,
-            # as this is not required (yet)
-            fields=dict(
-                exclude=['geometry', 'bbox', 'assets', 'links'],
-                include=['properties.datetime']
-            )
+            fields=fields
         )
         if bbox:
             source_crs = pyproj.crs.CRS.from_string(crs or DEFAULT_CRS)

@@ -1,5 +1,18 @@
 ## Changes in 0.10.2 (in development)
 
+* A new parameter `extra_search_params` has been added the `CubeConfig` as 
+  well as to the data store's `open_data()` method. (#93)
+
+  The value of `extra_search_params` is a dictionary that defines 
+  additional search parameters when querying the individual observations 
+  (time slices) that will form the data cube.  
+  Examples for such parameters are the keys `"filter"`, `"filter-lang"`,
+  or ``"fields"``. More on this can be found in the 
+  [Sentinel Hub Catalog API documentation](https://docs.sentinel-hub.com/api/latest/api/catalog/).
+
+  Note that `extra_search_params` will be ignored if `time_period` is used
+  (i.e., given and not `None`).
+
 ## Changes in 0.10.1
 
 * Fixed problem with that some parameters that were listed as result from 

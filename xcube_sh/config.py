@@ -27,7 +27,9 @@ from numbers import Number
 
 import pandas as pd
 
-from xcube.util.assertions import assert_given, assert_true, assert_in
+from xcube.util.assertions import assert_given
+from xcube.util.assertions import assert_true
+from xcube.util.assertions import assert_in
 from .constants import CRS_ID_TO_URI
 from .constants import CRS_URI_TO_ID
 from .constants import DEFAULT_CRS
@@ -80,15 +82,20 @@ class CubeConfig:
         Must be one of 'mostRecent', 'leastRecent', 'leastCC'.
         Defaults to 'mostRecent'.
     :param time_range: Time range tuple; (start time, end time).
-    :param time_period: A string denoting the temporal aggregation perriod,
+    :param time_period: A string denoting the temporal aggregation period,
         such as "8D", "1W", "2W".
-        If None, all observations are included.
+        If None, no temporal aggregations will be applied and all
+        observations matching the query will be included.
     :param time_tolerance: The tolerance used to identify whether a dataset
         should still be included within a time period.
     :param collection_id: Extra identifier used to identity a BYOC dataset.
         If given, *dataset_name* must be omitted or set to "CUSTOM".
     :param four_d: If variables should appear as forth dimension rather
         than separate arrays.
+    :param extra_search_params: Additional search parameters added to
+        the query if ** is ``None``. Examples are ``"filter"``
+        and ``"fields"``. See Sentinel Hub Catalog API documentation at
+        https://docs.sentinel-hub.com/api/latest/api/catalog/.
     :param exception_type: The type of exception to be raised on error
     """
 
@@ -112,6 +119,7 @@ class CubeConfig:
                  time_tolerance: Union[str, pd.Timedelta] = None,
                  collection_id: str = None,
                  four_d: bool = False,
+                 extra_search_params: Dict[str, Any] = None,
                  exception_type=ValueError):
 
         crs = crs or DEFAULT_CRS
@@ -247,6 +255,11 @@ class CubeConfig:
         if isinstance(time_tolerance, str):
             time_tolerance = pd.to_timedelta(time_tolerance)
 
+        if extra_search_params is not None:
+            assert_true(isinstance(extra_search_params, dict),
+                        message="extra_search_params must be a"
+                                " JSON-serializable dictionary")
+
         self._dataset_name = dataset_name
         self._band_names = tuple(band_names) \
             if band_names is not None else None
@@ -264,6 +277,7 @@ class CubeConfig:
         self._time_tolerance = time_tolerance
         self._collection_id = collection_id
         self._four_d = four_d
+        self._extra_search_params = extra_search_params
         self._size = width, height
         self._tile_size = tile_width, tile_height
         self._num_tiles = width // tile_width, height // tile_height
@@ -399,6 +413,10 @@ class CubeConfig:
     @property
     def four_d(self) -> bool:
         return self._four_d
+
+    @property
+    def extra_search_params(self) -> Dict[str, Any]:
+        return self._extra_search_params or {}
 
     @property
     def size(self) -> Tuple[int, int]:

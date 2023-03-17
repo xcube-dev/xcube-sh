@@ -126,7 +126,9 @@ class SentinelHubDataOpener(DataOpener):
         * ``collection_id: str``
             - An identifier used by Sentinel HUB to identify BYOC datasets.
         * ``four_d: bool``
-            - If True, variables will represented as fourth dimension.
+            - If True, variables will be represented as fourth dimension.
+        * ``extra_search_params: Dict[str, Any]``
+            - If True, variables will be represented as fourth dimension.
 
         In addition, all store parameters can be used, if the data
         opener is used on its own. See
@@ -179,6 +181,7 @@ class SentinelHubDataOpener(DataOpener):
                 'time_tolerance',
                 'collection_id',
                 'four_d',
+                'extra_search_params'
             )
         )
 
@@ -295,6 +298,7 @@ class SentinelHubDataOpener(DataOpener):
             ),
             collection_id=JsonStringSchema(),
             four_d=JsonBooleanSchema(default=False),
+            extra_search_params=JsonObjectSchema(additional_properties=True),
         )
         cache_params = dict(
             max_cache_size=JsonIntegerSchema(minimum=0),
