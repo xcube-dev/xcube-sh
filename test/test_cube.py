@@ -68,6 +68,20 @@ cube_config_LOTL2 = CubeConfig(dataset_name='LOTL2',
                                time_range=('2018-05-14', '2020-07-31'),
                                time_tolerance='30M')
 
+cube_config_LTML2 = CubeConfig(dataset_name='LTML2',
+                               band_names=['B02', 'B03'],
+                               bbox=(-17.554176, 14.640112, -17.387367, 14.792487),
+                               spatial_res=0.000089,
+                               time_range=('2018-05-14', '2020-07-31'),
+                               time_tolerance='30M')
+
+cube_config_LETML2 = CubeConfig(dataset_name='LETML2',
+                               band_names=['B02', 'B03'],
+                               bbox=(-17.554176, 14.640112, -17.387367, 14.792487),
+                               spatial_res=0.000089,
+                               time_range=('2018-05-14', '2020-07-31'),
+                               time_tolerance='30M')
+
 cube_config_S2L2A = CubeConfig(dataset_name='S2L2A',
                                band_names=['B03', 'B08', 'CLM'],
                                bbox=(2894267.8988124575, 9262943.968658403, 2899443.8488556934, 9268505.554239485),
@@ -151,6 +165,22 @@ class CubeWithCredentialsTest(unittest.TestCase):
 
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_open_cube_LOTL2(self):
+        cube = open_cube(cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com")
+        self.assertIsInstance(cube, xr.Dataset)
+        self.assertEqual({'time': 100, 'lat': 1912, 'lon': 2094, 'bnds': 2}, cube.dims)
+        self.assertEqual({'lat', 'lon', 'time', 'time_bnds'}, set(cube.coords))
+        self.assertEqual({'B02', 'B03'}, set(cube.data_vars))
+
+    @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+    def test_open_cube_LTML2(self):
+        cube = open_cube(cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com")
+        self.assertIsInstance(cube, xr.Dataset)
+        self.assertEqual({'time': 100, 'lat': 1912, 'lon': 2094, 'bnds': 2}, cube.dims)
+        self.assertEqual({'lat', 'lon', 'time', 'time_bnds'}, set(cube.coords))
+        self.assertEqual({'B02', 'B03'}, set(cube.data_vars))
+
+    @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
+    def test_open_cube_LETML2(self):
         cube = open_cube(cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com")
         self.assertIsInstance(cube, xr.Dataset)
         self.assertEqual({'time': 100, 'lat': 1912, 'lon': 2094, 'bnds': 2}, cube.dims)
