@@ -30,7 +30,7 @@ class SentinelHubMetadataTest(unittest.TestCase):
         md = SentinelHubMetadata()
 
         self.assertEqual({'S1GRD', 'S2L1C', 'S2L2A', 'S3OLCI', 'S3SLSTR', 'S5PL2',
-                          'LOTL1', 'LOTL2', 'L8L1C',
+                          'LOTL1', 'LOTL2', 'L8L1C', 'LTML2', 'LETML2',
                           'DEM', 'MODIS', 'CUSTOM'},
                          set(md.dataset_names))
 
