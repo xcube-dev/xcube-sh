@@ -367,6 +367,30 @@ L8L1C_BAND_METADATA = {
     for i in range(len(L8L1C_BAND_NAMES))
 }
 
+LETML2_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07',
+                    'BQA', 'QA_RADSAT', 'ST_QA', 'ST_TRAD', 'ST_URAD',
+                    'ST_DRAD', 'ST_ATRAN', 'ST_EMIS', 'ST_EMSD', 'ST_CDIST',
+                    'SR_ATMOS_OPACITY', 'SR_CLOUD_QA']
+LETML2_WAVELENGTHS = [485., 560., 660, 835, 1650, 11450, 2250,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+LETML2_RESOLUTIONS = [30, 30, 30, 30, 30, 120, 30,
+                     30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+LETML2_UNITS = [
+    'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance',
+    'kelvin', 'reflectance',
+    'Unitless', 'Unitless', 'kelvin', 'W/m²/sr/μm', 'W/m²/sr/μm',
+    'W/m²/sr/μm', 'Unitless', 'Unitless', 'Unitless', 'kilometers',
+    'Unitless', 'Unitless']
+
+LETML2_BAND_METADATA = {
+    LETML2_BAND_NAMES[i]: _get_band_attrs(
+        units=LETML2_UNITS[i],
+        wavelength=LETML2_WAVELENGTHS[i],
+        resolution=LETML2_RESOLUTIONS[i],
+    )
+    for i in range(len(LETML2_BAND_NAMES))
+}
+
 LOTL1_BAND_NAMES = ['B01', 'B02', 'B03', 'B04',
                     'B05', 'B06', 'B07', 'B08',
                     'B09', 'B10', 'B11',
@@ -423,6 +447,30 @@ LOTL2_BAND_METADATA = {
         resolution=LOTL2_RESOLUTIONS[i],
     )
     for i in range(len(LOTL2_BAND_NAMES))
+}
+
+LTML2_BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07',
+                    'BQA', 'QA_RADSAT', 'ST_QA', 'ST_TRAD', 'ST_URAD',
+                    'ST_DRAD', 'ST_ATRAN', 'ST_EMIS', 'ST_EMSD', 'ST_CDIST',
+                    'SR_ATMOS_OPACITY', 'SR_CLOUD_QA',]
+LTML2_WAVELENGTHS = [485., 560., 660, 835, 1650, 11450, 2250,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+LTML2_RESOLUTIONS = [30, 30, 30, 30, 30, 120, 30,
+                     30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+LTML2_UNITS = [
+    'reflectance', 'reflectance', 'reflectance', 'reflectance', 'reflectance',
+    'kelvin', 'reflectance',
+    'Unitless', 'Unitless', 'kelvin', 'W/m²/sr/μm', 'W/m²/sr/μm',
+    'W/m²/sr/μm', 'Unitless', 'Unitless', 'Unitless', 'kilometers',
+    'Unitless', 'Unitless']
+
+LTML2_BAND_METADATA = {
+    LTML2_BAND_NAMES[i]: _get_band_attrs(
+        units=LTML2_UNITS[i],
+        wavelength=LTML2_WAVELENGTHS[i],
+        resolution=LTML2_RESOLUTIONS[i],
+    )
+    for i in range(len(LTML2_BAND_NAMES))
 }
 
 DEM_BAND_METADATA = {
@@ -497,6 +545,13 @@ _SH_METADATA = dict(
             request_period='1D',
             collection_name='landsat-8-l1c',
         ),
+        'LETML2': dict(
+            title='Landsat 7 ETM+ L2',
+            bands=LETML2_BAND_METADATA,
+            processing_level='L2',
+            request_period='1D',
+            collection_name='landsat-etm-l2',
+        ),
         'LOTL1': dict(
             title='Landsat 8 - L1C',
             bands=LOTL1_BAND_METADATA,
@@ -510,6 +565,13 @@ _SH_METADATA = dict(
             processing_level='L2A',
             request_period='1D',
             collection_name='landsat-ot-l2',
+        ),
+        'LTML2': dict(
+            title='Landsat 4-5 TM L2',
+            bands=LTML2_BAND_METADATA,
+            processing_level='L2',
+            request_period='1D',
+            collection_name='landsat-tm-l2',
         ),
         'DEM': dict(
             title='Mapzen DEM',
