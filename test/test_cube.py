@@ -36,7 +36,7 @@ cube_config = CubeConfig(dataset_name='S2L1C',
                          bbox=(10.00, 54.27, 11.00, 54.60),
                          spatial_res=0.00018,
                          time_range=('2018-05-14', '2018-07-31'),
-                         time_tolerance='30M')
+                         time_tolerance='30m')
 
 cube_config_t1_none = CubeConfig(dataset_name='S2L1C',
                                  band_names=['B04'],
@@ -50,7 +50,7 @@ cube_config_t_none = CubeConfig(dataset_name='S2L1C',
                                 bbox=(10.00, 54.27, 11.00, 54.60),
                                 spatial_res=0.00018,
                                 time_range=(None, '2021-02-18'),
-                                time_tolerance='30M')
+                                time_tolerance='30m')
 
 cube_config_with_crs = CubeConfig(dataset_name='S2L1C',
                                   band_names=['B01'],
@@ -59,28 +59,28 @@ cube_config_with_crs = CubeConfig(dataset_name='S2L1C',
                                   crs="http://www.opengis.net/def/crs/EPSG/0/3857",
                                   spatial_res=10,  # in meters
                                   time_range=('2018-05-14', '2020-07-31'),
-                                  time_tolerance='30M')
+                                  time_tolerance='30m')
 
 cube_config_LOTL2 = CubeConfig(dataset_name='LOTL2',
                                band_names=['B02', 'B03'],
                                bbox=(-17.554176, 14.640112, -17.387367, 14.792487),
                                spatial_res=0.000089,
                                time_range=('2018-05-14', '2020-07-31'),
-                               time_tolerance='30M')
+                               time_tolerance='30m')
 
 cube_config_LTML2 = CubeConfig(dataset_name='LTML2',
                                band_names=['B02', 'B03'],
                                bbox=(-17.554176, 14.640112, -17.387367, 14.792487),
                                spatial_res=0.000089,
                                time_range=('2018-05-14', '2020-07-31'),
-                               time_tolerance='30M')
+                               time_tolerance='30m')
 
 cube_config_LETML2 = CubeConfig(dataset_name='LETML2',
                                band_names=['B02', 'B03'],
                                bbox=(-17.554176, 14.640112, -17.387367, 14.792487),
                                spatial_res=0.000089,
                                time_range=('2018-05-14', '2020-07-31'),
-                               time_tolerance='30M')
+                               time_tolerance='30m')
 
 cube_config_S2L2A = CubeConfig(dataset_name='S2L2A',
                                band_names=['B03', 'B08', 'CLM'],
