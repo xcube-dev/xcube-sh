@@ -128,7 +128,11 @@ class SentinelHubDataOpener(DataOpener):
         * ``four_d: bool``
             - If True, variables will be represented as fourth dimension.
         * ``extra_search_params: Dict[str, Any]``
-            - If True, variables will be represented as fourth dimension.
+            - Additional search parameters added to the query if 
+              *time_period* is ``None``. Examples are ``"filter"``
+              and ``"fields"``. See Sentinel Hub Catalog API 
+              documentation at 
+              https://docs.sentinel-hub.com/api/latest/api/catalog/.
 
         In addition, all store parameters can be used, if the data
         opener is used on its own. See

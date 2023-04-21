@@ -93,7 +93,7 @@ class CubeConfig:
     :param four_d: If variables should appear as forth dimension rather
         than separate arrays.
     :param extra_search_params: Additional search parameters added to
-        the query if ** is ``None``. Examples are ``"filter"``
+        the query if *time_period* is ``None``. Examples are ``"filter"``
         and ``"fields"``. See Sentinel Hub Catalog API documentation at
         https://docs.sentinel-hub.com/api/latest/api/catalog/.
     :param exception_type: The type of exception to be raised on error
