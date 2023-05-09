@@ -1,10 +1,11 @@
-## Changes in 0.10.2 (in development)
+## Changes in 0.10.2
 
 * Added support for Landsat-4,5 Level-2 (`"LTML2"`) 
   and Landsat 7 Level-2 (`"LETML2"`) collections available through the endpoint
   `api_url="https://services-uswest2.sentinel-hub.com"`.
 * Adapted to work with Python 3.10
-* Fixed default `time_tolerance` used when `time_period` is None. It is now correctly set to ten minutes.
+* Fixed default `time_tolerance` used when `time_period` is None. 
+  It is now correctly set to ten minutes.
 
 ## Changes in 0.10.1
 
