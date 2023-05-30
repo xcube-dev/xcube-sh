@@ -1,4 +1,4 @@
-## Changes in 0.10.3 (in development)
+## Changes in 0.10.3
 
 * Fixed a bug which caused that, when the `four_d` parameter was set to true
   when opening a dataset, the data of the bands of the resulting cubes could 
