@@ -537,13 +537,12 @@ class SentinelHub:
         width, height = size
         responses_element = []
 
-        for band_name in band_names:
-            responses_element.append({
-                "identifier": band_name if len(band_names) > 1 else "default",
-                "format": {
-                    "type": "image/tiff"
-                }
-            })
+        responses_element.append({
+            "identifier": "default",
+            "format": {
+                "type": "image/tiff"
+            }
+        })
 
         output_element = {
             "width": width,
@@ -557,59 +556,35 @@ class SentinelHub:
             "function setup() {",
             "    return {",
         ])
+        band_names_str = ", ".join(map(repr, band_names))
         if band_units:
-            band_names_str = ", ".join(map(repr, band_names))
             band_units_str = ", ".join(map(repr, band_units))
             evalscript.extend([
                 "        input: [{",
                 "            bands: [" + band_names_str + "],",
-                "            units: [" + band_units_str + "],",
+                "            units: [" + band_units_str + "]",
                 "        }],",
             ])
         else:
             evalscript.extend([
-                "        input: [" + ", ".join(map(repr, band_names)) + "],",
+                "        input: [{",
+                "            bands: [" + band_names_str + "]",
+                "        }],",
             ])
         evalscript.extend([
             "        output: [",
-        ])
-        if len(band_names) > 1:
-            evalscript.extend(
-                ["            {id: "
-                 + repr(band_name)
-                 + ", bands: 1, sampleType: "
-                 + repr(sample_type) + "},"
-                 for band_name, sample_type in zip(band_names,
-                                                   band_sample_types)])
-        else:
-            evalscript.extend(["            {bands: 1, sampleType: "
-                               + repr(band_sample_types[0]) + "}"])
-
-        evalscript.extend([
+            "            {bands: " + str(len(band_names))
+            + ", sampleType: " + repr(band_sample_types[0]) + "}",
             "        ]",
             "    };",
             "}"
         ])
-        if len(band_names) > 1:
-            evalscript.extend([
-                "function evaluatePixel(sample) {",
-                "    return {",
-            ])
-            evalscript.extend(["        "
-                               + band_name
-                               + ": [sample."
-                               + band_name + "],"
-                               for band_name in band_names])
-            evalscript.extend([
-                "    };",
-                "}",
-            ])
-        else:
-            evalscript.extend([
-                "function evaluatePixel(sample) {",
-                "    return [sample." + band_names[0] + "];",
-                "}",
-            ])
+        sample_strings = [f'sample.{band_name}' for band_name in band_names]
+        evalscript.extend([
+            "function evaluatePixel(sample) {",
+            "    return [" + ", ".join(sample_strings) + "];",
+            "}",
+        ])
 
         # Convert into valid JSON
         return json.loads(json.dumps({

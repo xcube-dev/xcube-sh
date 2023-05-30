@@ -40,5 +40,5 @@
       }
     ]
   },
-  "evalscript": "//VERSION=3\nfunction setup() {\n    return {\n        input: [{\n            bands: ['B02'],\n            units: ['reflectance'],\n        }],\n        output: [\n            {bands: 1, sampleType: 'FLOAT32'}\n        ]\n    };\n}\nfunction evaluatePixel(sample) {\n    return [sample.B02];\n}"
+  "evalscript": "//VERSION=3\nfunction setup() {\n    return {\n        input: [{\n            bands: ['B02'],\n            units: ['reflectance']\n        }],\n        output: [\n            {bands: 1, sampleType: 'FLOAT32'}\n        ]\n    };\n}\nfunction evaluatePixel(sample) {\n    return [sample.B02];\n}"
 }

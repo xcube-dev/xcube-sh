@@ -1,5 +1,9 @@
 ## Changes in 0.10.3 (in development)
 
+* Fixed a bug which caused that, when the `four_d` parameter was set to true
+  when opening a dataset, the data of the bands of the resulting cubes could 
+  not be accessed. (#101)
+
 ## Changes in 0.10.2
 
 * Added support for Landsat-4,5 Level-2 (`"LTML2"`) 
