@@ -36,5 +36,5 @@
       }
     ]
   },
-  "evalscript": "//VERSION=3\nfunction setup() {\n    return {\n        input: ['RED'],\n        output: [\n            {bands: 1, sampleType: 'UINT8'}\n        ]\n    };\n}\nfunction evaluatePixel(sample) {\n    return [sample.RED];\n}"
+  "evalscript": "//VERSION=3\nfunction setup() {\n    return {\n        input: [{\n            bands: ['RED']\n        }],\n        output: [\n            {bands: 1, sampleType: 'UINT8'}\n        ]\n    };\n}\nfunction evaluatePixel(sample) {\n    return [sample.RED];\n}"
 }

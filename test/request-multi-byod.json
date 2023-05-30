@@ -29,24 +29,12 @@
     "height": 305,
     "responses": [
       {
-        "identifier": "RED",
-        "format": {
-          "type": "image/tiff"
-        }
-      },
-      {
-        "identifier": "GREEN",
-        "format": {
-          "type": "image/tiff"
-        }
-      },
-      {
-        "identifier": "BLUE",
+        "identifier": "default",
         "format": {
           "type": "image/tiff"
         }
       }
     ]
   },
-  "evalscript": "//VERSION=3\nfunction setup() {\n    return {\n        input: ['RED', 'GREEN', 'BLUE'],\n        output: [\n            {id: 'RED', bands: 1, sampleType: 'UINT8'},\n            {id: 'GREEN', bands: 1, sampleType: 'UINT8'},\n            {id: 'BLUE', bands: 1, sampleType: 'UINT8'},\n        ]\n    };\n}\nfunction evaluatePixel(sample) {\n    return {\n        RED: [sample.RED],\n        GREEN: [sample.GREEN],\n        BLUE: [sample.BLUE],\n    };\n}"
+  "evalscript": "//VERSION=3\nfunction setup() {\n    return {\n        input: [{\n            bands: ['RED', 'GREEN', 'BLUE']\n        }],\n        output: [\n            {bands: 3, sampleType: 'UINT8'}\n        ]\n    };\n}\nfunction evaluatePixel(sample) {\n    return [sample.RED, sample.GREEN, sample.BLUE];\n}"
 }

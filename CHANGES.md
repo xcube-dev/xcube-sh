@@ -1,5 +1,8 @@
 ## Changes in 0.10.3 (in development)
 
+* Bands from cubes generated with `four_d` parameter set to true can be opened. 
+  (#101)
+
 ## Changes in 0.10.2
 
 * Added support for Landsat-4,5 Level-2 (`"LTML2"`) 
