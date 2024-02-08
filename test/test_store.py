@@ -134,6 +134,7 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         self.assertIn('upsampling', schema.properties)
         self.assertIn('downsampling', schema.properties)
         self.assertIn('mosaicking_order', schema.properties)
+        self.assertIn('extra_search_params', schema.properties)
 
         self.assertIn('time_range', schema.properties)
         self.assertEqual(

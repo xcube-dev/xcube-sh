@@ -598,7 +598,8 @@ class SentinelHubChunkStore(RemoteStore):
                 time_start.strftime(datetime_format),
                 time_end.strftime(datetime_format)
             ),
-            bad_request_ok=False
+            bad_request_ok=False,
+            **self._cube_config.extra_search_params
         )
         if not features:
             # Maybe the dataset has no data in given time_range
@@ -609,7 +610,8 @@ class SentinelHubChunkStore(RemoteStore):
                 collection_name=collection_name,
                 bbox=self._cube_config.bbox,
                 crs=self._cube_config.crs,
-                bad_request_ok=True
+                bad_request_ok=True,
+                **self._cube_config.extra_search_params
             )
             if not features:
                 # Still no results.
