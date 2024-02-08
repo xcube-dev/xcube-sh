@@ -255,7 +255,7 @@ class SentinelHub:
                 )
 
         catalog_url = self.catalog_url \
-                      or f'{self.api_url}/api/v1/catalog/search'
+                      or f'{self.api_url}/api/v1/catalog/1.0.0/search'
         headers = self._get_request_headers('application/json')
 
         all_features = []
@@ -263,8 +263,7 @@ class SentinelHub:
         feature_offset = 0
         while features_count == max_feature_count:
             response = self.session.post(catalog_url,
-                                         json=request,
-                                         headers=headers)
+                                         json=request)
 
             if bad_request_ok and response.status_code == 400:
                 break
