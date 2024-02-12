@@ -1,5 +1,8 @@
 ## Changes in 0.10.4 (in development)
 
+* Now using CRS `OGC:CRS84` as `CRS84` is no longer supported by `pyproj`. 
+  See https://github.com/dcs4cop/xcube/issues/869.
+
 ## Changes in 0.10.3
 
 * Fixed a bug which caused that, when the `four_d` parameter was set to true

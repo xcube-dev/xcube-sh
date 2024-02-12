@@ -92,7 +92,7 @@ AVAILABLE_CRS_EPSG_CODES = [
 
 # See https://docs.sentinel-hub.com/api/stage/api/process/crs/
 CRS_ID_TO_URI = {
-    'CRS84': 'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
+    'OGC:CRS84': 'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
     'WGS84': 'http://www.opengis.net/def/crs/EPSG/0/4326',
     **{f'EPSG:{code}': f'http://www.opengis.net/def/crs/EPSG/0/{code}'
        for code in AVAILABLE_CRS_EPSG_CODES}
@@ -100,6 +100,6 @@ CRS_ID_TO_URI = {
 
 CRS_URI_TO_ID = {v: k for k, v in CRS_ID_TO_URI.items()}
 CRS_URI_TO_ID.update({
-    'http://www.opengis.net/def/crs/OGC/1.3/CRS84': 'CRS84',
+    'http://www.opengis.net/def/crs/OGC/1.3/CRS84': 'OGC:CRS84',
     'http://www.opengis.net/def/crs/EPSG/0/4326': 'WGS84',
 })

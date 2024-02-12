@@ -213,10 +213,10 @@ class CubeConfigTest(unittest.TestCase):
         config = CubeConfig(crs='http://www.opengis.net/def/crs/EPSG/0/4326', **we_do_not_care)
         self.assertEqual('WGS84', config.crs)
 
-        config = CubeConfig(crs='CRS84', **we_do_not_care)
-        self.assertEqual('CRS84', config.crs)
+        config = CubeConfig(crs='OGC:CRS84', **we_do_not_care)
+        self.assertEqual('OGC:CRS84', config.crs)
         config = CubeConfig(crs='http://www.opengis.net/def/crs/OGC/1.3/CRS84', **we_do_not_care)
-        self.assertEqual('CRS84', config.crs)
+        self.assertEqual('OGC:CRS84', config.crs)
 
         config = CubeConfig(crs='EPSG:3857', **we_do_not_care)
         self.assertEqual('EPSG:3857', config.crs)

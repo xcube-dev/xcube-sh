@@ -414,7 +414,7 @@ class CubeConfig:
 
     @property
     def is_geographic_crs(self) -> bool:
-        return self._crs in ('CRS84', 'WGS84', 'EPSG:4326')
+        return self._crs in ('WGS84', 'CRS84', 'OGC:CRS84', 'EPSG:4326')
 
     @property
     def is_wgs84_crs(self) -> bool:
