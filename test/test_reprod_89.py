@@ -35,17 +35,15 @@ class ReproduceIssue89Test(unittest.TestCase):
     """
 
     def test_reproduce_issue_89(self):
-        sentinel_hub = SentinelHub(
-            api_url='https://services-uswest2.sentinel-hub.com'
-        )
+        sentinel_hub = SentinelHub(api_url="https://services-uswest2.sentinel-hub.com")
 
         cube_config = CubeConfig(
             dataset_name="LOTL2",
             band_names=["B03", "B04", "B05", "BQA"],
-            crs='EPSG:4326',
+            crs="EPSG:4326",
             bbox=(12.49, 41.88, 12.53, 41.92),
             spatial_res=0.0001,
-            time_range=('2017-07-01', '2017-07-16'),
+            time_range=("2017-07-01", "2017-07-16"),
             time_tolerance="30m",
         )
 

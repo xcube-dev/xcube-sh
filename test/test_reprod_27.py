@@ -46,8 +46,7 @@ class ReproduceIssue27Test(unittest.TestCase):
             "zarr_format": 2,
         }
 
-        zattrs = {
-        }
+        zattrs = {}
 
         lon_zarray = {
             "zarr_format": 2,
@@ -65,18 +64,26 @@ class ReproduceIssue27Test(unittest.TestCase):
             "_ARRAY_DIMENSIONS": ["lon"]
         }
 
-        src_store = WritableStoreThatIsNotADict({
-            '.zgroup': bytes(json.dumps(zgroup, indent=2), encoding='utf-8'),
-            '.zattrs': bytes(json.dumps(zattrs, indent=2), encoding='utf-8'),
-            'lon/.zarray': bytes(json.dumps(lon_zarray, indent=2), encoding='utf-8'),
-            'lon/.zattrs': bytes(json.dumps(lon_zattrs, indent=2), encoding='utf-8'),
-            'lon/0': array.tobytes(order=order)
-        })
-        self.assertEqual({'.zgroup', '.zattrs', 'lon/.zarray', 'lon/.zattrs', 'lon/0'},
-                         set(src_store.keys()))
+        src_store = WritableStoreThatIsNotADict(
+            {
+                ".zgroup": bytes(json.dumps(zgroup, indent=2), encoding="utf-8"),
+                ".zattrs": bytes(json.dumps(zattrs, indent=2), encoding="utf-8"),
+                "lon/.zarray": bytes(
+                    json.dumps(lon_zarray, indent=2), encoding="utf-8"
+                ),
+                "lon/.zattrs": bytes(
+                    json.dumps(lon_zattrs, indent=2), encoding="utf-8"
+                ),
+                "lon/0": array.tobytes(order=order),
+            }
+        )
+        self.assertEqual(
+            {".zgroup", ".zattrs", "lon/.zarray", "lon/.zattrs", "lon/0"},
+            set(src_store.keys()),
+        )
 
         dataset = xarray.open_zarr(src_store, consolidated=False)
-        self.assertIn('lon', dataset)
+        self.assertIn("lon", dataset)
         self.assertEqual(values, list(dataset.lon.values))
 
         dst_store = WritableStoreThatIsNotADict()
@@ -84,13 +91,15 @@ class ReproduceIssue27Test(unittest.TestCase):
 
         self.assertEqual(set(src_store.keys()), set(dst_store.keys()))
 
-        self.assertIsInstance(src_store['lon/0'], bytes)
+        self.assertIsInstance(src_store["lon/0"], bytes)
         with self.assertRaises(AssertionError) as cm:
             # This is the actual issue: dst_store['lon/0'] is still a numpy.ndarray instance,
             # instead of an encoded version of it.
-            self.assertIsInstance(dst_store['lon/0'], bytes)
-        self.assertEqual("array([12, 13, 14]) is not an instance of <class 'bytes'>",
-                         f'{cm.exception}')
+            self.assertIsInstance(dst_store["lon/0"], bytes)
+        self.assertEqual(
+            "array([12, 13, 14]) is not an instance of <class 'bytes'>",
+            f"{cm.exception}",
+        )
 
 
 class WritableStoreThatIsNotADict(MutableMapping):

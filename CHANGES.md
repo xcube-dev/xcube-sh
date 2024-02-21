@@ -1,4 +1,6 @@
-## Changes in 0.10.4 (in development)
+## Changes in 0.10.4
+
+* Reformatted code base using [black](https://black.readthedocs.io/).
 
 ## Changes in 0.10.3
 

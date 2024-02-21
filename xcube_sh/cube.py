@@ -29,12 +29,14 @@ from .config import CubeConfig
 from .sentinelhub import SentinelHub
 
 
-def open_cube(cube_config: CubeConfig,
-              observer: Callable = None,
-              trace_store_calls: bool = False,
-              max_cache_size: int = 2 ** 30,
-              sentinel_hub: SentinelHub = None,
-              **sh_kwargs) -> xr.Dataset:
+def open_cube(
+    cube_config: CubeConfig,
+    observer: Callable = None,
+    trace_store_calls: bool = False,
+    max_cache_size: int = 2**30,
+    sentinel_hub: SentinelHub = None,
+    **sh_kwargs,
+) -> xr.Dataset:
     """
     Open a data cube from SentinelHub.
 
@@ -58,17 +60,20 @@ def open_cube(cube_config: CubeConfig,
     if sentinel_hub is None:
         sentinel_hub = SentinelHub(**sh_kwargs)
     elif sh_kwargs:
-        raise ValueError(f'unexpected keyword-arguments:'
-                         f' {", ".join(sh_kwargs.keys())}')
-    cube_store = SentinelHubChunkStore(sentinel_hub,
-                                       cube_config,
-                                       observer=observer,
-                                       trace_store_calls=trace_store_calls)
+        raise ValueError(
+            f"unexpected keyword-arguments:" f' {", ".join(sh_kwargs.keys())}'
+        )
+    cube_store = SentinelHubChunkStore(
+        sentinel_hub,
+        cube_config,
+        observer=observer,
+        trace_store_calls=trace_store_calls,
+    )
     if max_cache_size:
         cube_store = zarr.LRUStoreCache(cube_store, max_cache_size)
 
     cube = xr.open_zarr(cube_store)
-    if hasattr(cube, 'zarr_store'):
+    if hasattr(cube, "zarr_store"):
         cube.zarr_store.set(cube_store)
 
     return cube

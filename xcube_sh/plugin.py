@@ -30,26 +30,25 @@ from xcube_sh.constants import SH_DATA_STORE_ID
 def init_plugin(ext_registry: extension.ExtensionRegistry):
     # xcube SentinelHub extensions
     ext_registry.add_extension(
-        loader=extension.import_component('xcube_sh.main:cli'),
+        loader=extension.import_component("xcube_sh.main:cli"),
         point=EXTENSION_POINT_CLI_COMMANDS,
-        name='sh_cli'
+        name="sh_cli",
     )
 
     # xcube DataAccessor extensions
     ext_registry.add_extension(
-        loader=extension.import_component(
-            'xcube_sh.store:SentinelHubDataStore'),
+        loader=extension.import_component("xcube_sh.store:SentinelHubDataStore"),
         point=EXTENSION_POINT_DATA_STORES,
         name=SH_DATA_STORE_ID,
-        description='Sentinel Hub Cloud API'
+        description="Sentinel Hub Cloud API",
     )
 
     # xcube DataAccessor extensions
     ext_registry.add_extension(
-        loader=extension.import_component(
-            'xcube_sh.store:SentinelHubDataOpener'),
+        loader=extension.import_component("xcube_sh.store:SentinelHubDataOpener"),
         point=EXTENSION_POINT_DATA_OPENERS,
         name=SH_DATA_OPENER_ID,
-        description=('xarray.Dataset cubes in Zarr format '
-                     'from Sentinel Hub Cloud API')
+        description=(
+            "xarray.Dataset cubes in Zarr format " "from Sentinel Hub Cloud API"
+        ),
     )

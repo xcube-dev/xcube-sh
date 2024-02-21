@@ -23,6 +23,5 @@ import unittest
 
 
 class MainTest(unittest.TestCase):
-
     def test_gen(self):
         pass
