@@ -162,7 +162,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
     def test_open_cube_with_other_crs(self):
         cube = open_cube(cube_config_with_crs)
         self.assertIsInstance(cube, xr.Dataset)
-        self.assertEqual({"time": 160, "y": 2048, "x": 2048, "bnds": 2}, cube.dims)
+        self.assertEqual({"time": 160, "y": 2048, "x": 2048, "bnds": 2}, cube.sizes)
         self.assertEqual({"x", "y", "time", "time_bnds"}, set(cube.coords))
         self.assertEqual({"B01", "crs"}, set(cube.data_vars))
 
@@ -172,7 +172,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
             cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com"
         )
         self.assertIsInstance(cube, xr.Dataset)
-        self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.dims)
+        self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.sizes)
         self.assertEqual({"lat", "lon", "time", "time_bnds"}, set(cube.coords))
         self.assertEqual({"B02", "B03"}, set(cube.data_vars))
 
@@ -182,7 +182,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
             cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com"
         )
         self.assertIsInstance(cube, xr.Dataset)
-        self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.dims)
+        self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.sizes)
         self.assertEqual({"lat", "lon", "time", "time_bnds"}, set(cube.coords))
         self.assertEqual({"B02", "B03"}, set(cube.data_vars))
 
@@ -192,7 +192,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
             cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com"
         )
         self.assertIsInstance(cube, xr.Dataset)
-        self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.dims)
+        self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.sizes)
         self.assertEqual({"lat", "lon", "time", "time_bnds"}, set(cube.coords))
         self.assertEqual({"B02", "B03"}, set(cube.data_vars))
 

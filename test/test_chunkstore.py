@@ -108,7 +108,7 @@ class SentinelHubStore3DTest(SentinelHubStoreTest):
             set(cube.variables),
         )
 
-        self.assertEqual({"time": 31, "lat": 4000, "lon": 4000, "bnds": 2}, cube.dims)
+        self.assertEqual({"time": 31, "lat": 4000, "lon": 4000, "bnds": 2}, cube.sizes)
 
         self.assert_coordinate_vars(
             cube,
@@ -245,7 +245,7 @@ class SentinelHubStore3DTestWithNonDefaultCrs(SentinelHubStoreTest):
     def get_cube_config(self):
         crs_name = "EPSG:3035"
         crs = pyproj.CRS.from_string(crs_name)
-        t = pyproj.Transformer.from_crs("CRS84", crs)
+        t = pyproj.Transformer.from_crs("WGS84", crs, always_xy=True)
         (x1, y1), (x2, y2) = t.transform((10.2, 10.3), (53.5, 53.6))
         spatial_res = (x2 - x1) / 4000
         y2 = y1 + spatial_res * 4000
@@ -303,7 +303,7 @@ class SentinelHubStore3DTestWithTiles(SentinelHubStoreTest):
             set(cube.variables),
         )
 
-        self.assertEqual({"time": 15, "lat": 4000, "lon": 4000, "bnds": 2}, cube.dims)
+        self.assertEqual({"time": 15, "lat": 4000, "lon": 4000, "bnds": 2}, cube.sizes)
 
         self.assert_coordinate_vars(
             cube,
@@ -454,7 +454,7 @@ class SentinelHubStore4DTest(SentinelHubStoreTest):
         )
 
         self.assertEqual(
-            {"time": 31, "lat": 4000, "lon": 4000, "bnds": 2, "band": 3}, cube.dims
+            {"time": 31, "lat": 4000, "lon": 4000, "bnds": 2, "band": 3}, cube.sizes
         )
 
         self.assert_coordinate_vars(
