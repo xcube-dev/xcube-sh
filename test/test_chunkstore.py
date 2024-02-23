@@ -245,8 +245,8 @@ class SentinelHubStore3DTestWithNonDefaultCrs(SentinelHubStoreTest):
     def get_cube_config(self):
         crs_name = "EPSG:3035"
         crs = pyproj.CRS.from_string(crs_name)
-        t = pyproj.Transformer.from_crs("WGS84", crs, always_xy=True)
-        (x1, y1), (x2, y2) = t.transform((10.2, 10.3), (53.5, 53.6))
+        t = pyproj.Transformer.from_crs("EPSG:4326", crs, always_xy=True)
+        (x1, x2), (y1, y2) = t.transform((10.2, 10.3), (53.5, 53.6))
         spatial_res = (x2 - x1) / 4000
         y2 = y1 + spatial_res * 4000
         return CubeConfig(
