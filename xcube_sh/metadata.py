@@ -238,6 +238,12 @@ S2L2A_BAND_METADATA.update(
             flag_meanings=" ".join(S2L2A_SLC_MEANINGS),
         ),
         "SNW": dict(sample_type="UINT8"),
+        "CLM": dict(
+            sample_type="UINT8",
+            flag_values="no clouds,clouds,no data",
+            flag_meanings="0 1 255",
+        ),
+        "CLP": dict(sample_type="UINT8"),
         "CLD": dict(sample_type="UINT8"),
     }
 )

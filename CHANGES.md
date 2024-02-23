@@ -1,5 +1,8 @@
 ## Changes in 0.10.4
 
+* Added cloud mask variables `CLM` and `CLP` to datasets of type `S2L2A`.
+  See [Cloud Masks](https://docs.sentinel-hub.com/api/latest/user-guides/cloud-masks/)
+  on SentinelHub.
 * Reformatted code base using [black](https://black.readthedocs.io/).
 * Updated copyright headers
 
