@@ -1,23 +1,6 @@
-# The MIT License (MIT)
-# Copyright (c) 2022 by the xcube development team and contributors
-#
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
+# Copyright © 2022-2024 by the xcube development team and contributors
+# Permissions are hereby granted under the terms of the MIT License:
+# https://opensource.org/licenses/MIT.
 
 import json
 import unittest
@@ -46,8 +29,7 @@ class ReproduceIssue27Test(unittest.TestCase):
             "zarr_format": 2,
         }
 
-        zattrs = {
-        }
+        zattrs = {}
 
         lon_zarray = {
             "zarr_format": 2,
@@ -65,18 +47,26 @@ class ReproduceIssue27Test(unittest.TestCase):
             "_ARRAY_DIMENSIONS": ["lon"]
         }
 
-        src_store = WritableStoreThatIsNotADict({
-            '.zgroup': bytes(json.dumps(zgroup, indent=2), encoding='utf-8'),
-            '.zattrs': bytes(json.dumps(zattrs, indent=2), encoding='utf-8'),
-            'lon/.zarray': bytes(json.dumps(lon_zarray, indent=2), encoding='utf-8'),
-            'lon/.zattrs': bytes(json.dumps(lon_zattrs, indent=2), encoding='utf-8'),
-            'lon/0': array.tobytes(order=order)
-        })
-        self.assertEqual({'.zgroup', '.zattrs', 'lon/.zarray', 'lon/.zattrs', 'lon/0'},
-                         set(src_store.keys()))
+        src_store = WritableStoreThatIsNotADict(
+            {
+                ".zgroup": bytes(json.dumps(zgroup, indent=2), encoding="utf-8"),
+                ".zattrs": bytes(json.dumps(zattrs, indent=2), encoding="utf-8"),
+                "lon/.zarray": bytes(
+                    json.dumps(lon_zarray, indent=2), encoding="utf-8"
+                ),
+                "lon/.zattrs": bytes(
+                    json.dumps(lon_zattrs, indent=2), encoding="utf-8"
+                ),
+                "lon/0": array.tobytes(order=order),
+            }
+        )
+        self.assertEqual(
+            {".zgroup", ".zattrs", "lon/.zarray", "lon/.zattrs", "lon/0"},
+            set(src_store.keys()),
+        )
 
         dataset = xarray.open_zarr(src_store, consolidated=False)
-        self.assertIn('lon', dataset)
+        self.assertIn("lon", dataset)
         self.assertEqual(values, list(dataset.lon.values))
 
         dst_store = WritableStoreThatIsNotADict()
@@ -84,13 +74,15 @@ class ReproduceIssue27Test(unittest.TestCase):
 
         self.assertEqual(set(src_store.keys()), set(dst_store.keys()))
 
-        self.assertIsInstance(src_store['lon/0'], bytes)
+        self.assertIsInstance(src_store["lon/0"], bytes)
         with self.assertRaises(AssertionError) as cm:
             # This is the actual issue: dst_store['lon/0'] is still a numpy.ndarray instance,
             # instead of an encoded version of it.
-            self.assertIsInstance(dst_store['lon/0'], bytes)
-        self.assertEqual("array([12, 13, 14]) is not an instance of <class 'bytes'>",
-                         f'{cm.exception}')
+            self.assertIsInstance(dst_store["lon/0"], bytes)
+        self.assertEqual(
+            "array([12, 13, 14]) is not an instance of <class 'bytes'>",
+            f"{cm.exception}",
+        )
 
 
 class WritableStoreThatIsNotADict(MutableMapping):
