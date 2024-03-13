@@ -154,9 +154,11 @@ class CubeWithCredentialsTest(unittest.TestCase):
             open_cube(
                 cube_config=cube_config,
                 sentinel_hub=SentinelHub(),
-                api_url="https://creodias.sentinel-hub.com/api/v1/catalog/collections",
+                instance_url="https://creodias.sentinel-hub.com",
             )
-        self.assertEqual("unexpected keyword-arguments: api_url", f"{cm.exception}")
+        self.assertEqual(
+            "unexpected keyword-arguments: instance_url", f"{cm.exception}"
+        )
 
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_open_cube_with_other_crs(self):
@@ -169,7 +171,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_open_cube_LOTL2(self):
         cube = open_cube(
-            cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com"
+            cube_config_LOTL2, instance_url="https://services-uswest2.sentinel-hub.com"
         )
         self.assertIsInstance(cube, xr.Dataset)
         self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.sizes)
@@ -179,7 +181,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_open_cube_LTML2(self):
         cube = open_cube(
-            cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com"
+            cube_config_LOTL2, instance_url="https://services-uswest2.sentinel-hub.com"
         )
         self.assertIsInstance(cube, xr.Dataset)
         self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.sizes)
@@ -189,7 +191,7 @@ class CubeWithCredentialsTest(unittest.TestCase):
     @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
     def test_open_cube_LETML2(self):
         cube = open_cube(
-            cube_config_LOTL2, api_url="https://services-uswest2.sentinel-hub.com"
+            cube_config_LOTL2, instance_url="https://services-uswest2.sentinel-hub.com"
         )
         self.assertIsInstance(cube, xr.Dataset)
         self.assertEqual({"time": 100, "lat": 1912, "lon": 2094, "bnds": 2}, cube.sizes)

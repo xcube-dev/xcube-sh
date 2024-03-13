@@ -25,9 +25,7 @@ from .constants import DEFAULT_NUM_RETRIES
 from .constants import DEFAULT_RESAMPLING
 from .constants import DEFAULT_RETRY_BACKOFF_BASE
 from .constants import DEFAULT_RETRY_BACKOFF_MAX
-from .constants import DEFAULT_SH_API_URL
-from .constants import DEFAULT_SH_METADATA_API_URL
-from .constants import DEFAULT_SH_OAUTH2_URL
+from .constants import DEFAULT_SH_INSTANCE_URL
 from .constants import LOG
 from .constants import SH_CATALOG_FEATURE_LIMIT
 from .metadata import SentinelHubMetadata
@@ -36,18 +34,16 @@ from .version import version
 
 class SentinelHub:
     """
-    Represents the SENTINEL Hub Cloud API.
+    Represents the Sentinel Hub Cloud API.
 
-    :param client_id: SENTINEL Hub client ID
-    :param client_secret: SENTINEL Hub client secret
-    :param instance_id:  SENTINEL Hub instance
-        ID (deprecated, no longer used)
-    :param api_url: Alternative SENTINEL Hub API URL.
-    :param oauth2_url: Alternative SENTINEL Hub OAuth2 API URL.
-    :param process_url: Overrides default SH process API URL
-        derived from *api_url*.
-    :param catalog_url: Overrides default SH catalog API URL
-        derived from *api_url*.
+    :param client_id: Sentinel Hub client ID
+    :param client_secret: Sentinel Hub client secret
+    :param instance_url:  Alternative Sentinel Hub instance URL.
+    :param api_url: Deprecated, use instance_url instead.
+    :param oauth2_url: Overrides default Sentinel Hub catalog API URL
+        derived from *instance_url*.
+    :param catalog_url: Overrides default Sentinel Hub catalog API URL
+        derived from *instance_url*.
     :param error_policy: "raise" or "warn".
         If "raise" an exception is raised on failed API requests.
     :param error_handler: An optional function called with the
@@ -69,10 +65,13 @@ class SentinelHub:
         client_id: Optional[str] = None,
         client_secret: Optional[str] = None,
         instance_id: Optional[str] = None,
+        instance_url: Optional[str] = None,
         api_url: Optional[str] = None,
         oauth2_url: Optional[str] = None,
         process_url: Optional[str] = None,
         catalog_url: Optional[str] = None,
+        collection_url: Optional[str] = None,
+        configuration_url: Optional[str] = None,
         enable_warnings: bool = False,
         error_policy: str = "fail",
         error_handler: Optional[Callable[[Any], None]] = None,
@@ -86,13 +85,43 @@ class SentinelHub:
                 "instance_id has been deprecated," " it is no longer used",
                 DeprecationWarning,
             )
-        self.api_url = api_url or os.environ.get("SH_API_URL", DEFAULT_SH_API_URL)
-        self.oauth2_url = oauth2_url or os.environ.get(
-            "SH_OAUTH2_URL", DEFAULT_SH_OAUTH2_URL
+        api_url = _get_url(api_url, None, "SH_API_URL")
+        if api_url:
+            warnings.warn(
+                "Parameter api_url is deprecated, use instance_url instead.",
+                category=DeprecationWarning,
+            )
+        instance_url = _get_url(
+            instance_url, api_url or DEFAULT_SH_INSTANCE_URL, "SH_INSTANCE_URL"
         )
-        self.token_url = self.oauth2_url + "/token"
-        self.process_url = process_url
-        self.catalog_url = catalog_url
+        self.instance_url = instance_url
+        # The authorisation service many
+        # SH instances is DEFAULT_SH_INSTANCE_URL!
+        self.oauth2_url = _get_url(
+            oauth2_url,
+            f"{DEFAULT_SH_INSTANCE_URL}/oauth",  # !
+            "SH_OAUTH2_URL",
+        )
+        self.process_url = _get_url(
+            process_url,
+            f"{instance_url}/api/v1/process",
+            "SH_PROCESS_URL",
+        )
+        self.catalog_url = _get_url(
+            catalog_url,
+            f"{instance_url}/api/v1/catalog/1.0.0",
+            "SH_CATALOG_URL",
+        )
+        self.configuration_url = _get_url(
+            configuration_url,
+            f"{instance_url}/configuration/v1",
+            "SH_CONFIGURATION_URL",
+        )
+        self.collection_url = _get_url(
+            collection_url,
+            f"{instance_url}/api/v1/metadata/collection",
+            "SH_COLLECTION_URL",
+        )
         self.error_policy = error_policy or "fail"
         self.error_handler = error_handler
         self.enable_warnings = enable_warnings
@@ -132,19 +161,19 @@ class SentinelHub:
         """
         See https://docs.sentinel-hub.com/api/latest/reference/#tag/configuration_dataset
         """
-        response = self.session.get(self.api_url + "/configuration/v1/datasets")
+        response = self.session.get(f"{self.configuration_url}/datasets")
         SentinelHubError.maybe_raise_for_response(response)
         return response.json()
 
     def band_names(self, dataset_name: str, collection_id: str = None) -> List[str]:
         if dataset_name.upper() == "CUSTOM":
-            url = DEFAULT_SH_METADATA_API_URL % collection_id
+            url = f"{self.collection_url}/byoc-{collection_id}"
             response = self.session.get(url)
             SentinelHubError.maybe_raise_for_response(response)
             bands = response.json().get("bands", [])
             return [band.get("name") for band in bands]
 
-        url = f"{self.api_url}/api/v1/process/dataset/{dataset_name}/bands"
+        url = f"{self.process_url}/dataset/{dataset_name}/bands"
         response = self.session.get(url)
         SentinelHubError.maybe_raise_for_response(response)
         return response.json().get("data", {})
@@ -153,12 +182,12 @@ class SentinelHub:
         self, dataset_name: str, collection_id: str = None
     ) -> List[Dict[str, Any]]:
         if dataset_name.upper() == "CUSTOM":
-            url = DEFAULT_SH_METADATA_API_URL % collection_id
+            url = f"{self.collection_url}/byoc-{collection_id}"
             response = self.session.get(url)
             SentinelHubError.maybe_raise_for_response(response)
             return response.json().get("bands", [])
 
-        url = f"{self.api_url}/api/v1/process/dataset/{dataset_name}/bands"
+        url = f"{self.process_url}/dataset/{dataset_name}/bands"
         response = self.session.get(url)
         SentinelHubError.maybe_raise_for_response(response)
         band_names = response.json().get("data", [])
@@ -168,7 +197,7 @@ class SentinelHub:
         """
         See https://docs.sentinel-hub.com/api/latest/reference/#operation/getCollections
         """
-        response = self.session.get(f"{self.api_url}/api/v1/catalog/collections")
+        response = self.session.get(f"{self.catalog_url}/collections")
         SentinelHubError.maybe_raise_for_response(response)
         return response.json().get("collections", [])
 
@@ -230,20 +259,19 @@ class SentinelHub:
             t1, t2 = time_range
             if t1 or t2:
                 request.update(
-                    datetime=f'{to_sh_format(t1) if t1 else ".."}/'
-                    f'{to_sh_format(t2) if t2 else ".."}'
+                    datetime=(
+                        f'{to_sh_format(t1) if t1 else ".."}/'
+                        f'{to_sh_format(t2) if t2 else ".."}'
+                    )
                 )
 
-        catalog_url = self.catalog_url \
-                      or f'{self.api_url}/api/v1/catalog/1.0.0/search'
-        headers = self._get_request_headers('application/json')
+        search_url = f"{self.catalog_url}/search"
 
         all_features = []
         features_count = max_feature_count
         feature_offset = 0
         while features_count == max_feature_count:
-            response = self.session.post(catalog_url,
-                                         json=request)
+            response = self.session.post(search_url, json=request)
 
             if bad_request_ok and response.status_code == 400:
                 break
@@ -254,8 +282,11 @@ class SentinelHub:
             if feature_collection.get("type") != "FeatureCollection" or not isinstance(
                 feature_collection.get("features"), list
             ):
+                print(80 * "=")
+                print(feature_collection)
+                print(80 * "=")
                 raise SentinelHubError(
-                    f"Got unexpected" f" result from {response.url}", response=response
+                    f"Got unexpected result from {response.url}", response=response
                 )
 
             features = feature_collection["features"]
@@ -302,7 +333,7 @@ class SentinelHub:
                 timestamps.append(pd.to_datetime(datetime, utc=True))
             except ValueError as e:
                 warnings.warn(
-                    f"failed parsing" f" feature.properties.datetime: {e}", source=e
+                    f"failed parsing feature.properties.datetime: {e}", source=e
                 )
 
         timestamps = sorted(set(timestamps))
@@ -334,7 +365,7 @@ class SentinelHub:
         retry_backoff_max = self.retry_backoff_max  # ms
         retry_backoff_base = self.retry_backoff_base
 
-        process_url = self.process_url or f"{self.api_url}/api/v1/process"
+        process_url = self.process_url
         headers = self._get_request_headers(mime_type)
 
         response = None
@@ -407,7 +438,7 @@ class SentinelHub:
             self.error_handler(response)
 
         LOG.error(
-            f"Failed to fetch data from Sentinel Hub"
+            f"Failed to fetch data from SentinelHub"
             f" after {end_time - start_time} seconds"
             f" and {num_retries} retries",
             exc_info=response_error,
@@ -592,7 +623,7 @@ class SentinelHub:
             client_secret=self.client_secret,
         )
 
-        LOG.info("fetched Sentinel Hub access token successfully")
+        LOG.info("fetched SentinelHub access token successfully")
 
 
 class SentinelHubError(ValueError):
@@ -615,7 +646,8 @@ class SentinelHubError(ValueError):
             try:
                 data = response.json()
                 if isinstance(data, dict):
-                    detail = data.get("detail")
+                    # See https://github.com/dcs4cop/xcube-sh/issues/100
+                    detail = data.get("detail") or data.get("description")
             except Exception:
                 pass
             raise SentinelHubError(
@@ -664,3 +696,7 @@ class SerializableOAuth2Session(requests_oauthlib.OAuth2Session):
     def __setstate__(self, state):
         for a in self._SERIALIZED_ATTRS:
             setattr(self, a, state[a])
+
+
+def _get_url(url: Optional[str], default_url: Optional[str], env_var: str) -> str:
+    return url if url else os.environ.get(env_var, default_url)

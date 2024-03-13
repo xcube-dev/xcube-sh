@@ -35,8 +35,7 @@ from .constants import DEFAULT_NUM_RETRIES
 from .constants import DEFAULT_RESAMPLING
 from .constants import DEFAULT_RETRY_BACKOFF_BASE
 from .constants import DEFAULT_RETRY_BACKOFF_MAX
-from .constants import DEFAULT_SH_API_URL
-from .constants import DEFAULT_SH_OAUTH2_URL
+from .constants import DEFAULT_SH_INSTANCE_URL
 from .constants import DEFAULT_TILE_SIZE
 from .constants import DEFAULT_TIME_TOLERANCE
 from .constants import MOSAICKING_ORDERS
@@ -331,12 +330,16 @@ class SentinelHubDataOpener(DataOpener):
                     if min_datetime or max_datetime:
                         # Get rid of time part
                         time_range = (
-                            min_datetime.split("T")[0]
-                            if min_datetime is not None
-                            else None,
-                            max_datetime.split("T")[0]
-                            if max_datetime is not None
-                            else None,
+                            (
+                                min_datetime.split("T")[0]
+                                if min_datetime is not None
+                                else None
+                            ),
+                            (
+                                max_datetime.split("T")[0]
+                                if max_datetime is not None
+                                else None
+                            ),
                         )
 
             if "title" in collection_metadata:
@@ -393,18 +396,34 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
             ),
             client_secret=JsonStringSchema(
                 title="Sentinel Hub API client secret",
-                description="Preferably set by environment"
-                " variable SH_CLIENT_SECRET",
+                description="Preferably set by environment variable SH_CLIENT_SECRET",
             ),
             api_url=JsonStringSchema(
-                default=DEFAULT_SH_API_URL, title="Sentinel Hub API URL"
+                title="Sentinel Hub instance URL (deprecated)",
+                description=("Deprecated, use instance_url instead."),
+            ),
+            instance_url=JsonStringSchema(
+                default=DEFAULT_SH_INSTANCE_URL,
+                title="Sentinel Hub instance URL",
             ),
             oauth2_url=JsonStringSchema(
-                default=DEFAULT_SH_OAUTH2_URL,
-                title="Sentinel Hub API authorisation URL",
+                title="Sentinel Hub Authorisation API URL (OAuth2)",
+            ),
+            process_url=JsonStringSchema(
+                title="Sentinel Hub Process API URL",
+            ),
+            catalog_url=JsonStringSchema(
+                title="Sentinel Hub Catalog API URL (STAC)",
+            ),
+            configuration_url=JsonStringSchema(
+                title="Sentinel Hub Configuration API URL",
+            ),
+            collection_url=JsonStringSchema(
+                title="Sentinel Hub Collection API URL",
             ),
             enable_warnings=JsonBooleanSchema(
-                default=False, title="Whether to output warnings"
+                default=False,
+                title="Whether to output warnings",
             ),
             error_policy=JsonStringSchema(
                 default="fail",
@@ -451,7 +470,7 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
             if self._sentinel_hub is not None:
                 metadata = SentinelHubMetadata()
                 extra_collections = metadata.extra_collections(
-                    self._sentinel_hub.api_url
+                    self._sentinel_hub.instance_url
                 )
                 # If we are connected to the API, we will return only
                 # datasets that are also collections

@@ -1,3 +1,29 @@
+## Changes in 0.11.0 (in development)
+
+* [Migrated](https://docs.sentinel-hub.com/api/latest/api/catalog/#migration-to-v100) 
+  to Sentinel Hub Catalog API 1.0. (#108)
+  
+  Thanks to @chorng for PR.
+
+* Deprecated `api_url` parameter in favour of `instance_url`, that specifies
+  the URL of the SentinelHub service instance. It defaults to 
+  `https://services.sentinel-hub.com`. For example, to use the SentinelHub 
+  instance on [CDSE](https://dataspace.copernicus.eu/) set 
+  `instance_url="https://sh.dataspace.copernicus.eu"`. (#107)
+
+* Updated or introduced other parameters that override specific 
+  [Sentinel Hub API](https://docs.sentinel-hub.com/api/latest/reference/) 
+  endpoints:
+  - `oauth2_url`
+  - `process_url`
+  - `catalog_url`
+  - `configuration_url`
+  - `collection_url`
+
+* Removed deprecated `instance_id` parameter.
+
+* Error messages now contain error details from Sentinel Hub API. (#100)
+
 ## Changes in 0.10.4
 
 * Added cloud mask variables `CLM` and `CLP` to datasets of type `S2L2A`.
