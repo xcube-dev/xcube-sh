@@ -10,9 +10,6 @@ import click
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
-from xcube_sh.constants import DEFAULT_SH_CATALOG_URL
-from xcube_sh.constants import DEFAULT_SH_OAUTH2_URL
-from xcube_sh.constants import DEFAULT_SH_PROCESS_URL
 from xcube_sh.constants import DEFAULT_TILE_SIZE
 from xcube_sh.constants import DEFAULT_TIME_TOLERANCE
 from xcube_sh.version import version
