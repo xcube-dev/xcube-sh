@@ -19,7 +19,10 @@ DEFAULT_VIEWER_URL = "http://xcube-viewer.s3-website.eu-central-1.amazonaws.com"
 
 
 class ViewerServers(list):
-    """A list of ViewerServers that has a HTML representation."""
+    """A list of ViewerServers that has a HTML representation.
+
+    Deprecated as of version 0.11.0, use xcube.webapi.viewer.Viewer instead.
+    """
 
     def _repr_html_(self):
         # noinspection PyProtectedMember
@@ -30,6 +33,8 @@ class ViewerServer:
     """
     Allows running an "xcube viewer" instance in a browser.
     Useful when invoked from Jupyter Notebooks.
+
+    Deprecated as of version 0.11.0, use xcube.webapi.viewer.Viewer instead.
 
     :param cube_paths:
     :param styles:

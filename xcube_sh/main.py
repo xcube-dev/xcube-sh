@@ -135,7 +135,9 @@ def gen(
 
     Please use command "xcube sh req" to generate example request files
     that can be passed as REQUEST. REQUEST may have JSON or YAML format.
-    You can also pipe a JSON request into this command. In this case
+    You can also pipe a JSON request into this command.
+
+    Deprecated as of version 0.11.0, use Python API only.
     """
     import json
     import os.path
@@ -260,6 +262,8 @@ def req(output_path: str, is_s3_config: bool):
         $ xcube sg req -o request.json
         $ vi request.json
         $ xcube sh gen request.json
+
+    Deprecated as of version 0.11.0, use Python API only.
     """
     import json
     import os.path
@@ -314,6 +318,8 @@ def info(datasets: List[str] = None):
     Print SentinelHub metadata info. If DATASETS (names of datasets)
     are not present, the list of available dataset names are returned.
     Otherwise, the the variables of the given datasets are returned.
+
+    Deprecated as of version 0.11.0, use Python API only.
     """
     from xcube_sh.sentinelhub import SentinelHub
 
@@ -349,6 +355,8 @@ def info(datasets: List[str] = None):
 def cli():
     """
     SentinelHub tools for xcube.
+
+    Deprecated as of version 0.11.0, use Python API only.
     """
 
 

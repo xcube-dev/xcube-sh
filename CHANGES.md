@@ -1,4 +1,4 @@
-## Changes in 0.11.0 (in development)
+## Changes in 0.11.0
 
 * [Migrated](https://docs.sentinel-hub.com/api/latest/api/catalog/#migration-to-v100) 
   to Sentinel Hub Catalog API 1.0. (#108)
@@ -20,9 +20,13 @@
   - `configuration_url`
   - `collection_url`
 
+* Error messages now contain error details from Sentinel Hub API. (#100)
+
 * Removed deprecated `instance_id` parameter.
 
-* Error messages now contain error details from Sentinel Hub API. (#100)
+* Deprecated command-line tool `xcube sh_cli`.
+
+* Deprecated utility module`xcube_sh.viewer`.
 
 ## Changes in 0.10.4
 
