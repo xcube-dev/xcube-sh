@@ -10,11 +10,7 @@ LOG = logging.getLogger("xcube.sh")
 DEFAULT_CLIENT_ID = os.environ.get("SH_CLIENT_ID")
 DEFAULT_CLIENT_SECRET = os.environ.get("SH_CLIENT_SECRET")
 
-DEFAULT_SH_API_URL = "https://services.sentinel-hub.com"
-DEFAULT_SH_OAUTH2_URL = f"{DEFAULT_SH_API_URL}/oauth"
-DEFAULT_SH_METADATA_API_URL = (
-    f"{DEFAULT_SH_API_URL}/configuration/" f"api/v1/metadata/collection/byoc-%s"
-)
+DEFAULT_SH_INSTANCE_URL = "https://services.sentinel-hub.com"
 
 # SH Catalog only allows this number of features to requested.
 SH_CATALOG_FEATURE_LIMIT = 100

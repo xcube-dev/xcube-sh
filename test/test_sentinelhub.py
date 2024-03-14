@@ -13,10 +13,13 @@ from typing import Any, Sequence, Dict
 
 import numpy as np
 import oauthlib.oauth2
+import pytest
 import zarr
 
 from xcube_sh.constants import CRS_ID_TO_URI
+from xcube_sh.sentinelhub import DEFAULT_SH_INSTANCE_URL
 from xcube_sh.sentinelhub import SentinelHub
+from xcube_sh.sentinelhub import SentinelHubError
 from xcube_sh.sentinelhub import SerializableOAuth2Session
 
 HAS_SH_CREDENTIALS = "SH_CLIENT_ID" in os.environ and "SH_CLIENT_SECRET" in os.environ
@@ -32,8 +35,7 @@ REQUEST_MULTI_BYOD_JSON = os.path.join(THIS_DIR, "request-multi-byod.json")
 @unittest.skipUnless(HAS_SH_CREDENTIALS, REQUIRE_SH_CREDENTIALS)
 class SentinelHubCatalogCollectionsTest(unittest.TestCase):
     def test_it(self):
-        sentinel_hub = SentinelHub(api_url="https://creodias.sentinel-hub.com")
-        # sentinel_hub = SentinelHub()
+        sentinel_hub = SentinelHub(instance_url="https://creodias.sentinel-hub.com")
         collections = sentinel_hub.collections()
         self.assertIsInstance(collections, list)
         self.assertTrue(len(collections) >= 1)
@@ -59,16 +61,23 @@ class SentinelHubCatalogSearchTest(unittest.TestCase):
             self.assertIn("datetime", properties)
 
     def test_get_features_byod(self):
-        user_collection_id = "1a3ab057-3c51-447c-9f85-27d4b633b3f5"
+        user_collection_id = "byoc-1a3ab057-3c51-447c-9f85-27d4b633b3f5"
 
-        features = SentinelHub().get_features(
-            collection_name=user_collection_id,
-            bbox=(1545577, 5761986, 1705367, 5857046),
-            crs="EPSG:3857",
-        )
-        # print(json.dumps(features, indent=2))
-        self.assertEqual(1, len(features))
-        self.assertEqual({"properties": {}}, features[0])
+        # We must have datetime is required since SH catalog 1.0.0
+        # See https://github.com/dcs4cop/xcube-sh/issues/108
+        with pytest.raises(
+            SentinelHubError,
+            match=(
+                f"400 Client Error: Bad Request for url:"
+                f" {DEFAULT_SH_INSTANCE_URL}/api/v1/catalog/1.0.0/search:"
+                f" Parameter 'datetime' must not be null."
+            ),
+        ):
+            SentinelHub().get_features(
+                collection_name=user_collection_id,
+                bbox=(1545577, 5761986, 1705367, 5857046),
+                crs="EPSG:3857",
+            )
 
         features = SentinelHub().get_features(
             collection_name=user_collection_id,
@@ -463,7 +472,7 @@ class SentinelHubCatalogueTest(unittest.TestCase):
             session=SessionMock(
                 {
                     "post": {
-                        "https://services.sentinel-hub.com/api/v1/catalog/search": dict(
+                        "https://services.sentinel-hub.com/api/v1/catalog/1.0.0/search": dict(
                             type="FeatureCollection", features=expected_features
                         )
                     }

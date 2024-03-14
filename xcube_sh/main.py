@@ -10,8 +10,6 @@ import click
 from xcube_sh.constants import DEFAULT_CLIENT_ID
 from xcube_sh.constants import DEFAULT_CLIENT_SECRET
 from xcube_sh.constants import DEFAULT_CRS
-from xcube_sh.constants import DEFAULT_SH_API_URL
-from xcube_sh.constants import DEFAULT_SH_OAUTH2_URL
 from xcube_sh.constants import DEFAULT_TILE_SIZE
 from xcube_sh.constants import DEFAULT_TIME_TOLERANCE
 from xcube_sh.version import version
@@ -271,8 +269,7 @@ def req(output_path: str, is_s3_config: bool):
     input_config = dict(
         client_id=DEFAULT_CLIENT_ID,
         client_secret=DEFAULT_CLIENT_SECRET,
-        api_url=DEFAULT_SH_API_URL,
-        oauth2_url=DEFAULT_SH_OAUTH2_URL,
+        instance_url=DEFAULT_SH_INSTANCE_URL,
     )
     cube_config = dict(
         dataset_name="S2L2A",
@@ -299,7 +296,7 @@ def req(output_path: str, is_s3_config: bool):
     if output_path:
         if os.path.exists(output_path):
             raise click.ClickException(
-                f"Output {output_path} already " f"exists. Move it away first."
+                f"Output {output_path} already exists. Move it away first."
             )
         with open(output_path, "w") as fp:
             if output_path.endswith(".json"):
