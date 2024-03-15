@@ -2,9 +2,17 @@ name: xcube-sh
 
 channels:
   - conda-forge
-  - defaults
 
 dependencies:
-  - xcube >=0.10
+  - click
+  - numcodecs
+  - numpy
   - oauthlib >=3.0
+  - pandas
+  - psutil
+  - pyproj
+  - requests
   - requests-oauthlib >=1.3
+  - xarray
+  - xcube >=0.10
+  - zarr
