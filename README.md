@@ -1,4 +1,4 @@
-[![Build Status](https://ci.appveyor.com/api/projects/status/0n1boma6tdt4qhta/branch/master?svg=true)](https://ci.appveyor.com/project/bcdev/xcube-sh)
+[![Build Status](https://ci.appveyor.com/api/projects/status/0n1boma6tdt4qhta/branch/main?svg=true)](https://ci.appveyor.com/project/bcdev/xcube-sh)
 [![Conda Version](https://anaconda.org/conda-forge/xcube-sh/badges/version.svg)](https://anaconda.org/conda-forge/xcube-sh)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License](https://img.shields.io/github/license/dcs4cop/xcube-sh)](https://github.com/dcs4cop/xcube-sh)

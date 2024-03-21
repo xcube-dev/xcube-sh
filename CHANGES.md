@@ -1,3 +1,7 @@
+## Changes in 0.11.1 (in development)
+
+* Renamed main branch from `master` into `main`.
+
 ## Changes in 0.11.0
 
 * [Migrated](https://docs.sentinel-hub.com/api/latest/api/catalog/#migration-to-v100) 
