@@ -489,6 +489,7 @@ class SentinelHub:
         collection_id: str = None,
         band_units: Union[str, Sequence[str]] = None,
         band_sample_types: Union[str, Sequence[str]] = None,
+        processing_kwargs: dict = None,
     ) -> Dict:
         if bbox is None:
             bbox = [-180.0, -90.0, 180.0, 90.0]
@@ -501,9 +502,14 @@ class SentinelHub:
         if isinstance(band_sample_types, str):
             band_sample_types = [band_sample_types] * len(band_names)
 
+        processing = {"upsampling": upsampling, "downsampling": downsampling}
+
+        if processing_kwargs:
+            processing |= processing_kwargs if processing_kwargs else {}
+
         data_element = {
             "type": dataset_name if collection_id is None else collection_id,
-            "processing": {"upsampling": upsampling, "downsampling": downsampling},
+            "processing": processing,
         }
 
         if any([time_range, mosaicking_order, collection_id]):

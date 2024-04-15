@@ -74,6 +74,16 @@ class CubeConfig:
     :param four_d: If variables should appear as forth dimension rather
         than separate arrays.
     :param exception_type: The type of exception to be raised on error
+    :param processing_kwargs: Processing Keywords Arguments to be passed to Sentinel Hub
+    such as for S1GRD -> {
+                    "orthorectify": "false",
+                    "backCoeff": "GAMMA0_ELLIPSOID",
+                    "speckleFilter": {
+                        "type": "LEE",
+                        "windowSizeX": 5,
+                        "windowSizeY": 5
+                    }
+    defaults to None
     """
 
     def __init__(
@@ -98,6 +108,7 @@ class CubeConfig:
         collection_id: str = None,
         four_d: bool = False,
         exception_type=ValueError,
+        processing_kwargs: dict = None,
     ):
         crs = crs or DEFAULT_CRS
         if crs in CRS_URI_TO_ID:
@@ -260,6 +271,7 @@ class CubeConfig:
         self._size = width, height
         self._tile_size = tile_width, tile_height
         self._num_tiles = width // tile_width, height // tile_height
+        self._processing_kwargs = processing_kwargs
 
     @classmethod
     def from_dict(
@@ -428,3 +440,7 @@ class CubeConfig:
             num_tiles = _safe_int_div(size, tile_size)
             size = num_tiles * tile_size
         return size
+
+    @property
+    def processing_kwargs(self) -> dict:
+        return self._processing_kwargs
