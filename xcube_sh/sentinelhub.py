@@ -505,7 +505,7 @@ class SentinelHub:
         processing = {"upsampling": upsampling, "downsampling": downsampling}
 
         if processing_kwargs:
-            processing |= processing_kwargs if processing_kwargs else {}
+            processing |= processing_kwargs
 
         data_element = {
             "type": dataset_name if collection_id is None else collection_id,
