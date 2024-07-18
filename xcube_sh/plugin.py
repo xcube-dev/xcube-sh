@@ -8,6 +8,7 @@ from xcube.constants import EXTENSION_POINT_DATA_STORES
 from xcube.util import extension
 from xcube_sh.constants import SH_DATA_OPENER_ID
 from xcube_sh.constants import SH_DATA_STORE_ID
+from xcube_sh.constants import SH_CDSE_DATA_STORE_ID
 
 
 def init_plugin(ext_registry: extension.ExtensionRegistry):
@@ -24,6 +25,14 @@ def init_plugin(ext_registry: extension.ExtensionRegistry):
         point=EXTENSION_POINT_DATA_STORES,
         name=SH_DATA_STORE_ID,
         description="Sentinel Hub Cloud API",
+    )
+
+    # xcube DataAccessor extensions
+    ext_registry.add_extension(
+        loader=extension.import_component("xcube_sh.store:SentinelHubCdseDataStore"),
+        point=EXTENSION_POINT_DATA_STORES,
+        name=SH_CDSE_DATA_STORE_ID,
+        description="Sentinel Hub Cloud API on CDSE",
     )
 
     # xcube DataAccessor extensions
