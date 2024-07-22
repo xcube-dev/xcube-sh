@@ -558,7 +558,13 @@ class SentinelHubCdseDataStore(SentinelHubDataStore):
     """
 
     def __init__(self, **sh_kwargs):
-        super().__init__(SentinelHub(**sh_kwargs))
+
+        if "instance_url" not in sh_kwargs:
+            sh_kwargs["instance_url"] = DEFAULT_SH_CDSE_INSTANCE_URL
+        if "oauth2_url" not in sh_kwargs:
+            sh_kwargs["oauth2_url"] = DEFAULT_SH_CDSE_OAUTH2_URL
+
+        super().__init__(**sh_kwargs)
 
     ##########################################################################
     # DataStore impl.
