@@ -45,7 +45,7 @@ BAND_DATA_ARRAY_NAME = "band_data"
 SH_DATA_STORE_ID = "sentinelhub"
 SH_DATA_OPENER_ID = "dataset:zarr:sentinelhub"
 
-SH_CDSE_DATA_STORE_ID = "sentinelhubCdse"
+SH_CDSE_DATA_STORE_ID = "sentinelhub-cdse"
 
 AVAILABLE_CRS_EPSG_CODES = [
     4326,
