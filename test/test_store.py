@@ -18,8 +18,10 @@ from xcube.util.jsonschema import JsonSchema
 from xcube_sh.constants import CRS_ID_TO_URI
 from xcube_sh.constants import SH_DATA_OPENER_ID
 from xcube_sh.constants import SH_DATA_STORE_ID
+from xcube_sh.constants import SH_CDSE_DATA_STORE_ID
 from xcube_sh.store import SentinelHubDataOpener
 from xcube_sh.store import SentinelHubDataStore
+from xcube_sh.store import SentinelHubCdseDataStore
 
 
 class SentinelHubDataStorePluginTest(unittest.TestCase):
@@ -184,3 +186,9 @@ class SentinelHubDataStoreTest(unittest.TestCase):
         self.assertIsInstance(d, dict)
         # Assert is JSON-serializable
         json.dumps(d)
+
+
+class SentinelHubCdseDataStoreTest(unittest.TestCase):
+    def test_new_data_store(self):
+        store = new_data_store(SH_CDSE_DATA_STORE_ID)
+        self.assertIsInstance(store, SentinelHubCdseDataStore)
