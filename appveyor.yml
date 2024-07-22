@@ -37,15 +37,15 @@ build_script:
   - . $MAMBA_ROOT_PREFIX/etc/profile.d/micromamba.sh
 
   # Clone xcube repository, install xcube dependencies with micromamba,
-  # and install the latest version of xcube with setup.py.
+  # and do a source install of the latest version of xcube.
   - git clone https://github.com/dcs4cop/xcube $HOME/xcube
   - micromamba create --name xc --file $HOME/xcube/environment.yml
   - micromamba activate xc
   - cd $HOME/xcube
-  - python setup.py install
+  - pip install -ve .
 
   # Use micromamba to install all xcube-sh dependencies *except* xcube
-  # (already manually installed), then install xcube-sh itself with setup.py.
+  # (already manually installed), then source-install xcube-sh.
   - cd $APPVEYOR_BUILD_FOLDER
   - grep -v "^  - xcube" environment.yml > env_no_xcube.yml
   - micromamba update --yes --name xc --file env_no_xcube.yml
