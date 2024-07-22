@@ -557,8 +557,6 @@ class SentinelHubCdseDataStore(SentinelHubDataStore):
     interface.
     """
 
-    # def __init__(self):
-    #     super().__init__()
     def __init__(self, **sh_kwargs):
         super().__init__(SentinelHub(**sh_kwargs))
 
@@ -567,67 +565,21 @@ class SentinelHubCdseDataStore(SentinelHubDataStore):
 
     @classmethod
     def get_data_store_params_schema(cls) -> JsonObjectSchema:
-        sh_params = dict(
-            client_id=JsonStringSchema(
-                title="Sentinel Hub API client identifier",
-                description="Preferably set by environment" " variable SH_CLIENT_ID",
-            ),
-            client_secret=JsonStringSchema(
-                title="Sentinel Hub API client secret",
-                description="Preferably set by environment variable SH_CLIENT_SECRET",
-            ),
-            api_url=JsonStringSchema(
-                title="Sentinel Hub instance URL (deprecated)",
-                description=("Deprecated, use instance_url instead."),
-            ),
-            instance_url=JsonStringSchema(
-                default=DEFAULT_SH_CDSE_INSTANCE_URL,
-                title="Sentinel Hub instance URL",
-            ),
-            oauth2_url=JsonStringSchema(
-                default=DEFAULT_SH_CDSE_OAUTH2_URL,
-                title="Sentinel Hub Authorisation API URL (OAuth2)",
-            ),
-            process_url=JsonStringSchema(
-                title="Sentinel Hub Process API URL",
-            ),
-            catalog_url=JsonStringSchema(
-                title="Sentinel Hub Catalog API URL (STAC)",
-            ),
-            configuration_url=JsonStringSchema(
-                title="Sentinel Hub Configuration API URL",
-            ),
-            collection_url=JsonStringSchema(
-                title="Sentinel Hub Collection API URL",
-            ),
-            enable_warnings=JsonBooleanSchema(
-                default=False,
-                title="Whether to output warnings",
-            ),
-            error_policy=JsonStringSchema(
-                default="fail",
-                enum=["fail", "warn", "ignore"],
-                title="Policy for errors while requesting data",
-            ),
-            num_retries=JsonIntegerSchema(
-                default=DEFAULT_NUM_RETRIES,
-                minimum=0,
-                title="Number of retries when requesting data fails",
-            ),
-            retry_backoff_max=JsonIntegerSchema(
-                default=DEFAULT_RETRY_BACKOFF_MAX, minimum=0
-            ),
-            retry_backoff_base=JsonNumberSchema(
-                default=DEFAULT_RETRY_BACKOFF_BASE, exclusive_minimum=1.0
-            ),
-        )
-        required = None
-        if not DEFAULT_CLIENT_ID or not DEFAULT_CLIENT_SECRET:
-            required = []
-            if DEFAULT_CLIENT_ID is None:
-                required.append("client_id")
-            if DEFAULT_CLIENT_SECRET is None:
-                required.append("client_secret")
+
+        base_schema = super().get_data_store_params_schema()
+
         return JsonObjectSchema(
-            properties=sh_params, required=required, additional_properties=False
+            properties={
+                **base_schema.properties,
+                "instance_url": JsonStringSchema(
+                    default=DEFAULT_SH_CDSE_INSTANCE_URL,
+                    title="Sentinel Hub instance URL",
+                ),
+                "oauth2_url": JsonStringSchema(
+                    default=DEFAULT_SH_CDSE_OAUTH2_URL,
+                    title="Sentinel Hub Authorisation API URL (OAuth2)",
+                ),
+            },
+            required=base_schema.required,
+            additional_properties=base_schema.additional_properties,
         )
