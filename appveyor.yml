@@ -49,7 +49,7 @@ build_script:
   - cd $APPVEYOR_BUILD_FOLDER
   - grep -v "^  - xcube" environment.yml > env_no_xcube.yml
   - micromamba update --yes --name xc --file env_no_xcube.yml
-  - python setup.py install
+  - pip install -ve .
 
   # Make sure pytest is installed
   - micromamba install --yes --name xc --channel conda-forge pytest attrs
