@@ -5,7 +5,7 @@
 import json
 import unittest
 
-from test.test_sentinelhub import HAS_SH_CREDENTIALS, SessionMock
+from test.test_sentinelhub import HAS_SH_CREDENTIALS
 from test.test_sentinelhub import REQUIRE_SH_CREDENTIALS
 from xcube.core.store import DatasetDescriptor, get_data_store_class
 from xcube.core.store import VariableDescriptor
