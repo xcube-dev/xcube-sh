@@ -21,7 +21,8 @@ from xcube_sh.metadata import S2_BAND_NAMES
 from xcube_sh.metadata import SentinelHubMetadata
 
 
-class SentinelHubStoreTest(unittest.TestCase, metaclass=ABCMeta):
+# noinspection PyUnresolvedReferences
+class SentinelHubStoreTest(metaclass=ABCMeta):
     def setUp(self) -> None:
         self.observed_kwargs = dict()
 

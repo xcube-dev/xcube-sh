@@ -5,9 +5,9 @@
 import json
 import unittest
 
-from test.test_sentinelhub import HAS_SH_CREDENTIALS
+from test.test_sentinelhub import HAS_SH_CREDENTIALS, SessionMock
 from test.test_sentinelhub import REQUIRE_SH_CREDENTIALS
-from xcube.core.store import DatasetDescriptor
+from xcube.core.store import DatasetDescriptor, get_data_store_class
 from xcube.core.store import VariableDescriptor
 from xcube.core.store import find_data_opener_extensions
 from xcube.core.store import find_data_store_extensions
@@ -189,6 +189,6 @@ class SentinelHubDataStoreTest(unittest.TestCase):
 
 
 class SentinelHubCdseDataStoreTest(unittest.TestCase):
-    def test_new_data_store(self):
-        store = new_data_store(SH_CDSE_DATA_STORE_ID)
-        self.assertIsInstance(store, SentinelHubCdseDataStore)
+    def test_get_data_store_class(self):
+        cls = get_data_store_class(SH_CDSE_DATA_STORE_ID)
+        self.assertIs(cls, SentinelHubCdseDataStore)
