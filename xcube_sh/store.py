@@ -36,6 +36,8 @@ from .constants import DEFAULT_RESAMPLING
 from .constants import DEFAULT_RETRY_BACKOFF_BASE
 from .constants import DEFAULT_RETRY_BACKOFF_MAX
 from .constants import DEFAULT_SH_INSTANCE_URL
+from .constants import DEFAULT_SH_CDSE_INSTANCE_URL
+from .constants import DEFAULT_SH_CDSE_OAUTH2_URL
 from .constants import DEFAULT_TILE_SIZE
 from .constants import DEFAULT_TIME_TOLERANCE
 from .constants import MOSAICKING_ORDERS
@@ -547,3 +549,43 @@ class SentinelHubDataStore(DefaultSearchMixin, SentinelHubDataOpener, DataStore)
                 f' "{SH_DATA_OPENER_ID}",'
                 f' but got "{opener_id}"'
             )
+
+
+class SentinelHubCdseDataStore(SentinelHubDataStore):
+    """
+    Sentinel HUB implementation of the ``xcube.core.store.DataStore``
+    interface.
+    """
+
+    def __init__(self, **sh_kwargs):
+
+        if "instance_url" not in sh_kwargs:
+            sh_kwargs["instance_url"] = DEFAULT_SH_CDSE_INSTANCE_URL
+        if "oauth2_url" not in sh_kwargs:
+            sh_kwargs["oauth2_url"] = DEFAULT_SH_CDSE_OAUTH2_URL
+
+        super().__init__(**sh_kwargs)
+
+    ##########################################################################
+    # DataStore impl.
+
+    @classmethod
+    def get_data_store_params_schema(cls) -> JsonObjectSchema:
+
+        base_schema = super().get_data_store_params_schema()
+
+        return JsonObjectSchema(
+            properties={
+                **base_schema.properties,
+                "instance_url": JsonStringSchema(
+                    default=DEFAULT_SH_CDSE_INSTANCE_URL,
+                    title="Sentinel Hub instance URL",
+                ),
+                "oauth2_url": JsonStringSchema(
+                    default=DEFAULT_SH_CDSE_OAUTH2_URL,
+                    title="Sentinel Hub Authorisation API URL (OAuth2)",
+                ),
+            },
+            required=base_schema.required,
+            additional_properties=base_schema.additional_properties,
+        )

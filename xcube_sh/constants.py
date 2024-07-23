@@ -12,6 +12,11 @@ DEFAULT_CLIENT_SECRET = os.environ.get("SH_CLIENT_SECRET")
 
 DEFAULT_SH_INSTANCE_URL = "https://services.sentinel-hub.com"
 
+DEFAULT_SH_CDSE_INSTANCE_URL = "https://sh.dataspace.copernicus.eu"
+DEFAULT_SH_CDSE_OAUTH2_URL = (
+    "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect"
+)
+
 # SH Catalog only allows this number of features to requested.
 SH_CATALOG_FEATURE_LIMIT = 100
 
@@ -39,6 +44,8 @@ BAND_DATA_ARRAY_NAME = "band_data"
 
 SH_DATA_STORE_ID = "sentinelhub"
 SH_DATA_OPENER_ID = "dataset:zarr:sentinelhub"
+
+SH_CDSE_DATA_STORE_ID = "sentinelhub-cdse"
 
 AVAILABLE_CRS_EPSG_CODES = [
     4326,
