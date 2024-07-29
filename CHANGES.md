@@ -6,6 +6,10 @@
   [Sentinel Hub instance on CDSE](https://dataspace.copernicus.eu/analyse/apis/sentinel-hub)
   with preconfigured auth and API endpoints. (#112)
 
+- Added a feature to allow a user to pass processing keyword arguments 
+  (`processing_kwargs`) for cubes configuration. (#114)
+  
+
 ## Changes in 0.11.0
 
 - [Migrated](https://docs.sentinel-hub.com/api/latest/api/catalog/#migration-to-v100)
