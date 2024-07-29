@@ -75,15 +75,15 @@ class CubeConfig:
         than separate arrays.
     :param exception_type: The type of exception to be raised on error
     :param processing_kwargs: Processing Keywords Arguments to be passed to Sentinel Hub
-    such as for S1GRD -> {
+        such as for S1GRD -> ``{
                     "orthorectify": "false",
                     "backCoeff": "GAMMA0_ELLIPSOID",
                     "speckleFilter": {
                         "type": "LEE",
                         "windowSizeX": 5,
                         "windowSizeY": 5
-                    }
-    defaults to None
+                    }``.
+        Defaults to ``None``.
     """
 
     def __init__(
