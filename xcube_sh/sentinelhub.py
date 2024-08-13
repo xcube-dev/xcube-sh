@@ -523,7 +523,7 @@ class SentinelHub:
             if mosaicking_order and time_range:
                 data_element["dataFilter"].update(mosaickingOrder=mosaicking_order)
             if collection_id:
-                data_element["dataFilter"].update(collectionId=collection_id)
+                data_element["type"] = collection_id
 
         input_element = {
             "bounds": {
