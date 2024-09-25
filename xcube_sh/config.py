@@ -113,7 +113,7 @@ class CubeConfig:
         mosaicking_order = mosaicking_order or DEFAULT_MOSAICKING_ORDER
         assert_in(mosaicking_order, MOSAICKING_ORDERS, "mosaicking_order")
 
-        if not collection_id.startswith("byoc-"):
+        if collection_id and not collection_id.startswith("byoc-"):
             collection_id = f"byoc-{collection_id}"
 
         if not dataset_name:
