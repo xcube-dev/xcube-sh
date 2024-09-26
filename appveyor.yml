@@ -48,7 +48,7 @@ build_script:
   # (already manually installed), then source-install xcube-sh.
   - cd $APPVEYOR_BUILD_FOLDER
   - grep -v "^  - xcube" environment.yml > env_no_xcube.yml
-  - micromamba update --yes --name xc --file env_no_xcube.yml
+  - micromamba install --yes --name xc --file env_no_xcube.yml
   - pip install -ve .
 
   # Make sure pytest is installed
