@@ -614,7 +614,7 @@ class SentinelHubNewRequestTest(unittest.TestCase):
             crs="http://www.opengis.net/def/crs/EPSG/0/3857",
             bbox=(1545577, 5761986, 1705367, 5857046),
             band_sample_types="UINT8",
-            collection_id="1a3ab057-3c51-447c-9f85-27d4b633b3f5",
+            collection_id="byoc-1a3ab057-3c51-447c-9f85-27d4b633b3f5",
         )
 
         # with open(os.path.join(REQUEST_SINGLE_JSON, 'w') as fp:
@@ -633,7 +633,7 @@ class SentinelHubNewRequestTest(unittest.TestCase):
             bbox=(1545577, 5761986, 1705367, 5857046),
             crs=CRS_ID_TO_URI["EPSG:3857"],
             band_sample_types="UINT8",
-            collection_id="1a3ab057-3c51-447c-9f85-27d4b633b3f5",
+            collection_id="byoc-1a3ab057-3c51-447c-9f85-27d4b633b3f5",
         )
 
         # with open(REQUEST_MULTI_JSON), 'w') as fp:
