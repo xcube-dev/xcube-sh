@@ -741,6 +741,7 @@ class SentinelHubChunkStore(RemoteStore):
             mosaicking_order=self.cube_config.mosaicking_order,
             collection_id=self.cube_config.collection_id,
             band_units=self.cube_config.band_units,
+            processing_kwargs=self.cube_config.processing_kwargs,
         )
 
         response = self._sentinel_hub.get_data(
