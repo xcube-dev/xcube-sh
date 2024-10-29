@@ -6,6 +6,11 @@
   [Sentinel Hub instance on CDSE](https://dataspace.copernicus.eu/analyse/apis/sentinel-hub)
   with preconfigured auth and API endpoints. (#112)
 
+- Fixed bugs related to collection id which caused 
+  BYOC request to fail. The collection id are now assigned to
+  `type` not under `data filter` during request and a `byoc-` 
+  prefix is automatically added depending on user input (#117)
+
 ## Changes in 0.11.0
 
 - [Migrated](https://docs.sentinel-hub.com/api/latest/api/catalog/#migration-to-v100)

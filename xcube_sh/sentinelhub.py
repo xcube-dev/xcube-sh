@@ -167,7 +167,7 @@ class SentinelHub:
 
     def band_names(self, dataset_name: str, collection_id: str = None) -> List[str]:
         if dataset_name.upper() == "CUSTOM":
-            url = f"{self.collection_url}/byoc-{collection_id}"
+            url = f"{self.collection_url}/{collection_id}"
             response = self.session.get(url)
             SentinelHubError.maybe_raise_for_response(response)
             bands = response.json().get("bands", [])
@@ -182,7 +182,7 @@ class SentinelHub:
         self, dataset_name: str, collection_id: str = None
     ) -> List[Dict[str, Any]]:
         if dataset_name.upper() == "CUSTOM":
-            url = f"{self.collection_url}/byoc-{collection_id}"
+            url = f"{self.collection_url}/{collection_id}"
             response = self.session.get(url)
             SentinelHubError.maybe_raise_for_response(response)
             return response.json().get("bands", [])
@@ -502,7 +502,7 @@ class SentinelHub:
             band_sample_types = [band_sample_types] * len(band_names)
 
         data_element = {
-            "type": dataset_name,
+            "type": dataset_name if collection_id is None else collection_id,
             "processing": {"upsampling": upsampling, "downsampling": downsampling},
         }
 
@@ -522,8 +522,6 @@ class SentinelHub:
                 data_element["dataFilter"].update(timeRange=time_range_element)
             if mosaicking_order and time_range:
                 data_element["dataFilter"].update(mosaickingOrder=mosaicking_order)
-            if collection_id:
-                data_element["dataFilter"].update(collectionId=collection_id)
 
         input_element = {
             "bounds": {
