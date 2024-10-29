@@ -1,6 +1,6 @@
-## Changes in 0.11.1 (in development)
+## Changes in 0.11.1
 
-- Renamed main branch from `master` into `main`.
+- Renamed main branch from `master` to `main`.
 
 - Added a data store (`sentinelhub-cdse`) for the
   [Sentinel Hub instance on CDSE](https://dataspace.copernicus.eu/analyse/apis/sentinel-hub)
