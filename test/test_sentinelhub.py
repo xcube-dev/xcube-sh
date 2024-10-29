@@ -70,7 +70,7 @@ class SentinelHubCatalogSearchTest(unittest.TestCase):
             match=(
                 f"400 Client Error: Bad Request for url:"
                 f" {DEFAULT_SH_INSTANCE_URL}/api/v1/catalog/1.0.0/search:"
-                f" Parameter 'datetime' must not be null."
+                f" One of parameters 'datetime' or 'ids' need to be set."
             ),
         ):
             SentinelHub().get_features(
