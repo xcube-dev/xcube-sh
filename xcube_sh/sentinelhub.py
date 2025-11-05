@@ -26,6 +26,7 @@ from .constants import DEFAULT_RESAMPLING
 from .constants import DEFAULT_RETRY_BACKOFF_BASE
 from .constants import DEFAULT_RETRY_BACKOFF_MAX
 from .constants import DEFAULT_SH_INSTANCE_URL
+from .constants import DEFAULT_SH_CDSE_INSTANCE_URL
 from .constants import LOG
 from .constants import SH_CATALOG_FEATURE_LIMIT
 from .metadata import SentinelHubMetadata
@@ -166,6 +167,11 @@ class SentinelHub:
         return response.json()
 
     def band_names(self, dataset_name: str, collection_id: str = None) -> List[str]:
+        # Unsupported endpoint for DEFAULT_SH_CDSE_INSTANCE_URL,
+        # use band information defined in metadata.py
+        if self.instance_url == DEFAULT_SH_CDSE_INSTANCE_URL:
+            return []
+
         if dataset_name.upper() == "CUSTOM":
             url = f"{self.collection_url}/{collection_id}"
             response = self.session.get(url)
@@ -181,6 +187,11 @@ class SentinelHub:
     def bands(
         self, dataset_name: str, collection_id: str = None
     ) -> List[Dict[str, Any]]:
+        # Unsupported endpoint for DEFAULT_SH_CDSE_INSTANCE_URL,
+        # use band information defined in metadata.py
+        if self.instance_url == DEFAULT_SH_CDSE_INSTANCE_URL:
+            return []
+
         if dataset_name.upper() == "CUSTOM":
             url = f"{self.collection_url}/{collection_id}"
             response = self.session.get(url)

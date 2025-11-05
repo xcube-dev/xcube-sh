@@ -287,14 +287,7 @@ class SentinelHubDataOpener(DataOpener):
         ) = self._get_dataset_and_collection_metadata(data_id)
         bands = dict(dataset_metadata.get("bands", {}))
 
-        # Let store with DEFAULT_SH_CDSE_INSTANCE_URL use default band information, due to unsupported endpoint used in
-        # https://github.com/xcube-dev/xcube-sh/blob/main/xcube_sh/sentinelhub.py#L181
-        if (
-            self._sentinel_hub is not None
-            and data_id.upper() != "CUSTOM"
-            and self._sentinel_hub.instance_url != DEFAULT_SH_CDSE_INSTANCE_URL
-        ):
-
+        if self._sentinel_hub is not None and data_id.upper() != "CUSTOM":
             # If we are connected to the API, we return band names by API
             remote_bands = self._sentinel_hub.bands(data_id)
             if remote_bands:
