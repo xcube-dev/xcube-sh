@@ -26,7 +26,6 @@ from .constants import DEFAULT_RESAMPLING
 from .constants import DEFAULT_RETRY_BACKOFF_BASE
 from .constants import DEFAULT_RETRY_BACKOFF_MAX
 from .constants import DEFAULT_SH_INSTANCE_URL
-from .constants import DEFAULT_SH_CDSE_INSTANCE_URL
 from .constants import LOG
 from .constants import SH_CATALOG_FEATURE_LIMIT
 from .metadata import SentinelHubMetadata
