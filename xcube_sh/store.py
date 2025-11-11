@@ -287,19 +287,22 @@ class SentinelHubDataOpener(DataOpener):
         ) = self._get_dataset_and_collection_metadata(data_id)
         bands = dict(dataset_metadata.get("bands", {}))
 
-        if self._sentinel_hub is not None and data_id.upper() != "CUSTOM":
-            # If we are connected to the API, we return band names by API
-            remote_bands = self._sentinel_hub.bands(data_id)
-            if remote_bands:
-                for band in remote_bands:
-                    band_copy = dict(band)
-                    band_name = band_copy.pop("name")
-                    if "sampleType" in band_copy:
-                        band_copy["sample_type"] = band_copy.pop("sampleType")
-                    if band_name in bands:
-                        bands[band_name].update(band_copy)
-                    else:
-                        bands[band_name] = band_copy
+        # As of version 0.11.2, band information is only hardcoded and not accessed
+        # dynamically, due to unsupported endpoint used in xcube_sh/sentinelhub.py:186
+        #
+        # if self._sentinel_hub is not None and data_id.upper() != "CUSTOM":
+        #     # If we are connected to the API, we return band names by API
+        #     remote_bands = self._sentinel_hub.bands(data_id)
+        #     if remote_bands:
+        #         for band in remote_bands:
+        #             band_copy = dict(band)
+        #             band_name = band_copy.pop("name")
+        #             if "sampleType" in band_copy:
+        #                 band_copy["sample_type"] = band_copy.pop("sampleType")
+        #             if band_name in bands:
+        #                 bands[band_name].update(band_copy)
+        #             else:
+        #                 bands[band_name] = band_copy
 
         data_vars = {}
         for band_name, band_attrs in bands.items():

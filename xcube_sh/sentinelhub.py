@@ -167,11 +167,10 @@ class SentinelHub:
         return response.json()
 
     def band_names(self, dataset_name: str, collection_id: str = None) -> List[str]:
-        # Unsupported endpoint for DEFAULT_SH_CDSE_INSTANCE_URL,
-        # use band information defined in metadata.py
-        if self.instance_url == DEFAULT_SH_CDSE_INSTANCE_URL:
-            return []
-
+        """
+        Deprecated as of version 0.11.2, due to unsupported endpoint
+        for Sentinelhub on CDSE.
+        """
         if dataset_name.upper() == "CUSTOM":
             url = f"{self.collection_url}/{collection_id}"
             response = self.session.get(url)
@@ -187,11 +186,10 @@ class SentinelHub:
     def bands(
         self, dataset_name: str, collection_id: str = None
     ) -> List[Dict[str, Any]]:
-        # Unsupported endpoint for DEFAULT_SH_CDSE_INSTANCE_URL,
-        # use band information defined in metadata.py
-        if self.instance_url == DEFAULT_SH_CDSE_INSTANCE_URL:
-            return []
-
+        """
+        Deprecated as of version 0.11.2, due to unsupported endpoint
+        for Sentinelhub on CDSE.
+        """
         if dataset_name.upper() == "CUSTOM":
             url = f"{self.collection_url}/{collection_id}"
             response = self.session.get(url)

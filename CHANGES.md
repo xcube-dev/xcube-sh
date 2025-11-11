@@ -4,8 +4,10 @@
   (`processing_kwargs`) for cubes configuration. (#114)
   
 - Fixed an issue related to an unsupported Sentinel Hub endpoint on 
-  CDSE that provided band metadata (e.g., for describe_data()). The sentinelhub-cdse 
-  store implementation now uses default metadata. (#121)
+  CDSE that provided band metadata (e.g., for describe_data()). 
+  As the used endpoint turned out to be experimental, both stores
+  (sentinel-hub and sentinelhub-cdse) now use default metadata, 
+  defined in metadata.py. Additional metadata was added for S1GRD (#121).
  
 ## Changes in 0.11.1
 
