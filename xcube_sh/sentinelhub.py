@@ -168,7 +168,7 @@ class SentinelHub:
 
     @deprecated(
         version="0.11.2",
-        reason="Deprecated, due to unsupported endpoint " "for Sentinelhub on CDSE.",
+        reason="Deprecated, due to unsupported endpoint for Sentinelhub on CDSE.",
     )
     def band_names(self, dataset_name: str, collection_id: str = None) -> List[str]:
         if dataset_name.upper() == "CUSTOM":
@@ -185,7 +185,7 @@ class SentinelHub:
 
     @deprecated(
         version="0.11.2",
-        reason="Deprecated, due to unsupported endpoint " "for Sentinelhub on CDSE.",
+        reason="Deprecated, due to unsupported endpoint for Sentinelhub on CDSE.",
     )
     def bands(
         self, dataset_name: str, collection_id: str = None
