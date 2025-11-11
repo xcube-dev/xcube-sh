@@ -8,6 +8,7 @@ import platform
 import random
 import time
 import warnings
+from deprecated import deprecated
 from typing import List, Any, Dict, Tuple, Union, Sequence, Callable, Optional
 
 import oauthlib.oauth2
@@ -165,11 +166,11 @@ class SentinelHub:
         SentinelHubError.maybe_raise_for_response(response)
         return response.json()
 
+    @deprecated(
+        version="0.11.2",
+        reason="Deprecated, due to unsupported endpoint " "for Sentinelhub on CDSE.",
+    )
     def band_names(self, dataset_name: str, collection_id: str = None) -> List[str]:
-        """
-        Deprecated as of version 0.11.2, due to unsupported endpoint
-        for Sentinelhub on CDSE.
-        """
         if dataset_name.upper() == "CUSTOM":
             url = f"{self.collection_url}/{collection_id}"
             response = self.session.get(url)
@@ -182,13 +183,13 @@ class SentinelHub:
         SentinelHubError.maybe_raise_for_response(response)
         return response.json().get("data", {})
 
+    @deprecated(
+        version="0.11.2",
+        reason="Deprecated, due to unsupported endpoint " "for Sentinelhub on CDSE.",
+    )
     def bands(
         self, dataset_name: str, collection_id: str = None
     ) -> List[Dict[str, Any]]:
-        """
-        Deprecated as of version 0.11.2, due to unsupported endpoint
-        for Sentinelhub on CDSE.
-        """
         if dataset_name.upper() == "CUSTOM":
             url = f"{self.collection_url}/{collection_id}"
             response = self.session.get(url)
