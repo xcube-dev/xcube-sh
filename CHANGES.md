@@ -1,4 +1,4 @@
-## Changes in 0.11.2 (in development)
+## Changes in 0.11.2
 
 - Added a feature to allow a user to pass processing keyword arguments 
   (`processing_kwargs`) for cubes configuration. (#114)
