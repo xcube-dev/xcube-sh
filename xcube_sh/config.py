@@ -1,4 +1,4 @@
-# Copyright © 2022-2024 by the xcube development team and contributors
+# Copyright © 2022-2025 by the xcube development team and contributors
 # Permissions are hereby granted under the terms of the MIT License:
 # https://opensource.org/licenses/MIT.
 
@@ -225,9 +225,11 @@ class CubeConfig:
             time_range = tuple(
                 map(
                     lambda s: s.strip(),
-                    time_range.split(",", maxsplit=1)
-                    if "," in time_range
-                    else (time_range, time_range),
+                    (
+                        time_range.split(",", maxsplit=1)
+                        if "," in time_range
+                        else (time_range, time_range)
+                    ),
                 )
             )
             time_range = tuple(time_range)
