@@ -3,6 +3,12 @@
 - Added a feature to allow a user to pass processing keyword arguments 
   (`processing_kwargs`) for cubes configuration. (#114)
   
+- Fixed an issue related to an unsupported Sentinel Hub endpoint on 
+  CDSE that provided band metadata (e.g., for describe_data()). 
+  As the used endpoint turned out to be experimental, both stores
+  (sentinel-hub and sentinelhub-cdse) now use default metadata, 
+  defined in metadata.py. Additional metadata was added for S1GRD (#121).
+ 
 ## Changes in 0.11.1
 
 - Renamed main branch from `master` to `main`.

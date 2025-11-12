@@ -137,6 +137,18 @@ S1GRD_BAND_METADATA = {
     for i in range(len(S1GRD_BAND_NAMES))
 }
 
+S1GRD_BAND_METADATA.update(
+    {
+        "localIncidenceAngle": dict(sample_type="FLOAT32", unit="Angle (degrees)"),
+        "scatteringArea": dict(sample_type="FLOAT32", unit="Normalized area"),
+        "shadowMask": dict(
+            sample_type="UINT8",
+            flag_values="likely not radar shadow, likely in/near radar shadow",
+            flag_meanings="0 1",
+        ),
+    }
+)
+
 S2_BAND_NAMES = [
     "B01",
     "B02",
