@@ -16,3 +16,6 @@ dependencies:
   - xarray
   - xcube >=0.10
   - zarr
+  # Testing
+  - pytest
+  - pytest-cov

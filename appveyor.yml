@@ -2,18 +2,24 @@ version: '{build}'
 
 image:
   - Ubuntu2204
-  - macos
+  - macOS
 
 configuration: Release
 
 platform:
   - x64
 
+# Do not build feature branch with open Pull Requests.
+# Note that a feature branch build may still occur on the first push to
+# the branch -- see
+# https://help.appveyor.com/discussions/questions/18437-skip_branch_with_pr-setting-doesnt-work
+skip_branch_with_pr: true
+
 for:
 -
   matrix:
     only:
-      - image: macos
+      - image: macOS
   install:
     - curl -Ls https://micro.mamba.pm/api/micromamba/osx-64/latest | tar -xvj bin/micromamba
     - mv bin/micromamba ./micromamba
@@ -26,6 +32,14 @@ for:
     - mv bin/micromamba ./micromamba
 
 build_script:
+  # Diagnostics
+  - echo $PLATFORM
+  - echo $APPVEYOR_BUILD_WORKER_IMAGE
+  - echo $APPVEYOR_BUILD_FOLDER
+  - uname -a
+  - pwd
+  - ls
+
   # Set up micromamba
   - ./micromamba shell init -s bash --root-prefix ~/micromamba
   - source ~/.bashrc
@@ -36,28 +50,13 @@ build_script:
   - export MAMBA_EXE=$(pwd)/micromamba
   - . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
 
-  # Clone xcube repository, install xcube dependencies with micromamba,
-  # and do a source install of the latest version of xcube.
-  - git clone https://github.com/dcs4cop/xcube $HOME/xcube
-  - micromamba create --name xc --file $HOME/xcube/environment.yml
-  - micromamba activate xc
-  - cd $HOME/xcube
-  - pip install -ve .
-
-  # Use micromamba to install all xcube-sh dependencies *except* xcube
-  # (already manually installed), then source-install xcube-sh.
+  - micromamba create --name xcube-sh --file $APPVEYOR_BUILD_FOLDER/environment.yml
+  - micromamba activate xcube-sh
   - cd $APPVEYOR_BUILD_FOLDER
-  - grep -v "^  - xcube" environment.yml > env_no_xcube.yml
-  - micromamba install --yes --name xc --file env_no_xcube.yml
-  - pip install -ve .
+  - pip install --no-deps .
 
-  # Make sure pytest is installed
-  - micromamba install --yes --name xc --channel conda-forge pytest attrs
-
-  # Print some diagnostics (useful for debugging)
+  - git status
   - micromamba list
-  - xcube --version
-  - python -c "from xcube_sh.version import version; print(f'xcube_sh version {version}')"
 
   # Run the test suite
-  - python -m pytest
+  - pytest -v --cov=xcube_sh
